@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAYS-RIG // PUSAT KONTROLER</title>
+    <!-- Tailwind CSS untuk tata letak modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+        
+        :root {
+            --bg-color: #020203;
+            --text-color: #a1a1aa;
+            --title-color: #ffffff;
+            --slice-shadow: rgba(0, 0, 0, 0.85);
+            --border-color: rgba(255, 255, 255, 0.05);
+            --card-bg: rgba(10, 10, 12, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --watermark-color: rgba(255, 255, 255, 0.012);
+            /* Overlay dibuat lebih transparan agar gambar BG terlihat jelas */
+            --overlay-gradient: linear-gradient(to bottom, rgba(2, 2, 3, 0.25) 0%, transparent 50%, rgba(2, 2, 3, 0.75) 100%);
+            /* Filter kecerahan ditingkatkan dari 0.2 menjadi 0.45 agar BG muncul di mode gelap */
+            --slice-bg-filter: brightness(0.45) contrast(1.1) grayscale(0.25);
+            --slice-bg-hover-filter: brightness(0.75) contrast(1.15) grayscale(0);
+            --header-bg: rgba(2, 2, 3, 0.4);
+        }
+
+        body.light-theme {
+            --bg-color: #f3f4f6;
+            --text-color: #4b5563;
+            --title-color: #111827;
+            --slice-shadow: rgba(0, 0, 0, 0.08);
+            --border-color: rgba(0, 0, 0, 0.06);
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --watermark-color: rgba(0, 0, 0, 0.015);
+            --overlay-gradient: linear-gradient(to bottom, rgba(243, 244, 246, 0.3) 0%, transparent 50%, rgba(243, 244, 246, 0.8) 100%);
+            --slice-bg-filter: brightness(0.75) contrast(0.95) grayscale(0.25) opacity(0.85);
+            --slice-bg-hover-filter: brightness(0.95) contrast(1.05) grayscale(0) opacity(1);
+            --header-bg: rgba(243, 244, 246, 0.4);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .slice-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background-color: var(--bg-color);
+            transition: background-color 0.4s ease;
+        }
+
+        /* Irisan Miring Diagonal */
+        .diagonal-slice {
+            position: relative;
+            height: 100%;
+            flex: 1;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            transform: skewX(-7deg); /* Sudut miring miring yang lebih bersahabat */
+            margin-right: -2px;
+            border-right: 1px solid var(--border-color);
+            z-index: 10;
+            box-shadow: -12px 0 35px var(--slice-shadow);
+        }
+
+        /* Kompensasi ujung layar kiri & kanan agar miringnya tidak bocor */
+        .diagonal-slice:first-child {
+            margin-left: -6vw;
+            width: calc(100% + 6vw);
+        }
+
+        .diagonal-slice:last-child {
+            margin-right: -6vw;
+            width: calc(100% + 6vw);
+            border-right: none;
+        }
+
+        /* Redupkan irisan lain ketika salah satu sedang di-hover */
+        .slice-container:hover .diagonal-slice:not(:hover) .slice-bg {
+            filter: brightness(0.15) contrast(1.1) grayscale(0.9);
+            opacity: 0.4;
+        }
+        .slice-container:hover .diagonal-slice:not(:hover) .product-wrapper {
+            opacity: 0.3;
+        }
+
+        .slice-bg {
+            position: absolute;
+            top: 0;
+            left: -35%;
+            width: 170%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transform: skewX(7deg) scale(1.1); /* Unskew agar gambar tetap proporsional */
+            transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease, opacity 0.8s ease;
+            filter: var(--slice-bg-filter);
+            z-index: 1;
+        }
+
+        /* Efek latar belakang menyala saat di-hover */
+        .diagonal-slice:hover .slice-bg {
+            transform: skewX(7deg) scale(1.15);
+            filter: var(--slice-bg-hover-filter);
+        }
+
+        /* Wadah Konten Utama */
+        .slice-content {
+            position: absolute;
+            inset: 0;
+            transform: skewX(7deg); /* Unskew konten teks agar tetap tegak */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5.5rem 1.8rem 4rem 1.8rem;
+            z-index: 5;
+        }
+
+        /* Kompensasi padding aman di tepi layar kiri dan kanan */
+        .diagonal-slice:first-child .slice-content {
+            padding-left: 7vw;
+        }
+
+        .diagonal-slice:last-child .slice-content {
+            padding-right: 7vw;
+        }
+
+        /* Wadah Utama Foto Produk + Teks Floating */
+        .product-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 45%;
+            width: 100%;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+
+        .product-wrapper img {
+            max-width: 80%;
+            max-height: 125px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* LOGIKA HOVER BARU: Bergeser halus ke tengah (Center Focus) tanpa merusak teks */
+        .diagonal-slice:hover .product-wrapper {
+            transform: translate(15px, -10px) scale(1.05);
+        }
+
+        /* DETAIL TEKS FLOATING (Pojok Kanan Bawah Foto Unit) */
+        .floating-details {
+            position: absolute;
+            bottom: -25px;
+            right: 0;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-width: 190px;
+            max-width: 230px;
+            transition: border-color 0.3s ease;
+            z-index: 10;
+        }
+
+        /* Penyelaras letak floating agar tidak keluar layar di ujung kiri/kanan */
+        .diagonal-slice:first-child .floating-details {
+            right: 5%;
+        }
+
+        .diagonal-slice:last-child .floating-details {
+            right: 10%;
+        }
+
+        .diagonal-slice:hover .floating-details {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Detail aksi konfigurasi yang meluncur mulus */
+        .hidden-details {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .diagonal-slice:hover .hidden-details {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Gradasi overlay gambar di bawah */
+        .slice-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--overlay-gradient);
+            pointer-events: none;
+            z-index: 2;
+            transition: background 0.4s ease;
+        }
+
+        /* ADAPTASI RESPONSIF UNTUK MOBILE (Stacked Vertikal) */
+        @media (max-width: 768px) {
+            .slice-container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+            .diagonal-slice {
+                height: 240px;
+                width: 100% !important;
+                transform: skewY(-5deg); /* Skew horizontal di mobile */
+                margin-right: 0;
+                margin-left: 0 !important;
+                margin-top: -30px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                box-shadow: 0 -10px 30px var(--slice-shadow);
+            }
+            .diagonal-slice:first-child {
+                margin-top: 0;
+            }
+            .slice-bg {
+                transform: skewY(5deg) scale(1.15);
+                left: 0;
+                width: 100%;
+                height: 140%;
+                top: -20%;
+            }
+            .diagonal-slice:hover .slice-bg {
+                transform: skewY(5deg) scale(1.25);
+            }
+            .slice-content {
+                transform: skewY(5deg);
+                padding: 2.2rem 1.8rem !important;
+                width: 100% !important;
+                left: 0 !important;
+            }
+            .product-wrapper {
+                height: 35%;
+            }
+            .product-wrapper img {
+                max-height: 100px;
+            }
+            .diagonal-slice:hover .product-wrapper {
+                transform: scale(1.03);
+            }
+            .floating-details {
+                position: relative;
+                bottom: 0;
+                right: 0 !important;
+                margin-top: 1rem;
+                width: 100%;
+                max-width: none;
+            }
+        }
+
+        /* Watermark Teks Raksasa */
+        .center-branding {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11vw;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            color: var(--watermark-color);
+            text-transform: uppercase;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 15;
+            user-select: none;
+            transition: color 0.4s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- HEADER BAR ELEGAN -->
+    <header class="absolute top-0 inset-x-0 h-20 flex items-center justify-between px-8 sm:px-12 z-50 pointer-events-none">
+        <!-- Logo & Sapaan Baru -->
+        <div class="flex items-center gap-4 pointer-events-auto">
+            <div class="w-8 h-8 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg">
+                <span class="text-xs font-black tracking-widest text-zinc-100">B</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[11px] font-black tracking-wider text-zinc-400 uppercase">BAYS-RIG // STUDIO HUB</span>
+                <span id="header-greeting" class="text-xs font-semibold text-zinc-500 mt-0.5">Hello, rig mana yg mau di config?</span>
+            </div>
+        </div>
+
+        <!-- Toolbar Audio & Tema -->
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <!-- Toggle Audio -->
+            <button onclick="toggleAudio()" id="audio-toggle" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-950/60 border border-zinc-800/80 hover:bg-zinc-900 text-[10px] text-zinc-400 font-semibold tracking-wider transition shadow-md">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-blue-400 animate-pulse" id="audio-icon"></i>
+                <span id="audio-text">AUDIO: ON</span>
+            </button>
+            
+            <!-- Toggle Tema (Dark / Light) -->
+            <button onclick="toggleTheme()" id="theme-toggle" class="p-1.5 rounded-full bg-zinc-950/60 border border-zinc-800/80 hover:bg-zinc-900 text-zinc-400 transition shadow-md" title="Ganti Tema">
+                <i data-lucide="sun" class="w-4 h-4" id="theme-icon"></i>
+            </button>
+
+            <span class="text-[9px] bg-zinc-950/80 border border-zinc-800/80 text-zinc-500 px-3 py-1.5 rounded-full font-bold">V1.3 LOCALHOST</span>
+        </div>
+    </header>
+
+    <!-- TEKS WATERMARK RAksasa -->
+    <div class="center-branding">BAYS-RIG</div>
+
+    <!-- MAIN COMPONENT: DIAGONAL ACCORDION GRID -->
+    <main class="slice-container">
+
+        <!-- SLICE 01: baysKONTROL S3 -->
+        <div class="diagonal-slice" onmouseenter="playBeep(440)" onclick="launchConfigurator('bayskontrol-s3', 110)">
+            <div class="slice-bg" style="background-image: url('assets/BG/1.png');"></div>
+            <div class="slice-overlay"></div>
+            
+            <div class="slice-content">
+                <div></div> <!-- Top Spacer -->
+
+                <!-- Foto Produk + Teks & Badge Melayang (Terkunci Rapi) -->
+                <div class="product-wrapper">
+                    <!-- BADGE MODEL: Sekarang nempel persis di atas kiri gambar perangkat -->
+                    <div class="absolute top-[-25px] left-[5%] sm:left-[10%] z-20">
+                        <span class="text-[9px] font-extrabold tracking-widest text-cyan-400 uppercase bg-cyan-950/80 px-2.5 py-0.5 rounded border border-cyan-800/35">MODEL 01</span>
+                    </div>
+
+                    <img class="hidden transition duration-500" src="assets/images/bayskontrol-s3.png" alt="baysKONTROL S3" onerror="showSvgBlueprint(this, 's3')">
+                    
+                    <!-- Fallback Blueprint SVG -->
+                    <div class="svg-blueprint w-full max-w-[130px] opacity-40 transition duration-500">
+                        <svg class="w-full h-auto" viewBox="0 0 160 120" fill="none" stroke="currentColor">
+                            <rect x="5" y="5" width="150" height="110" rx="4" stroke="#22d3ee" stroke-width="1.2" stroke-dasharray="2 2"/>
+                            <rect x="15" y="15" width="40" height="30" rx="2" stroke="#22d3ee" stroke-width="0.8"/>
+                            <circle cx="75" cy="25" r="7" stroke="#cbd5e1" stroke-width="0.8"/>
+                            <circle cx="100" cy="25" r="7" stroke="#cbd5e1" stroke-width="0.8"/>
+                        </svg>
+                    </div>
+
+                    <!-- FLOATING DETAIL TEXT (Efek Kaca Transparan) -->
+                    <div class="floating-details">
+                        <h2 class="text-xs font-black tracking-tight" style="color: var(--title-color)">baysKONTROL S3</h2>
+                        <p class="text-[9px] text-zinc-500 font-semibold uppercase tracking-wide mt-0.5">Mixer & Synthesizer Core</p>
+                        <div class="text-[9px] text-cyan-400 font-bold mt-0.5">ESP32-S3 // ST7789</div>
+                        
+                        <!-- Tombol Konfigurasi -->
+                        <div class="hidden-details mt-2.5 pt-2 border-t border-zinc-800/20 flex justify-end">
+                            <button class="px-3.5 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-[8px] tracking-widest uppercase transition flex items-center gap-1">
+                                <span>CONFIG</span>
+                                <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div></div> <!-- Bottom Spacer -->
+            </div>
+        </div>
+
+        <!-- SLICE 02: saku-MIDI -->
+        <div class="diagonal-slice" onmouseenter="playBeep(494)" onclick="launchConfigurator('saku-midi', 130)">
+            <div class="slice-bg" style="background-image: url('assets/BG/2.png');"></div>
+            <div class="slice-overlay"></div>
+            
+            <div class="slice-content">
+                <div></div>
+
+                <div class="product-wrapper">
+                    <!-- BADGE MODEL -->
+                    <div class="absolute top-[-25px] left-[5%] sm:left-[10%] z-20">
+                        <span class="text-[9px] font-extrabold tracking-widest text-indigo-400 uppercase bg-indigo-950/80 px-2.5 py-0.5 rounded border border-indigo-800/35">MODEL 02</span>
+                    </div>
+
+                    <img class="hidden transition duration-500" src="assets/images/saku-midi.png" alt="saku-MIDI" onerror="showSvgBlueprint(this, 'sakumidi')">
+                    
+                    <div class="svg-blueprint w-full max-w-[85px] opacity-40 transition duration-500">
+                        <svg class="w-full h-auto" viewBox="0 0 100 140" fill="none" stroke="currentColor">
+                            <rect x="5" y="5" width="90" height="130" rx="8" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="2 2"/>
+                            <circle cx="25" cy="25" r="10" stroke="#818cf8" stroke-width="0.8"/>
+                        </svg>
+                    </div>
+
+                    <!-- FLOATING DETAIL TEXT (Efek Kaca Transparan) -->
+                    <div class="floating-details">
+                        <h2 class="text-xs font-black tracking-tight" style="color: var(--title-color)">saku-MIDI</h2>
+                        <p class="text-[9px] text-zinc-500 font-semibold uppercase tracking-wide mt-0.5">Matrix Grid Controller</p>
+                        <div class="text-[9px] text-indigo-400 font-bold mt-0.5">ATMEGA32U4 // 2X6 MATRIX</div>
+                        
+                        <div class="hidden-details mt-2.5 pt-2 border-t border-zinc-800/20 flex justify-end">
+                            <button class="px-3.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[8px] tracking-widest uppercase transition flex items-center gap-1">
+                                <span>CONFIG</span>
+                                <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div></div>
+            </div>
+        </div>
+
+        <!-- SLICE 03: bento -->
+        <div class="diagonal-slice" onmouseenter="playBeep(554)" onclick="launchConfigurator('bento', 150)">
+            <div class="slice-bg" style="background-image: url('assets/BG/3.png');"></div>
+            <div class="slice-overlay"></div>
+            
+            <div class="slice-content">
+                <div></div>
+
+                <div class="product-wrapper">
+                    <!-- BADGE MODEL -->
+                    <div class="absolute top-[-25px] left-[5%] sm:left-[10%] z-20">
+                        <span class="text-[9px] font-extrabold tracking-widest text-amber-500 uppercase bg-amber-950/80 px-2.5 py-0.5 rounded border border-amber-800/35">MODEL 03</span>
+                    </div>
+
+                    <img class="hidden transition duration-500" src="assets/images/bento.png" alt="bento" onerror="showSvgBlueprint(this, 'bento')">
+                    
+                    <div class="svg-blueprint w-full max-w-[120px] opacity-40 transition duration-500">
+                        <svg class="w-full h-auto" viewBox="0 0 160 110" fill="none" stroke="currentColor">
+                            <rect x="5" y="5" width="150" height="100" rx="8" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="2 2"/>
+                        </svg>
+                    </div>
+
+                    <!-- FLOATING DETAIL TEXT (Efek Kaca Transparan) -->
+                    <div class="floating-details">
+                        <h2 class="text-xs font-black tracking-tight" style="color: var(--title-color)">bento</h2>
+                        <p class="text-[9px] text-zinc-500 font-semibold uppercase tracking-wide mt-0.5">Ergonomic Split Interface</p>
+                        <div class="text-[9px] text-amber-500 font-bold mt-0.5">CUSTOM ARCADE // ARC PRO</div>
+                        
+                        <div class="hidden-details mt-2.5 pt-2 border-t border-zinc-800/20 flex justify-end">
+                            <button class="px-3.5 py-1 rounded bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-[8px] tracking-widest uppercase transition flex items-center gap-1">
+                                <span>CONFIG</span>
+                                <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div></div>
+            </div>
+        </div>
+
+        <!-- SLICE 04: saku-MIDI Lite -->
+        <div class="diagonal-slice" onmouseenter="playBeep(587)" onclick="launchConfigurator('saku-midi-lite', 164)">
+            <div class="slice-bg" style="background-image: url('assets/BG/4.png');"></div>
+            <div class="slice-overlay"></div>
+            
+            <div class="slice-content">
+                <div></div>
+
+                <div class="product-wrapper">
+                    <!-- BADGE MODEL -->
+                    <div class="absolute top-[-25px] left-[5%] sm:left-[10%] z-20">
+                        <span class="text-[9px] font-extrabold tracking-widest text-teal-400 uppercase bg-teal-950/80 px-2.5 py-0.5 rounded border border-teal-800/35">MODEL 04</span>
+                    </div>
+
+                    <img class="hidden transition duration-500" src="assets/images/saku-midi-lite.png" alt="saku-MIDI Lite" onerror="showSvgBlueprint(this, 'sakulite')">
+                    
+                    <div class="svg-blueprint w-full max-w-[85px] opacity-40 transition duration-500">
+                        <svg class="w-full h-auto" viewBox="0 0 100 140" fill="none" stroke="currentColor">
+                            <rect x="5" y="5" width="90" height="130" rx="10" stroke="#2dd4bf" stroke-width="1.2" stroke-dasharray="2 2"/>
+                        </svg>
+                    </div>
+
+                    <!-- FLOATING DETAIL TEXT (Efek Kaca Transparan) -->
+                    <div class="floating-details">
+                        <h2 class="text-xs font-black tracking-tight" style="color: var(--title-color)">saku-MIDI Lite</h2>
+                        <p class="text-[9px] text-zinc-500 font-semibold uppercase tracking-wide mt-0.5">Ultra-Portable Single Dial</p>
+                        <div class="text-[9px] text-teal-400 font-bold mt-0.5">1X PRECISION DIAL // 6X KEY</div>
+                        
+                        <div class="hidden-details mt-2.5 pt-2 border-t border-zinc-800/20 flex justify-end">
+                            <button class="px-3.5 py-1 rounded bg-teal-500 hover:bg-teal-400 text-zinc-950 font-bold text-[8px] tracking-widest uppercase transition flex items-center gap-1">
+                                <span>CONFIG</span>
+                                <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div></div>
+            </div>
+        </div>
+
+        <!-- SLICE 05: baysKONTROL X1 -->
+        <div class="diagonal-slice" onmouseenter="playBeep(659)" onclick="launchConfigurator('bayskontrol-x1', 196)">
+            <div class="slice-bg" style="background-image: url('assets/BG/5.png');"></div>
+            <div class="slice-overlay"></div>
+            
+            <div class="slice-content">
+                <div></div>
+
+                <div class="product-wrapper">
+                    <!-- BADGE MODEL -->
+                    <div class="absolute top-[-25px] left-[5%] sm:left-[10%] z-20">
+                        <span class="text-[9px] font-extrabold tracking-widest text-red-500 uppercase bg-red-950/80 px-2.5 py-0.5 rounded border border-red-800/35">MODEL 05</span>
+                    </div>
+
+                    <img class="hidden transition duration-500" src="assets/images/bayskontrol-x1.png" alt="baysKONTROL X1" onerror="showSvgBlueprint(this, 'x1')">
+                    
+                    <div class="svg-blueprint w-full max-w-[100px] opacity-40 transition duration-500">
+                        <svg class="w-full h-auto" viewBox="0 0 140 120" fill="none" stroke="currentColor">
+                            <rect x="5" y="5" width="130" height="110" rx="6" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="2 2"/>
+                        </svg>
+                    </div>
+
+                    <!-- FLOATING DETAIL TEXT (Efek Kaca Transparan) -->
+                    <div class="floating-details">
+                        <h2 class="text-xs font-black tracking-tight" style="color: var(--title-color)">baysKONTROL X1</h2>
+                        <p class="text-[9px] text-zinc-500 font-semibold uppercase tracking-wide mt-0.5">Multi-Fader Deck</p>
+                        <div class="text-[9px] text-red-500 font-bold mt-0.5">RP2040 // 4X SLIDER</div>
+                        
+                        <div class="hidden-details mt-2.5 pt-2 border-t border-zinc-800/20 flex justify-end">
+                            <button class="px-3.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white font-bold text-[8px] tracking-widest uppercase transition flex items-center gap-1">
+                                <span>CONFIG</span>
+                                <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="status-toast" class="opacity-0 translate-y-5 transition-all duration-300 fixed bottom-6 right-6 bg-zinc-900 border border-zinc-800 text-[11px] px-4 py-3 rounded-lg flex items-center gap-2.5 z-40 text-zinc-200">
+        <span class="w-2 h-2 rounded-full bg-blue-500" id="toast-indicator"></span>
+        <span id="toast-text">Memuat ekosistem...</span>
+    </div>
+
+    <script>
+        // Inisialisasi ikon Lucide
+        lucide.createIcons();
+
+        // AUDIO ENGINE: Web Audio API
+        let audioCtx = null;
+        let audioEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Efek bip sintetis mikro saat kursor masuk ke salah satu slice (hover)
+        function playBeep(frequency) {
+            if (!audioEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.12);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        // Efek bass analog berdengung kencang saat klik slice
+        function playClickSynth(baseFreq) {
+            if (!audioEnabled) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(25, audioCtx.currentTime + 0.5);
+
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // Mengaktifkan/menonaktifkan efek suara
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const btnText = document.getElementById('audio-text');
+            const btnIcon = document.getElementById('audio-icon');
+            
+            if (audioEnabled) {
+                btnText.innerText = "AUDIO: ON";
+                btnIcon.className = "w-3.5 h-3.5 text-blue-400 animate-pulse";
+                showToast("Efek suara diaktifkan", "bg-emerald-500");
+                initAudio();
+            } else {
+                btnText.innerText = "AUDIO: OFF";
+                btnIcon.className = "w-3.5 h-3.5 text-zinc-600";
+                showToast("Efek suara dimatikan", "bg-zinc-600");
+            }
+        }
+
+        // GANTI TEMA (DARK / LIGHT MODE)
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const isLight = body.classList.toggle('light-theme');
+            
+            // Simpan status tema ke local storage
+            localStorage.setItem('bays_rig_theme', isLight ? 'light' : 'dark');
+
+            if (isLight) {
+                themeIcon.setAttribute('data-lucide', 'moon');
+                showToast("Beralih ke Tema Terang", "bg-amber-500");
+            } else {
+                themeIcon.setAttribute('data-lucide', 'sun');
+                showToast("Beralih ke Tema Gelap", "bg-zinc-700");
+            }
+            
+            // Re-render icon Lucide
+            lucide.createIcons();
+        }
+
+        // Menampilkan SVG Blueprint jika gambar lokal belum siap
+        function showSvgBlueprint(imgElement, deviceKey) {
+            imgElement.classList.add('hidden');
+            const parent = imgElement.closest('.product-wrapper');
+            const svgBlueprint = parent.querySelector('.svg-blueprint');
+            if (svgBlueprint) {
+                svgBlueprint.classList.remove('hidden');
+                svgBlueprint.classList.add('flex');
+            }
+        }
+
+        // Jalankan Halaman Konfigurator Perangkat
+        function launchConfigurator(folderName, synthFreq) {
+            playClickSynth(synthFreq);
+            showToast(`Mengarahkan ke ${folderName}...`, "bg-blue-500");
+            
+            setTimeout(() => {
+                window.location.href = `controllers/${folderName}/index.html`;
+            }, 600);
+        }
+
+        // Sistem Notifikasi Toast
+        function showToast(message, colorClass = "bg-blue-500") {
+            const toast = document.getElementById('status-toast');
+            const toastText = document.getElementById('toast-text');
+            const indicator = document.getElementById('toast-indicator');
+
+            toastText.innerText = message;
+            indicator.className = `w-2 h-2 rounded-full ${colorClass}`;
+            toast.className = "opacity-100 translate-y-0 transition-all duration-300 fixed bottom-6 right-6 bg-zinc-900 border border-zinc-800 text-[11px] px-4 py-3 rounded-lg flex items-center gap-2.5 z-40 text-zinc-200 shadow-2xl";
+
+            setTimeout(() => {
+                toast.className = "opacity-0 translate-y-5 transition-all duration-300 fixed bottom-6 right-6 bg-zinc-900 border border-zinc-800 text-[11px] px-4 py-3 rounded-lg flex items-center gap-2.5 z-40 text-zinc-200";
+            }, 2500);
+        }
+
+        // Memuat status tema saat pertama kali dijalankan
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('bays_rig_theme');
+            const themeIcon = document.getElementById('theme-icon');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.classList.remove('light-theme');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons();
+        }
+
+        // Melakukan preload pengecekan gambar lokal saat halaman dibuka pertama kali
+        window.onload = function() {
+            loadSavedTheme();
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                const testImg = new Image();
+                testImg.onload = function() {
+                    img.classList.remove('hidden');
+                    const parent = img.closest('.product-wrapper');
+                    const blueprint = parent.querySelector('.svg-blueprint');
+                    if (blueprint) blueprint.classList.add('hidden');
+                };
+                testImg.onerror = function() {
+                    // Biarkan SVG blueprint berjalan bila file tidak ditemukan
+                };
+                testImg.src = img.getAttribute('src');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>baysKONTROL S3 Configurator RC7</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        @font-face { font-family: 'Klasikap'; src: local('Klasikap'), url('klasikap.ttf') format('truetype'); }
+
+        :root {
+            --bg-color: #e6e6e6; --box-bg: #f8f8f8; --text-main: #111111; --text-muted: #666666;
+            --border-color: #222222; --shadow-color: #111111; --rig-bg: #2a2a2a; --input-bg: #ffffff;
+            --grid-line: rgba(0,0,0,0.05); --checker-1: #222222; --checker-2: #f8f8f8;
+            --font-main: 'Roboto', system-ui, -apple-system, sans-serif; --font-logo: 'Klasikap', sans-serif; 
+            --accent-main: #333333; --dyn-prof-color: #00ffff;
+            
+            /* CASING RIG ADAPTIF LIGHT MODE */
+            --rig-plate: #dcdcdc; --rig-border: #999999; --rig-shadow: rgba(0,0,0,0.25);
+            --screw-bg: #aaaaaa; --screw-text: #444444;
+            --comp-bg: #e2e2e2; --comp-border: #888888; --comp-text: #222222; --fader-track: #aaaaaa;
+            --pot-grad: linear-gradient(135deg, #dddddd, #aaaaaa); --enc-grad: linear-gradient(135deg, #eeeeee, #cccccc);
+            --btn-inner: #d0d0d0; --knob-bg: #bbbbbb;
+            --glow-color: transparent;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a; --box-bg: #262626; --text-main: #f0f0f0; --text-muted: #888888;
+            --border-color: #e0e0e0; --shadow-color: #050505; --rig-bg: #1e1e1e; --input-bg: #111111;
+            --grid-line: rgba(255,255,255,0.04); --accent-main: #aaaaaa;
+            
+            /* CASING RIG ADAPTIF DARK MODE */
+            --rig-plate: #1a1a1a; --rig-border: #0a0a0a; --rig-shadow: rgba(0,0,0,0.9);
+            --screw-bg: #333333; --screw-text: #000000;
+            --comp-bg: #151515; --comp-border: #050505; --comp-text: #ffffff; --fader-track: #000000;
+            --pot-grad: linear-gradient(135deg, #777, #444); --enc-grad: linear-gradient(135deg, #ddd, #888);
+            --btn-inner: #222222; --knob-bg: #444444;
+        }
+
+        /* CONFIG ONE PAGE ZERO-SCROLL */
+        body, html { 
+            height: 100vh; margin: 0; padding: 0; overflow: hidden; /* Mengunci scrollbar global */
+            background-color: var(--bg-color); font-family: var(--font-main); color: var(--text-main); 
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px; transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* CUSTOM SCROLLBAR UNTUK INTERNAL SUB-PANEL */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        
+        .checker-banner, .checker-bottom { height: 35px; background-image: repeating-conic-gradient(var(--checker-1) 0% 25%, var(--checker-2) 0% 50%); background-size: 50px 50px; width: 100%; position: absolute; z-index: 10; transition: border-color 0.3s;}
+        .checker-banner { top: 0; border-bottom: 6px solid var(--border-color); }
+        .checker-bottom { bottom: 0; border-top: 6px solid var(--border-color); }
+
+        /* MEMBUAT LAYOUT BENAR-BENAR SYMETRIC DAN CENTERED DI TENGAH LAYAR */
+        #config-screen { display: flex; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center; z-index: 5; position: relative; height: 100vh; padding: 50px 0;}
+        .config-workspace { display: flex; flex-direction: column; align-items: center; width: 95%; max-width: 1200px; height: 100%; box-sizing: border-box; }
+        
+        /* CANVAS UTAMA (ROUND SQUARE TETAP TERJAGA UTUH) */
+        .main-canvas { background: var(--box-bg); border: 6px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; padding: 20px; width: 100%; display: flex; gap: 20px; flex: 1; overflow: hidden; box-sizing: border-box;}
+        
+        /* PANEL KIRI (VISUAL CONTROLLER) */
+        .canvas-left-pane { flex: 0 0 50%; display: flex; flex-direction: column; align-items: center; border-right: 4px dashed var(--border-color); overflow: hidden; height: 100%; box-sizing: border-box; justify-content: center;}
+        
+        /* SISTEM STRUKTUR PENYEMBUH SCALE PADA RIG (PELEBARAN KE 490PX UNTUK MENCEGAH CUT-OFF) */
+        #rig-parent { position: relative; display: flex; justify-content: center; align-items: flex-start; width: 100%; flex: 1; overflow: hidden; }
+        .rig-scale-wrapper { transform-origin: top center; width: 490px; height: 1020px; position: absolute; top: 0; transition: transform 0.05s ease-out; }
+        .rig-container { width: 440px; height: 1020px; background: var(--rig-plate); border: 6px solid var(--rig-border); border-radius: 20px; position: relative; box-shadow: inset 0 0 20px var(--rig-shadow); overflow: visible; transition: background-color 0.3s, border-color 0.3s; left: 0; }
+        
+        /* KOMPONEN PERANGKAT Keras RIG & HOVER MAGNIFIER */
+        .screw { position: absolute; width: 16px; height: 16px; background: var(--screw-bg); border-radius: 50%; border: 2px solid var(--rig-border); box-shadow: inset 1px 1px 2px rgba(255,255,255,0.2); transition: background-color 0.3s, border-color 0.3s;}
+        .screw::after { content: '+'; position: absolute; color: var(--screw-text); top: -4px; left: 2px; font-weight: bold; font-family: sans-serif; font-size: 14px; transition: color 0.3s;}
+        .s-tl { top: 10px; left: 10px; } .s-tr { top: 10px; right: 10px; } .s-bl { bottom: 10px; left: 10px; } .s-br { bottom: 10px; right: 10px; }
+
+        .knob-unit, .btn-unit, .fader-unit { transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s, background-color 0.2s, border-color 0.2s, z-index 0s; z-index: 2;}
+        
+        /* HOVER ZOOM EXTREME MAGNIFIER (1.35x) TANPA BORDER CYAN / SHADOW TEXT */
+        /* LIGHT THEME HOVERS - KONTRAST MAKSIMAL & LABELS SANGAT BESAR (0.9rem) */
+        html:not([data-theme="dark"]) .knob-unit:hover, 
+        html:not([data-theme="dark"]) .fader-unit:hover, 
+        html:not([data-theme="dark"]) .btn-unit:hover { 
+            transform: scale(1.35) !important; 
+            z-index: 100 !important; 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4) !important; 
+            background: #111111 !important; 
+            border-color: transparent !important; 
+        }
+        html:not([data-theme="dark"]) .knob-unit:hover *, 
+        html:not([data-theme="dark"]) .fader-unit:hover *, 
+        html:not([data-theme="dark"]) .btn-unit:hover * { 
+            color: #ffffff !important; 
+            border-color: transparent !important; 
+            text-shadow: none !important;
+        }
+        html:not([data-theme="dark"]) .knob-unit:hover .btn-lbl-n,
+        html:not([data-theme="dark"]) .knob-unit:hover .btn-lbl-s,
+        html:not([data-theme="dark"]) .btn-unit:hover .btn-lbl-n,
+        html:not([data-theme="dark"]) .btn-unit:hover .btn-lbl-s,
+        html:not([data-theme="dark"]) .fader-unit:hover .btn-lbl-n,
+        html:not([data-theme="dark"]) .fader-unit:hover .btn-lbl-s {
+            font-size: 0.9rem !important;
+        }
+        html:not([data-theme="dark"]) .knob-unit:hover .enc-sw-label {
+            font-size: 1.1rem !important;
+        }
+        html:not([data-theme="dark"]) .knob-unit:hover::before, 
+        html:not([data-theme="dark"]) .btn-unit:hover::before { 
+            background-color: #222222 !important; 
+            border-color: transparent !important; 
+        }
+        html:not([data-theme="dark"]) .knob-unit:hover .btn-lbl-div, 
+        html:not([data-theme="dark"]) .btn-unit:hover .btn-lbl-div { 
+            background: #444444 !important; 
+        }
+
+        /* DARK THEME HOVERS - KONTRAST MAKSIMAL & LABELS SANGAT BESAR (0.9rem) */
+        [data-theme="dark"] .knob-unit:hover, 
+        [data-theme="dark"] .fader-unit:hover, 
+        [data-theme="dark"] .btn-unit:hover { 
+            transform: scale(1.35) !important; 
+            z-index: 100 !important; 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.8) !important; 
+            background: #ffffff !important; 
+            border-color: transparent !important; 
+        }
+        [data-theme="dark"] .knob-unit:hover *, 
+        [data-theme="dark"] .fader-unit:hover *, 
+        [data-theme="dark"] .btn-unit:hover * { 
+            color: #111111 !important; 
+            border-color: transparent !important; 
+            text-shadow: none !important;
+        }
+        [data-theme="dark"] .knob-unit:hover .btn-lbl-n,
+        [data-theme="dark"] .knob-unit:hover .btn-lbl-s,
+        [data-theme="dark"] .btn-unit:hover .btn-lbl-n,
+        [data-theme="dark"] .btn-unit:hover .btn-lbl-s,
+        [data-theme="dark"] .fader-unit:hover .btn-lbl-n,
+        [data-theme="dark"] .fader-unit:hover .btn-lbl-s {
+            font-size: 0.9rem !important;
+        }
+        [data-theme="dark"] .knob-unit:hover .enc-sw-label {
+            font-size: 1.1rem !important;
+        }
+        [data-theme="dark"] .knob-unit:hover::before, 
+        [data-theme="dark"] .btn-unit:hover::before { 
+            background-color: #eeeeee !important; 
+            border-color: transparent !important; 
+        }
+        [data-theme="dark"] .knob-unit:hover .btn-lbl-div, 
+        [data-theme="dark"] .btn-unit:hover .btn-lbl-div { 
+            background: #cccccc !important; 
+        }
+
+        /* ACTIVE / CLICK EFFECT */
+        .knob-unit:active, .btn-unit:active { transform: scale(1.05) translate(2px, 2px) !important; box-shadow: inset 0 0 15px rgba(0,0,0,0.9) !important; }
+        .fader-unit:active { transform: scale(1.1) translate(1px, 1px) !important; }
+
+        .knob-unit { position: absolute; border-radius: 50%; box-shadow: 4px 4px 5px rgba(0,0,0,0.6); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid var(--comp-border); }
+        .pot-unit { width: 60px; height: 60px; background: var(--pot-grad); }
+        .pot-unit::after { content: ''; position: absolute; top: 5px; left: 50%; width: 4px; height: 14px; background: rgba(255,255,255,0.7); transform: translateX(-50%); border-radius: 2px; z-index: 1;}
+        .enc-unit { width: 75px; height: 75px; background: var(--enc-grad); }
+        .enc-unit::after { content: ''; position: absolute; top: 6px; left: 50%; width: 5px; height: 16px; background: var(--text-main); transform: translateX(-50%); border-radius: 3px; z-index: 1;}
+        
+        .fader-unit { position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .fader-v-200 { width: 40px; height: 200px; } .fader-h { width: 200px; height: 40px; } 
+        .fader-knob { position: absolute; z-index: 3; box-shadow: 0 4px 6px rgba(0,0,0,0.6); transition: background 0.3s, border-color 0.3s; }
+
+        .fader-style-c-v { background: linear-gradient(to right, var(--comp-bg) 42%, var(--fader-track) 42%, var(--fader-track) 58%, var(--comp-bg) 58%); border-radius: 6px; border: 2px solid var(--comp-border); box-shadow: inset 0 0 10px rgba(0,0,0,0.6); }
+        .fader-style-c-v .fader-knob { width: 36px; height: 30px; border-radius: 4px; left: 0px; top: 150px; background: repeating-linear-gradient(to bottom, var(--knob-bg), var(--knob-bg) 3px, var(--comp-border) 3px, var(--comp-border) 5px); border: 2px solid var(--comp-border); box-shadow: 0px 4px 8px rgba(0,0,0,0.9), 0px -4px 8px rgba(0,0,0,0.9); }
+        .fader-style-c-v .fader-knob::after { content: ''; position: absolute; top: 50%; left: 2px; right: 2px; height: 4px; background: #fff; transform: translateY(-50%); border-radius: 2px; }
+
+        /* FADER P5-P8 LABELS VERTICAL DI KANAN LUAR UNIT (SEPERTI P9 - AMAN DARI CUT-OFF DAN SIMETRIS) */
+        .fader-v-lbl-right-vert {
+            position: absolute;
+            right: -42px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+            transform-origin: center center;
+            width: 180px; 
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            pointer-events: none;
+            z-index: 5;
+            white-space: nowrap;
+        }
+        .fader-v-lbl-right-vert .btn-lbl-n, .fader-v-lbl-right-vert .btn-lbl-s {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin: 0;
+            display: inline-block;
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+        }
+        /* MENGISOLASI DIVIDER KHUSUS DI VERTIKAL FADER AGAR TIDAK RUSAK */
+        .fader-v-lbl-right-vert .btn-lbl-div {
+            width: auto !important;
+            height: auto !important;
+            background: transparent !important;
+            margin: 0 4px !important;
+            display: inline-block !important;
+        }
+
+        .fader-style-c-h { background: linear-gradient(to bottom, var(--comp-bg) 42%, var(--fader-track) 42%, var(--fader-track) 58%, var(--comp-bg) 58%); border-radius: 6px; border: 2px solid var(--comp-border); box-shadow: inset 0 0 10px rgba(0,0,0,0.6); }
+        .fader-style-c-h .fader-knob { width: 30px; height: 36px; border-radius: 4px; top: 0px; left: 85px; background: repeating-linear-gradient(to right, var(--knob-bg), var(--knob-bg) 3px, var(--comp-border) 3px, var(--comp-border) 5px); border: 2px solid var(--comp-border); box-shadow: 4px 0px 8px rgba(0,0,0,0.9), -4px 0px 8px rgba(0,0,0,0.9); }
+        .fader-style-c-h .fader-knob::after { content: ''; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 4px; background: #fff; transform: translateX(-50%); border-radius: 2px; }
+
+        .btn-unit { background: var(--comp-bg); border: 4px solid var(--comp-border); cursor: pointer; position: absolute; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 2px 2px 4px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-unit::before { content: ''; position: absolute; background: var(--btn-inner); border: 1px solid var(--comp-border); z-index: 1; transition: background-color 0.3s, border-color 0.3s;}
+        .btn-square { width: 75px; height: 75px; border-radius: 12px; } .btn-square::before { width: 55px; height: 55px; border-radius: 8px; }
+        .btn-round { width: 50px; height: 50px; border-radius: 50%; } .btn-round::before { width: 36px; height: 36px; border-radius: 50%; }
+        
+        .btn-glow-border { border-color: var(--glow-color) !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 15px var(--glow-color), inset 0 0 15px var(--glow-color) !important; transition: border-color 0.1s, box-shadow 0.1s; }
+        .led-strip-pot { position: absolute; left: 50%; transform: translateX(-50%); width: 28px; height: 6px; border-radius: 3px; background: #333; transition: 0.1s; z-index: 5; pointer-events: none;}
+        .btn-id { position: absolute; top: -8px; right: -8px; background: var(--text-main); color: var(--box-bg); padding: 2px 6px; border-radius: 5px; font-size: 0.7rem; font-weight: 700; z-index: 10; border: 2px solid var(--border-color);} 
+        .btn-round .btn-id { top: -6px; right: -12px; font-size: 0.65rem; padding: 1px 5px; }
+
+        .btn-lbl-n, .btn-lbl-s { font-size: 0.7rem; font-weight: 700; color: var(--comp-text); text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); transition: color 0.3s, text-shadow 0.3s;}
+        .btn-lbl-n { margin-bottom: 1px; } .btn-lbl-s { opacity: 0.7; margin-top: 1px; }
+        .btn-lbl-div { width: 70%; height: 2px; background: var(--comp-border); margin: 2px 0; z-index: 15; transition: background-color 0.3s;}
+        .btn-round .btn-lbl-n, .btn-round .btn-lbl-s { max-width: 150%; font-size: 0.65rem; }
+
+        .pot-lbl-wrap { position: absolute; width: 100%; left: 0; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; z-index: 12; top: 12px; }
+
+        .btn-b18-locked-state { background: #3a1515 !important; border-color: #ff4757 !important; cursor: not-allowed !important; }
+        .btn-b18-locked-state::before { background: #882222 !important; border-color: #551111 !important; }
+        .btn-b18-locked-state:active { transform: scale(1.05) translate(2px,2px) !important; box-shadow: inset 0 0 10px #000 !important; }
+
+        .enc-sw-label { position: absolute; top: 80px; width: 150px; text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: var(--comp-text); text-shadow: 1px 1px 2px rgba(0,0,0,0.4); z-index: 20;}
+        .enc-inner-labels { position: absolute; top: 22px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; pointer-events: none;}
+
+        /* PANEL KANAN (TABULAR MODULAR & AUTO SCROLL INTERNAL) */
+        .canvas-right-pane { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden; padding-left: 5px; height: 100%; box-sizing: border-box;}
+        .right-tabs-bar { display: flex; gap: 5px; border-bottom: 4px solid var(--border-color); margin-bottom: 8px; flex-shrink: 0;}
+        .rtab { flex: 1; padding: 8px 5px; font-weight: 900; font-family: var(--font-main); font-size: 0.8rem; border: 4px solid var(--border-color); border-bottom: none; background: var(--rig-plate); color: var(--text-main); cursor: pointer; border-radius: 10px 10px 0 0; opacity: 0.6; transition: 0.2s; text-transform: uppercase;}
+        .rtab.active { opacity: 1; background: var(--text-main); color: var(--bg-color); }
+        
+        .rtab-content { display: none; overflow-y: auto; flex: 1; padding-right: 5px; box-sizing: border-box;}
+        .rtab-content.active { display: block; }
+
+        .led-box { border: 4px solid var(--border-color); padding: 10px 15px; background: var(--box-bg); border-radius: 15px; box-shadow: 6px 6px 0px var(--shadow-color); margin-bottom: 12px;}
+        .ctrl-row { margin-bottom: 10px; } .ctrl-row label { font-weight: bold; margin-bottom: 4px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;}
+        .badge-percent { background: var(--bg-color); padding: 2px 6px; border: 3px solid var(--border-color); border-radius: 6px; font-size: 0.8rem; box-shadow: 2px 2px 0 var(--shadow-color);}
+        
+        /* QUAD-ZONE HORIZONTAL LAYOUT */
+        .quad-ctrl-row { display: flex; gap: 10px; margin-bottom: 8px; }
+        .q-col { flex: 1; background: var(--input-bg); border: 3px solid var(--border-color); border-radius: 8px; padding: 6px 10px; display: flex; flex-direction: column; justify-content: center; box-shadow: 3px 3px 0 var(--shadow-color); }
+        .q-col label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; color: var(--text-main); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;}
+        .q-col input[type=range] { margin-top: 5px; }
+
+        .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 5px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 3px 3px 0px var(--shadow-color); box-sizing: border-box; font-size: 0.85rem;}
+        
+        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .cg-item { display: flex; flex-direction: column; }
+        input[type="color"] { width: 100%; height: 32px; border: 3px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 0;}
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 10px; background: #999; border: 2px solid var(--border-color); border-radius: 6px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 16px; border-radius: 4px; background: var(--text-main); border: 3px solid var(--border-color); margin-top: -8px;}
+
+        .integrated-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .btn-action { padding: 8px 10px; border: 3px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 8px; font-family: var(--font-main); font-weight: bold; cursor: pointer; box-shadow: 3px 3px 0px var(--shadow-color); font-size: 0.8rem; transition: 0.2s; text-align: center;}
+        .btn-action:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow-color);}
+        
+        /* BOTTOM PANEL (PUSH BINARY, PROFIL SWITCHER, DAN THEME SWITCHER) */
+        .push-container { 
+            margin-top: auto; 
+            border-top: 4px dashed var(--border-color); 
+            padding-top: 10px; 
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-main { 
+            flex: 1; 
+            background: var(--text-main); 
+            color: var(--box-bg); 
+            font-size: 1rem; 
+            padding: 10px; 
+            font-family: var(--font-main); 
+            font-weight: 900; 
+            cursor: pointer; 
+            border: 4px solid var(--border-color); 
+            box-shadow: 4px 4px 0 var(--shadow-color); 
+            border-radius: 10px; 
+            transition: 0.2s; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .btn-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--shadow-color);}
+        .btn-main.unsaved { background: #ff4757; color: #ffffff; border-color: #ff4757; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } }
+
+        /* NAVIGASI SAKLAR BANK PROFIL A & B KUSTOM */
+        .bank-switch-group {
+            display: flex;
+            gap: 4px;
+            border: 3px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--input-bg);
+            padding: 3px;
+            box-shadow: 3px 3px 0 var(--shadow-color);
+            flex-shrink: 0;
+        }
+        .bank-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-weight: 900;
+            font-size: 0.85rem;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bank-btn:hover { background: rgba(0,0,0,0.05); }
+        [data-theme="dark"] .bank-btn:hover { background: rgba(255,255,255,0.05); }
+        .bank-btn.active {
+            background: var(--text-main) !important;
+            color: var(--box-bg) !important;
+        }
+
+        .cb-container { grid-column: span 2; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; gap: 8px; cursor: pointer; color: var(--text-main); margin-top: 3px; }
+        .cb-neo { appearance: none; width: 14px; height: 14px; border: 3px solid var(--border-color); border-radius: 4px; background: var(--input-bg); position: relative; box-shadow: 2px 2px 0 var(--shadow-color);}
+        .cb-neo:checked { background: var(--text-main); }
+        .cb-neo:checked::after { content: '✔'; position: absolute; color: var(--bg-color); font-weight: bold; top: -5px; left: 1px; font-size: 10px; }
+
+        #serial-status { background: var(--box-bg); color: var(--text-main); }
+
+        /* THEME TOGGLE MODERN SAKLAR SUTRA */
+        .theme-switch { 
+            width: 46px; 
+            height: 22px; 
+            border: 3px solid var(--border-color); 
+            background: var(--input-bg); 
+            box-shadow: 3px 3px 0px var(--shadow-color); 
+            cursor: pointer; 
+            position: relative; 
+            display: inline-block;
+            border-radius: 20px;
+            flex-shrink: 0;
+            transition: background-color 0.3s;
+        }
+        .theme-switch:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--shadow-color); }
+        .theme-switch-knob { 
+            width: 12px; 
+            height: 12px; 
+            background: var(--text-main); 
+            position: absolute; 
+            top: 2px; 
+            left: 2px; 
+            border-radius: 50%;
+            transition: left 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
+        [data-theme="dark"] .theme-switch-knob { left: 26px; }
+
+        /* MODAL POPUP - AUDIT INTEGRITAS THEME (LIGHT/DARK HARMONY) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--box-bg); width: 680px; max-height: 85vh; display: flex; flex-direction: column; border: 5px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; color: var(--text-main); overflow: hidden;}
+        .modal-header { background: var(--border-color); color: var(--bg-color); padding: 12px 20px; display: flex; justify-content: space-between; font-size: 1.15rem; font-weight: bold; flex-shrink: 0;}
+        [data-theme="dark"] .modal-header { color: #000; background: #fff; }
+        
+        .modal-tabs-bar { display: flex; gap: 5px; padding: 12px 15px 0 15px; background: var(--box-bg); border-bottom: 3px solid var(--border-color); flex-shrink: 0;}
+        .mtab { flex: 1; padding: 8px; font-weight: 900; font-family: var(--font-main); font-size: 0.9rem; border: 4px solid var(--border-color); border-bottom: none; background: var(--rig-plate); color: var(--text-main); cursor: pointer; border-radius: 10px 10px 0 0; opacity: 0.5; transition: 0.2s;}
+        .mtab.active { opacity: 1; background: var(--text-main); color: var(--bg-color); }
+        
+        .modal-body { padding: 15px; flex: 1; overflow-y: auto; }
+        .mtab-content { display: none; } .mtab-content.active { display: block; }
+        
+        .layer-unit { border: 4px solid var(--border-color); border-radius: 12px; padding: 15px; background: var(--input-bg); position: relative; box-shadow: 5px 5px 0 var(--shadow-color); }
+        
+        .row-edit { display: flex; gap: 10px; align-items: center; margin-top: 10px;}
+        .hidden { display: none !important; }
+
+        /* SEQUENCE STEP CONTAINER (THEME HARMONIZED) */
+        .seq-step-box { display: flex; gap: 10px; margin-top: 10px; }
+        .seq-pane { flex: 1; border: 3px solid var(--border-color); padding: 10px; border-radius: 8px; background: var(--box-bg); }
+        .seq-pane-title { text-align: center; font-weight: 900; font-size: 0.8rem; margin-bottom: 8px; color: var(--text-main); border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; text-transform: uppercase; }
+
+        /* CUSTOM SLIDING TOGGLE SWITCH INDICATOR */
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-main);
+            user-select: none;
+        }
+        .toggle-switch input { display: none; }
+        .toggle-slider {
+            width: 44px;
+            height: 22px;
+            background-color: var(--comp-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 20px;
+            position: relative;
+            transition: background-color 0.2s;
+            box-shadow: 2px 2px 0 var(--shadow-color);
+        }
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--text-main);
+            border: 2px solid var(--border-color);
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background-color: var(--dyn-prof-color); }
+        .toggle-switch input:checked + .toggle-slider::after { transform: translateX(22px); background-color: var(--box-bg); }
+        .toggle-status { font-size: 0.75rem; text-transform: uppercase; font-weight: 900; color: var(--text-muted); min-width: 30px; }
+        .toggle-switch input:checked ~ .toggle-status { color: var(--text-main); }
+
+        .toast-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999; visibility: hidden; opacity: 0; transition: all 0.2s; }
+        .toast-overlay.active { visibility: visible; opacity: 1; }
+        .toast-box { background-color: var(--box-bg); border: 6px solid var(--border-color); padding: 30px 50px; box-shadow: 15px 15px 0 var(--text-main); transform: rotate(-2deg); color: var(--text-main);}
+        .toast-msg { font-size: 1.5rem; font-weight: 900; text-transform: uppercase;}
+        
+        .custom-key-btn { background-color: var(--input-bg); color: var(--text-main); border: 3px solid var(--border-color); padding: 8px 15px; font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); flex: 1; text-align: left; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px; font-size: 0.85rem;}
+        
+        /* KEY PICKER CONTAINER ADAPTIF TEMA */
+        .kp-section { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; background: var(--input-bg); border: 3px solid var(--border-color); padding: 12px; border-radius: 8px;}
+        .kp-title { width: 100%; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; border-bottom: 2px dashed var(--border-color); padding-bottom: 4px; color: var(--text-main);}
+        .kp-btn { background: var(--box-bg); border: 2px solid var(--border-color); font-family: var(--font-main); font-size: 0.8rem; font-weight: bold; cursor: pointer; padding: 5px 8px; border-radius: 4px; color: var(--text-main);}
+        .kp-btn:hover { background: var(--text-main); color: var(--box-bg); }
+    </style>
+</head>
+<body>
+
+<div id="toastOverlay" class="toast-overlay"><div class="toast-box"><div id="toastMessage" class="toast-msg">Pesan...</div></div></div>
+<div class="checker-banner"></div>
+
+<div id="config-screen">
+    <div class="config-workspace">
+        
+        <div class="main-canvas">
+            <!-- PANE KIRI (CONTROLLER VISUAL DENGAN SCALING ENGINE & VERTICAL LABELS P5-P8 AMAN TANPA POTONG) -->
+            <div class="canvas-left-pane">
+                
+                <div id="rig-parent">
+                    <div class="rig-scale-wrapper">
+                        <div class="rig-container">
+                            <div class="screw s-tl"></div><div class="screw s-tr"></div>
+                            <div class="screw s-bl"></div><div class="screw s-br"></div>
+                            
+                            <!-- BARIS 1: POTENSIO P1-P4 -->
+                            <div class="knob-unit pot-unit" style="top: 35px; left: 40px;" onclick="openEditor('pot', 0)"><div class="led-strip-pot" id="led-p0" style="top: -16px;"></div><div class="btn-id">P1</div><div class="pot-lbl-wrap"><div class="btn-lbl-n" id="lbl-pot0-n">CC</div><div class="btn-lbl-div" id="div-pot0"></div><div class="btn-lbl-s" id="lbl-pot0-s">CC</div></div></div>
+                            <div class="knob-unit pot-unit" style="top: 35px; left: 140px;" onclick="openEditor('pot', 1)"><div class="led-strip-pot" id="led-p1" style="top: -16px;"></div><div class="btn-id">P2</div><div class="pot-lbl-wrap"><div class="btn-lbl-n" id="lbl-pot1-n">CC</div><div class="btn-lbl-div" id="div-pot1"></div><div class="btn-lbl-s" id="lbl-pot1-s">CC</div></div></div>
+                            <div class="knob-unit pot-unit" style="top: 35px; left: 240px;" onclick="openEditor('pot', 2)"><div class="led-strip-pot" id="led-p2" style="top: -16px;"></div><div class="btn-id">P3</div><div class="pot-lbl-wrap"><div class="btn-lbl-n" id="lbl-pot2-n">CC</div><div class="btn-lbl-div" id="div-pot2"></div><div class="btn-lbl-s" id="lbl-pot2-s">CC</div></div></div>
+                            <div class="knob-unit pot-unit" style="top: 35px; left: 340px;" onclick="openEditor('pot', 3)"><div class="led-strip-pot" id="led-p3" style="top: -16px;"></div><div class="btn-id">P4</div><div class="pot-lbl-wrap"><div class="btn-lbl-n" id="lbl-pot3-n">CC</div><div class="btn-lbl-div" id="div-pot3"></div><div class="btn-lbl-s" id="lbl-pot3-s">CC</div></div></div>
+
+                            <!-- BARIS 2: ENCODER -->
+                            <div class="knob-unit enc-unit" style="top: 140px; left: 80px;" onclick="openEditor('encRot', 0)"><div class="enc-sw-label" id="wrap-encsw0" onclick="openEditor('encSw', 0); event.stopPropagation();">[ <span style="color:var(--dyn-prof-color);">Off</span> ]</div><div class="enc-inner-labels"><div class="btn-lbl-n" id="lbl-encrot0-n" style="color:var(--text-main); text-shadow:none; font-size:0.65rem;">Off</div><div class="btn-lbl-div" id="div-encrot0" style="background:#555; width:60%; margin:1px 0;"></div><div class="btn-lbl-s" id="lbl-encrot0-s" style="color:var(--text-muted); text-shadow:none; font-size:0.65rem;">Off</div></div></div>
+                            <div class="knob-unit enc-unit" style="top: 140px; left: 280px;" onclick="openEditor('encRot', 1)"><div class="enc-sw-label" id="wrap-encsw1" onclick="openEditor('encSw', 1); event.stopPropagation();">[ <span style="color:var(--dyn-prof-color);">Off</span> ]</div><div class="enc-inner-labels"><div class="btn-lbl-n" id="lbl-encrot1-n" style="color:var(--text-main); text-shadow:none; font-size:0.65rem;">Off</div><div class="btn-lbl-div" id="div-encrot1" style="background:#555; width:60%; margin:1px 0;"></div><div class="btn-lbl-s" id="lbl-encrot1-s" style="color:var(--text-muted); text-shadow:none; font-size:0.65rem;">Off</div></div></div>
+
+                            <!-- BARIS 3: FADER VERTIKAL P5-P8 (VERTICAL LABELS DI SEBELAH KANAN LUAR UNIT) -->
+                            <div class="fader-unit fader-v-200 fader-style-c-v" style="top: 280px; left: 50px;" onclick="openEditor('pot', 4)">
+                                <div class="led-strip-pot" id="led-p4" style="top: -16px;"></div>
+                                <div class="btn-id" style="top: -20px; right: -25px;">P5</div>
+                                <div class="fader-v-lbl-right-vert">
+                                    <span class="btn-lbl-n" id="lbl-pot4-n">CC</span>
+                                    <span class="btn-lbl-div" id="div-pot4" style="color: var(--rig-border); font-weight: bold;">|</span>
+                                    <span class="btn-lbl-s" id="lbl-pot4-s">CC</span>
+                                </div>
+                                <div class="fader-knob"></div>
+                            </div>
+                            <div class="fader-unit fader-v-200 fader-style-c-v" style="top: 280px; left: 150px;" onclick="openEditor('pot', 5)">
+                                <div class="led-strip-pot" id="led-p5" style="top: -16px;"></div>
+                                <div class="btn-id" style="top: -20px; right: -25px;">P6</div>
+                                <div class="fader-v-lbl-right-vert">
+                                    <span class="btn-lbl-n" id="lbl-pot5-n">CC</span>
+                                    <span class="btn-lbl-div" id="div-pot5" style="color: var(--rig-border); font-weight: bold;">|</span>
+                                    <span class="btn-lbl-s" id="lbl-pot5-s">CC</span>
+                                </div>
+                                <div class="fader-knob"></div>
+                            </div>
+                            <div class="fader-unit fader-v-200 fader-style-c-v" style="top: 280px; left: 250px;" onclick="openEditor('pot', 6)">
+                                <div class="led-strip-pot" id="led-p6" style="top: -16px;"></div>
+                                <div class="btn-id" style="top: -20px; right: -25px;">P7</div>
+                                <div class="fader-v-lbl-right-vert">
+                                    <span class="btn-lbl-n" id="lbl-pot6-n">CC</span>
+                                    <span class="btn-lbl-div" id="div-pot6" style="color: var(--rig-border); font-weight: bold;">|</span>
+                                    <span class="btn-lbl-s" id="lbl-pot6-s">CC</span>
+                                </div>
+                                <div class="fader-knob"></div>
+                            </div>
+                            <div class="fader-unit fader-v-200 fader-style-c-v" style="top: 280px; left: 350px;" onclick="openEditor('pot', 7)">
+                                <div class="led-strip-pot" id="led-p7" style="top: -16px;"></div>
+                                <div class="btn-id" style="top: -20px; right: -25px;">P8</div>
+                                <div class="fader-v-lbl-right-vert">
+                                    <span class="btn-lbl-n" id="lbl-pot7-n">CC</span>
+                                    <span class="btn-lbl-div" id="div-pot7" style="color: var(--rig-border); font-weight: bold;">|</span>
+                                    <span class="btn-lbl-s" id="lbl-pot7-s">CC</span>
+                                </div>
+                                <div class="fader-knob"></div>
+                            </div>
+
+                            <!-- BARIS 4: TOMBOL BULAT B13-B16 -->
+                            <div class="btn-unit btn-round" style="top: 530px; left: 45px;" onclick="openEditor('btn', 12)"><div class="btn-id">B13</div><div class="btn-lbl-n" id="lbl-b12-n">Off</div><div class="btn-lbl-div" id="div-b12"></div><div class="btn-lbl-s" id="lbl-b12-s">Off</div></div>
+                            <div class="btn-unit btn-round" style="top: 530px; left: 145px;" onclick="openEditor('btn', 13)"><div class="btn-id">B14</div><div class="btn-lbl-n" id="lbl-b13-n">Off</div><div class="btn-lbl-div" id="div-b13"></div><div class="btn-lbl-s" id="lbl-b13-s">Off</div></div>
+                            <div class="btn-unit btn-round" style="top: 530px; left: 245px;" onclick="openEditor('btn', 14)"><div class="btn-id">B15</div><div class="btn-lbl-n" id="lbl-b14-n">Off</div><div class="btn-lbl-div" id="div-b14"></div><div class="btn-lbl-s" id="lbl-b14-s">Off</div></div>
+                            <div class="btn-unit btn-round" style="top: 530px; left: 345px;" onclick="openEditor('btn', 15)"><div class="btn-id">B16</div><div class="btn-lbl-n" id="lbl-b15-n">Off</div><div class="btn-lbl-div" id="div-b15"></div><div class="btn-lbl-s" id="lbl-b15-s">Off</div></div>
+
+                            <!-- MATRIKS TOMBOL KOTAK B1-B12 -->
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b0" style="top: 610px; left: 30px;" onclick="openEditor('btn', 0)"><div class="btn-id">B1</div><div class="btn-lbl-n" id="lbl-b0-n">Off</div><div class="btn-lbl-div" id="div-b0"></div><div class="btn-lbl-s" id="lbl-b0-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b1" style="top: 610px; left: 130px;" onclick="openEditor('btn', 1)"><div class="btn-id">B2</div><div class="btn-lbl-n" id="lbl-b1-n">Off</div><div class="btn-lbl-div" id="div-b1"></div><div class="btn-lbl-s" id="lbl-b1-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b2" style="top: 610px; left: 230px;" onclick="openEditor('btn', 2)"><div class="btn-id">B3</div><div class="btn-lbl-n" id="lbl-b2-n">Off</div><div class="btn-lbl-div" id="div-b2"></div><div class="btn-lbl-s" id="lbl-b2-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b3" style="top: 610px; left: 330px;" onclick="openEditor('btn', 3)"><div class="btn-id">B4</div><div class="btn-lbl-n" id="lbl-b3-n">Off</div><div class="btn-lbl-div" id="div-b3"></div><div class="btn-lbl-s" id="lbl-b3-s">Off</div></div>
+                            
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b4" style="top: 705px; left: 30px;" onclick="openEditor('btn', 4)"><div class="btn-id">B5</div><div class="btn-lbl-n" id="lbl-b4-n">Off</div><div class="btn-lbl-div" id="div-b4"></div><div class="btn-lbl-s" id="lbl-b4-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b5" style="top: 705px; left: 130px;" onclick="openEditor('btn', 5)"><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div" id="div-b5"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b6" style="top: 705px; left: 230px;" onclick="openEditor('btn', 6)"><div class="btn-id">B7</div><div class="btn-lbl-n" id="lbl-b6-n">Off</div><div class="btn-lbl-div" id="div-b6"></div><div class="btn-lbl-s" id="lbl-b6-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b7" style="top: 705px; left: 330px;" onclick="openEditor('btn', 7)"><div class="btn-id">B8</div><div class="btn-lbl-n" id="lbl-b7-n">Off</div><div class="btn-lbl-div" id="div-b7"></div><div class="btn-lbl-s" id="lbl-b7-s">Off</div></div>
+                            
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b8" style="top: 800px; left: 30px;" onclick="openEditor('btn', 8)"><div class="btn-id">B9</div><div class="btn-lbl-n" id="lbl-b8-n">Off</div><div class="btn-lbl-div" id="div-b8"></div><div class="btn-lbl-s" id="lbl-b8-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b9" style="top: 800px; left: 130px;" onclick="openEditor('btn', 9)"><div class="btn-id">B10</div><div class="btn-lbl-n" id="lbl-b9-n">Off</div><div class="btn-lbl-div" id="div-b9"></div><div class="btn-lbl-s" id="lbl-b9-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b10" style="top: 800px; left: 230px;" onclick="openEditor('btn', 10)"><div class="btn-id">B11</div><div class="btn-lbl-n" id="lbl-b10-n">Off</div><div class="btn-lbl-div" id="div-b10"></div><div class="btn-lbl-s" id="lbl-b10-s">Off</div></div>
+                            <div class="btn-unit btn-square btn-glow-border" id="led-b11" style="top: 800px; left: 330px;" onclick="openEditor('btn', 11)"><div class="btn-id">B12</div><div class="btn-lbl-n" id="lbl-b11-n">Off</div><div class="btn-lbl-div" id="div-b11"></div><div class="btn-lbl-s" id="lbl-b11-s">Off</div></div>
+
+                            <!-- BARIS TERAKHIR: B17, P9, B18 -->
+                            <div class="btn-unit btn-round" style="top: 900px; left: 42px;" onclick="openEditor('btn', 16)"><div class="btn-id">B17</div><div class="btn-lbl-n" id="lbl-b16-n">Off</div><div class="btn-lbl-div" id="div-b16"></div><div class="btn-lbl-s" id="lbl-b16-s">Off</div></div>
+                            <div class="fader-unit fader-h fader-style-c-h" style="top: 905px; left: 120px;" onclick="openEditor('pot', 8)"><div class="fader-knob"></div><div style="position:absolute; bottom:-25px; width:100%; text-align:center; font-size:0.75rem; font-weight:700; color:var(--text-main); text-shadow: none;">P9 | <span id="lbl-pot8-n" style="font-weight:500;">CC</span> <span id="lbl-pot8-s" style="color:var(--text-muted); font-weight:500;"></span></div></div>
+                            <div id="hw-B18" class="btn-unit btn-round" style="top: 900px; left: 342px;" onclick="openEditor('btn', 17)"><div class="btn-id">B18</div><div class="btn-lbl-n" id="lbl-b17-n">Off</div><div class="btn-lbl-div" id="div-b17"></div><div class="btn-lbl-s" id="lbl-b17-s">Off</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL KANAN (MODULAR TAB) -->
+            <div class="canvas-right-pane">
+                <div class="right-tabs-bar">
+                    <button id="rtab-vis-btn" class="rtab active" onclick="switchRTab('vis')">Visual Engine</button>
+                    <button id="rtab-glob-btn" class="rtab" onclick="switchRTab('glob')">Global Settings</button>
+                    <button id="rtab-tools-btn" class="rtab" onclick="switchRTab('tools')">File & Tools</button>
+                </div>
+
+                <!-- SUB TAB 1: VISUAL ENGINE QUAD ZONE (HORIZONTAL LAYOUT) -->
+                <div id="rtab-vis" class="rtab-content active">
+                    <div class="led-box">
+                        <h5 style="margin: 4px 0 6px 0; font-size: 0.75rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 2px; text-transform: uppercase;">LAYER ATAS (L1 - L4)</h5>
+                        <div class="quad-ctrl-row">
+                            <div class="q-col">
+                                <label>BRIGHT <span id="val-bright-top" class="badge-percent">100%</span></label>
+                                <input type="range" id="ui-bright-top" min="0" max="100" step="5" value="100" oninput="updateQuad('bright-top', this.value)">
+                            </div>
+                            <div class="q-col">
+                                <label>SPEED <span id="val-speed-top" class="badge-percent">5</span></label>
+                                <input type="range" id="ui-speed-top" min="1" max="10" step="1" value="5" oninput="updateQuad('speed-top', this.value)">
+                            </div>
+                        </div>
+                        <div class="ctrl-row">
+                            <select id="ui-anim-top" class="neo-select" onchange="autoSave();"><option value="0">Statis</option><option value="1">Wave</option><option value="2">Sweep</option><option value="3">Breath</option><option value="4">Flame</option><option value="5">Rainbow</option><option value="6">Gradient Sweep</option></select>
+                        </div>
+                        <div class="color-grid">
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">BASE</label><input type="color" id="ui-color-top" onchange="autoSave()"></div>
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color2-top" onchange="autoSave()"></div>
+                        </div>
+
+                        <h5 style="margin: 8px 0 6px 0; font-size: 0.75rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 2px; text-transform: uppercase;">LAYER TENGAH (L5 - L8)</h5>
+                        <div class="quad-ctrl-row">
+                            <div class="q-col">
+                                <label>BRIGHT <span id="val-bright-mid" class="badge-percent">100%</span></label>
+                                <input type="range" id="ui-bright-mid" min="0" max="100" step="5" value="100" oninput="updateQuad('bright-mid', this.value)">
+                            </div>
+                            <div class="q-col">
+                                <label>SPEED <span id="val-speed-mid" class="badge-percent">5</span></label>
+                                <input type="range" id="ui-speed-mid" min="1" max="10" step="1" value="5" oninput="updateQuad('speed-mid', this.value)">
+                            </div>
+                        </div>
+                        <div class="ctrl-row">
+                            <select id="ui-anim-mid" class="neo-select" onchange="autoSave();"><option value="0">Statis</option><option value="1">Wave</option><option value="2">Sweep</option><option value="3">Breath</option><option value="4">Flame</option><option value="5">Rainbow</option><option value="6">Gradient Sweep</option></select>
+                        </div>
+                        <div class="color-grid">
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">BASE</label><input type="color" id="ui-color-mid" onchange="autoSave()"></div>
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color2-mid" onchange="autoSave()"></div>
+                        </div>
+
+                        <h5 style="margin: 8px 0 6px 0; font-size: 0.75rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 2px; text-transform: uppercase;">LAYER BAWAH (L9 - L20)</h5>
+                        <div class="quad-ctrl-row">
+                            <div class="q-col">
+                                <label>BRIGHT <span id="val-bright-bot" class="badge-percent">100%</span></label>
+                                <input type="range" id="ui-bright-bot" min="0" max="100" step="5" value="100" oninput="updateQuad('bright-bot', this.value)">
+                            </div>
+                            <div class="q-col">
+                                <label>SPEED <span id="val-speed-bot" class="badge-percent">5</span></label>
+                                <input type="range" id="ui-speed-bot" min="1" max="10" step="1" value="5" oninput="updateQuad('speed-bot', this.value)">
+                            </div>
+                        </div>
+                        <div class="ctrl-row">
+                            <select id="ui-anim-bot" class="neo-select" onchange="autoSave();"><option value="0">Statis</option><option value="1">Wave</option><option value="2">Sweep</option><option value="3">Breath</option><option value="4">Flame</option><option value="5">Rainbow</option><option value="6">Gradient Sweep</option></select>
+                        </div>
+                        <div class="color-grid">
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">BASE</label><input type="color" id="ui-color-bot" onchange="autoSave()"></div>
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color2-bot" onchange="autoSave()"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB TAB 2: GLOBAL SETTINGS -->
+                <div id="rtab-glob" class="rtab-content">
+                    <div class="led-box">
+                        <h5 style="margin: 4px 0 6px 0; font-size: 0.75rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 2px; text-transform: uppercase;">INTERUPSI KONTROL GLOBAL</h5>
+                        <div class="quad-ctrl-row">
+                            <div class="q-col">
+                                <label>BRIGHT <span id="val-bright-global" class="badge-percent">100%</span></label>
+                                <input type="range" id="ui-bright-global" min="0" max="100" step="5" value="100" oninput="updateQuad('bright-global', this.value)">
+                            </div>
+                            <div class="q-col">
+                                <label>SPEED <span id="val-speed-global" class="badge-percent">5</span></label>
+                                <input type="range" id="ui-speed-global" min="1" max="10" step="1" value="5" oninput="updateQuad('speed-global', this.value)">
+                            </div>
+                        </div>
+                        <div class="color-grid">
+                            <div class="cg-item" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">PUSH ACTIVE</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
+                            <div class="cg-item" id="wrap-sh-on" style="grid-column: span 2;"><label style="font-size:0.6rem; font-weight:bold;">SHIFT ON (GLOBAL)</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
+                        </div>
+                    </div>
+
+                    <div class="led-box">
+                        <div class="ctrl-row">
+                            <label style="font-size:0.8rem;">Panic Action Type</label>
+                            <select id="ui-panic-mode" class="neo-select" onchange="togglePanicUI(); autoSave();">
+                                <option value="0">OFF (Zero-Latency)</option><option value="1">CC 123 (All Notes Off)</option><option value="2">CC 120 (All Sound Off)</option><option value="3">CC 121 (Reset Controllers)</option><option value="4">Custom MIDI CC</option><option value="5">Custom Keyboard</option>
+                            </select>
+                        </div>
+                        <div id="ui-panic-midi" class="row-edit hidden">
+                            <select id="ui-panic-ch" class="neo-select" style="width:100px" onchange="autoSave()"></select>
+                            <input type="number" id="ui-panic-cc" class="neo-input" placeholder="CC (0-127)" onchange="autoSave()"><input type="number" id="ui-panic-val" class="neo-input" placeholder="Val (0-127)" onchange="autoSave()">
+                        </div>
+                        <div id="ui-panic-key" class="row-edit hidden">
+                            <select id="ui-panic-mod" class="neo-select" onchange="autoSave()"></select><button type="button" id="ui-panic-btn" class="custom-key-btn" onclick="openKeyPicker('ui-panic-keyval')">PILIH KEY</button><input type="hidden" id="ui-panic-keyval" value="0">
+                        </div>
+                        <div class="ctrl-row" style="margin-top:10px;">
+                            <label style="font-size:0.8rem;">Panic Trigger Source</label>
+                            <select id="ui-panic-source" class="neo-select" onchange="autoSave();">
+                                <option value="0">Double-Click EC1</option>
+                                <option value="1">Double-Click EC2</option>
+                                <option value="2">Tombol B17</option>
+                                <option value="3">Tombol B18 (Profil B Only)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB TAB 3: TOOLS & ACTIONS -->
+                <div id="rtab-tools" class="rtab-content">
+                    <div class="led-box">
+                        <div class="integrated-actions" style="margin-top: 0; border-top: none; padding-top: 0;">
+                            <div class="btn-action" id="serial-status" onclick="connectUSB()" style="grid-column: span 2;">CONNECT USB SERIAL</div>
+                            <button class="btn-action" onclick="syncDevice()" style="grid-column: span 2;">SYNC DARI DEVICE</button>
+                            <button class="btn-action" onclick="exportData()">EXPORT JSON</button>
+                            <button class="btn-action" onclick="importData()">IMPORT JSON</button>
+                            <label class="cb-container"><input type="checkbox" id="cb-autoexport" class="cb-neo" checked> AUTO-BACKUP CONFIG</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOMBOL UTAMA, SWITCHER BANK, DAN SWITCHER TEMA BERDAMPINGAN SERTA FLUID -->
+                <div class="push-container">
+                    <button class="btn-main" id="btn-push" onclick="pushToDevice()">⚡ PUSH BINARY TO S3</button>
+                    <!-- Navigasi Saklar Bank Profil Kustom -->
+                    <div class="bank-switch-group">
+                        <button id="p1" class="bank-btn active" onclick="switchBank(1)">A</button>
+                        <button id="p0" class="bank-btn" onclick="switchBank(0)">B</button>
+                    </div>
+                    <!-- Saklar Tema Gelap/Terang Berdampingan Indah Secara Simetris -->
+                    <div class="theme-switch" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><div class="theme-switch-knob"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDITOR MODAL POP-UP (TABBED NORMAL VS SHIFT) -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><span id="m-title">EDITOR</span><span onclick="closeModal()" style="cursor:pointer">[X]</span></div>
+        
+        <!-- HEADER TAB MODAL -->
+        <div class="modal-tabs-bar" id="modal-tab-bar">
+            <button id="mtab-btn-n" class="mtab active" onclick="switchMTab('n')">Normal Layer</button>
+            <button id="mtab-btn-s" class="mtab" onclick="switchMTab('s')">Shift Layer</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- ISI TAB NORMAL LAYER -->
+            <div id="mtab-content-n" class="mtab-content active">
+                <div class="layer-unit">
+                    <div class="row-edit"><select id="n-m" class="neo-select" style="flex:1;" onchange="uiLogic('n')"></select><input type="text" id="n-lbl" class="neo-input" placeholder="Custom Label (Opsional)" style="flex:1;"></div>
+                    <div id="n-ui-sto" class="row-edit hidden" style="margin-top:10px;"><label class="cb-container"><input type="checkbox" id="n-sto" class="cb-neo"> Enable Soft Takeover (STO) untuk mencegah lonjakan nilai</label></div>
+                    <div id="n-ui-mult" class="row-edit hidden"><label style="width:140px; font-weight:bold; font-size:0.9rem;">Kelipatan Step Encoder:</label><input type="number" id="n-enc-mult" class="neo-input" min="1" max="10" value="1"></div>
+                    <div id="n-ui-midi" class="row-edit hidden"><select id="n-chan" class="neo-select" style="width:140px"></select><input type="number" id="n-cc" class="neo-input" placeholder="CC Num" min="0" max="127"><input type="number" id="n-cc2" class="neo-input hidden" placeholder="CC Putar Kanan" min="0" max="127"></div>
+                    <div id="n-ui-short" class="row-edit hidden"><select id="n-mod1" class="neo-select"></select><select id="n-mod2" class="neo-select"></select><button type="button" id="n-key-btn" class="custom-key-btn" onclick="openKeyPicker('n-key')">- PILIH KEY -</button><input type="hidden" id="n-key" value="0"></div>
+                    <div id="n-ui-media" class="row-edit hidden"><select id="n-med" class="neo-select"><option value="205">PLAY/PAUSE</option><option value="182">PREV</option><option value="181">NEXT</option><option value="226">MUTE</option><option value="233">VOL UP</option><option value="234">VOL DN</option></select></div>
+                    <div id="n-ui-nav" class="row-edit hidden"><select id="n-nav-opt" class="neo-select"><option value="1">Page Up/Down</option><option value="2">Scroll Up/Down</option><option value="3">Zoom In/Out</option><option value="4">Undo/Redo</option><option value="5">Copy/Paste</option><option value="6">Home/End</option><option value="7">Prev/Next</option></select></div>
+                    <div id="n-ui-enc-short" class="row-edit hidden"><select id="n-enc-mod" class="neo-select" style="width:100px"></select><button type="button" id="n-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-l')">PUTAR KIRI</button><input type="hidden" id="n-enc-l" value="0"><button type="button" id="n-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-r')">PUTAR KANAN</button><input type="hidden" id="n-enc-r" value="0"></div>
+                    <div id="n-ui-macro" class="hidden"><div class="row-edit"><label style="width:100px; font-weight:bold;">Aksi 1:</label><select id="n-mac-init" class="neo-select"><option value="0">Tekan WIN+R (Run App)</option><option value="1">Ketik Langsung</option></select></div><div class="row-edit"><input type="text" id="n-mac-txt1" class="neo-input" placeholder="Teks Eksekusi (Maks 27 karakter)..." maxlength="27"></div><div class="row-edit"><label style="width:100px; font-weight:bold;">Aksi 2:</label><select id="n-mac-act2" class="neo-select" onchange="uiLogic('n')"><option value="1">Tekan ENTER</option><option value="0">Selesai</option></select></div></div>
+                    
+                    <!-- AREA SEKUENSIAL DI-AUDIT AMAN TEMA -->
+                    <div id="n-ui-seq" class="hidden" style="margin-top:10px;">
+                        <div class="row-edit" style="justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 10px;">
+                            <select id="n-seq-type" class="neo-select" style="width: auto; flex: 1;" onchange="toggleSeqType('n')"><option value="1">KEYBOARD SEQ</option><option value="2">MIDI CC SEQ</option></select>
+                            <select id="n-seq-mod" class="neo-select" style="width: auto; flex: 1;"></select>
+                            
+                            <!-- DESAIN SAKLAR FISIK SLIDING TOGGLE -->
+                            <label class="toggle-switch">
+                                <span>End-Reset:</span>
+                                <input type="checkbox" id="n-seq-reset" onchange="updateToggleStatus('n-seq-reset')">
+                                <div class="toggle-slider"></div>
+                                <span id="n-seq-reset-status" class="toggle-status">OFF</span>
+                            </label>
+                            
+                            <label class="toggle-switch">
+                                <span>Idle (2s):</span>
+                                <input type="checkbox" id="n-seq-idle" onchange="updateToggleStatus('n-seq-idle')">
+                                <div class="toggle-slider"></div>
+                                <span id="n-seq-idle-status" class="toggle-status">OFF</span>
+                            </label>
+                        </div>
+                        <div class="seq-step-box">
+                            <div class="seq-pane">
+                                <div class="seq-pane-title">PUTAR KIRI (L1-L5)</div>
+                                <div id="n-seq-l" style="display:flex; flex-direction:column; gap:5px;"></div>
+                            </div>
+                            <div class="seq-pane">
+                                <div class="seq-pane-title">PUTAR KANAN (R1-R5)</div>
+                                <div id="n-seq-r" style="display:flex; flex-direction:column; gap:5px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ISI TAB SHIFT LAYER -->
+            <div id="mtab-content-s" class="mtab-content">
+                <div class="layer-unit" style="border-color: var(--text-muted);">
+                    <div class="row-edit"><select id="s-m" class="neo-select" style="flex:1;" onchange="uiLogic('s')"></select><input type="text" id="s-lbl" class="neo-input" placeholder="Custom Label (Opsional)" style="flex:1;"></div>
+                    <div id="s-ui-sto" class="row-edit hidden" style="margin-top:10px;"><label class="cb-container"><input type="checkbox" id="s-sto" class="cb-neo"> Enable Soft Takeover (STO)</label></div>
+                    <div id="s-ui-mult" class="row-edit hidden"><label style="width:140px; font-weight:bold; font-size:0.9rem;">Kelipatan Step Encoder:</label><input type="number" id="s-enc-mult" class="neo-input" min="1" max="10" value="1"></div>
+                    <div id="s-ui-midi" class="row-edit hidden"><select id="s-chan" class="neo-select" style="width:140px"></select><input type="number" id="s-cc" class="neo-input" placeholder="CC Num" min="0" max="127"><input type="number" id="s-cc2" class="neo-input hidden" placeholder="CC Putar Kanan" min="0" max="127"></div>
+                    <div id="s-ui-short" class="row-edit hidden"><select id="s-mod1" class="neo-select"></select><select id="s-mod2" class="neo-select"></select><button type="button" id="s-key-btn" class="custom-key-btn" onclick="openKeyPicker('s-key')">- PILIH KEY -</button><input type="hidden" id="s-key" value="0"></div>
+                    <div id="s-ui-media" class="row-edit hidden"><select id="s-med" class="neo-select"><option value="205">PLAY/PAUSE</option><option value="182">PREV</option><option value="181">NEXT</option><option value="226">MUTE</option><option value="233">VOL UP</option><option value="234">VOL DN</option></select></div>
+                    <div id="s-ui-nav" class="row-edit hidden"><select id="s-nav-opt" class="neo-select"><option value="1">Page Up/Down</option><option value="2">Scroll Up/Down</option><option value="3">Zoom In/Out</option><option value="4">Undo/Redo</option><option value="5">Copy/Paste</option><option value="6">Home/End</option><option value="7">Prev/Next</option></select></div>
+                    <div id="s-ui-enc-short" class="row-edit hidden"><select id="s-enc-mod" class="neo-select" style="width:100px"></select><button type="button" id="s-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-l')">PUTAR KIRI</button><input type="hidden" id="s-enc-l" value="0"><button type="button" id="s-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-r')">PUTAR KANAN</button><input type="hidden" id="s-enc-r" value="0"></div>
+                    <div id="s-ui-macro" class="hidden"><div class="row-edit"><label style="width:100px; font-weight:bold;">Aksi 1:</label><select id="s-mac-init" class="neo-select"><option value="0">Tekan WIN+R (Run App)</option><option value="1">Ketik Langsung</option></select></div><div class="row-edit"><input type="text" id="s-mac-txt1" class="neo-input" placeholder="Teks Eksekusi (Maks 27 karakter)..." maxlength="27"></div><div class="row-edit"><label style="width:100px; font-weight:bold;">Aksi 2:</label><select id="s-mac-act2" class="neo-select" onchange="uiLogic('s')"><option value="1">Tekan ENTER</option><option value="0">Selesai</option></select></div></div>
+                    
+                    <!-- SHIFT SEKUENSIAL DI-AUDIT AMAN TEMA -->
+                    <div id="s-ui-seq" class="hidden" style="margin-top:10px;">
+                        <div class="row-edit" style="justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 10px;">
+                            <select id="s-seq-type" class="neo-select" style="width: auto; flex: 1;" onchange="toggleSeqType('s')"><option value="1">KEYBOARD SEQ</option><option value="2">MIDI CC SEQ</option></select>
+                            <select id="s-seq-mod" class="neo-select" style="width: auto; flex: 1;"></select>
+                            
+                            <!-- DESAIN SAKLAR FISIK SLIDING TOGGLE SHIFT LAYER -->
+                            <label class="toggle-switch">
+                                <span>End-Reset:</span>
+                                <input type="checkbox" id="s-seq-reset" onchange="updateToggleStatus('s-seq-reset')">
+                                <div class="toggle-slider"></div>
+                                <span id="s-seq-reset-status" class="toggle-status">OFF</span>
+                            </label>
+                            
+                            <label class="toggle-switch">
+                                <span>Idle (2s):</span>
+                                <input type="checkbox" id="s-seq-idle" onchange="updateToggleStatus('s-seq-idle')">
+                                <div class="toggle-slider"></div>
+                                <span id="s-seq-idle-status" class="toggle-status">OFF</span>
+                            </label>
+                        </div>
+                        <div class="seq-step-box">
+                            <div class="seq-pane">
+                                <div class="seq-pane-title">PUTAR KIRI (L1-L5)</div>
+                                <div id="s-seq-l" style="display:flex; flex-direction:column; gap:5px;"></div>
+                            </div>
+                            <div class="seq-pane">
+                                <div class="seq-pane-title">PUTAR KANAN (R1-R5)</div>
+                                <div id="s-seq-r" style="display:flex; flex-direction:column; gap:5px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-action btn-main" style="margin-top:15px; width:100%; background: #2ed573; color: #111; border-color: #2ed573;" onclick="saveConfig()">SIMPAN PERUBAHAN CONFIG</button>
+        </div>
+    </div>
+</div>
+
+<div id="keyPickerModal" class="modal" style="z-index: 150;"><div class="modal-content" style="width: 800px; padding: 20px;"><div class="modal-header" style="margin-bottom: 15px; font-size: 1.2rem;"><span>PILIH KEYBOARD KEY</span><span onclick="closeKeyPicker()" style="cursor:pointer">[X]</span></div><div id="keyPickerContainer" style="overflow-y:auto; max-height: 60vh;"></div></div></div>
+<div class="checker-bottom"></div><input type="file" id="f-import" hidden onchange="handleImport(this)">
+
+<script>
+    // =========================================================================
+    // 1. VARIABEL GLOBAL (Terjaga Penuh dari RC5 dengan ekspansi Quad-Zone aman)
+    // =========================================================================
+    const defaultAct = {m:0, v1:0, v2:0, v3:0, lbl:""}; 
+    let cfg = { panic: {m:0, ch:1, cc:0, val:127}, profiles: [
+            { id: "B", global: { bright: 100, brightTop: 100, brightMid: 100, brightBot: 100, speed: 5, speedTop: 5, speedMid: 5, speedBot: 5, animTop: 1, animMid: 1, animBot: 1, colTop: [255,0,255], col2Top: [0,255,255], colMid: [255,0,255], col2Mid: [0,255,255], colBot: [255,0,255], col2Bot: [0,255,255], colActive: [255,255,255], colShift: [255,128,0] }, btn: [ Array.from({length:20}, () => ({...defaultAct})), Array.from({length:20}, () => ({...defaultAct})) ], pot: [ Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})), Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})) ], enc: [ { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] }, { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] } ] },
+            { id: "A", global: { bright: 100, brightTop: 100, brightMid: 100, brightBot: 100, speed: 5, speedTop: 5, speedMid: 5, speedBot: 5, animTop: 1, animMid: 1, animBot: 1, colTop: [0,255,255], col2Top: [255,0,255], colMid: [0,255,255], col2Mid: [255,0,255], colBot: [0,255,255], col2Bot: [255,0,255], colActive: [255,255,255], colShift: [255,128,0] }, btn: [ Array.from({length:20}, () => ({...defaultAct})), Array.from({length:20}, () => ({...defaultAct})) ], pot: [ Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})), Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})) ], enc: [ { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] }, { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] } ] }
+        ]
+    };
+    
+    let curB = 1, curT = '', curI = 0, port, serialReader, currentKeyTarget = ''; 
+    let isSyncing = false; let isPushing = false;
+
+    // =========================================================================
+    // 2. ISOLATED RESPONSIVE SCALING ENGINE
+    // =========================================================================
+    function adjustRigScale() {
+        const parent = document.getElementById('rig-parent'), wrapper = document.querySelector('.rig-scale-wrapper');
+        if (!parent || !wrapper) return;
+        const availableHeight = parent.clientHeight - 10; 
+        const scale = Math.min(1, availableHeight / 1020);
+        wrapper.style.transform = `scale(${scale})`;
+        parent.style.width = (440 * scale) + "px"; parent.style.height = (1020 * scale) + "px";
+    }
+
+    // =========================================================================
+    // 3. LOGIKA SAKLAR TOGGLE KUSTOM (Indikator ON/OFF)
+    // =========================================================================
+    function updateToggleStatus(id) {
+        const el = document.getElementById(id);
+        const statusEl = document.getElementById(id + '-status');
+        if (el && statusEl) {
+            statusEl.innerText = el.checked ? 'ON' : 'OFF';
+        }
+    }
+
+    // =========================================================================
+    // 4. LOGIKA NAVIGASI TAB (KANAN & MODAL)
+    // =========================================================================
+    function switchRTab(tabId) {
+        document.querySelectorAll('.rtab, .rtab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(`rtab-${tabId}-btn`).classList.add('active'); document.getElementById(`rtab-${tabId}`).classList.add('active');
+    }
+
+    // [FIX] Gunakan deklarasi standar agar aman dari crash interpreter
+    function switchMTab(layerId) {
+        document.querySelectorAll('.mtab, .mtab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(`mtab-btn-${layerId}`).classList.add('active'); document.getElementById(`mtab-content-${layerId}`).classList.add('active');
+    }
+
+    // =========================================================================
+    // 5. FUNGSI UTILITAS DASAR (Helper)
+    // =========================================================================
+    function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+    function rgbToHex(arr) { return "#" + arr.map(x=>x.toString(16).padStart(2,'0')).join(''); }
+    function HSVtoRGB(h, s, v) { 
+        var r, g, b, i, f, p, q, t; i = Math.floor(h * 6); f = h * 6 - i; p = v * (1 - s); q = v * (1 - f * s); t = v * (1 - (1 - f) * s); 
+        switch (i % 6) { case 0: r=v, g=t, b=p; break; case 1: r=q, g=v, b=p; break; case 2: r=p, g=v, b=t; break; case 3: r=p, g=q, b=v; break; case 4: r=t, g=p, b=v; break; case 5: r=v, g=p, b=q; break; } 
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)]; 
+    }
+    
+    function toggleTheme() { 
+        const doc = document.documentElement; 
+        const cur = doc.getAttribute('data-theme') || 'light'; 
+        const next = cur === 'dark' ? 'light' : 'dark'; 
+        doc.setAttribute('data-theme', next); 
+        localStorage.setItem('sakuTheme', next); 
+    }
+    
+    function showToast(msg) { const o = document.getElementById('toastOverlay'); document.getElementById('toastMessage').innerText = msg; o.classList.add('active'); setTimeout(()=>o.classList.remove('active'), 2500); }
+    function markUnsaved() { const b = document.getElementById('btn-push'); b.classList.add('unsaved'); b.innerText = "⚠️ UNSAVED CHANGES!"; }
+    function markSaved() { const b = document.getElementById('btn-push'); b.classList.remove('unsaved'); b.innerText = "⚡ PUSH BINARY TO S3"; }
+    function getKeyDisplayLabel(val) {
+        if(val == 0) return 'NONE'; if(val == 234) return 'NUM 0'; if(val >= 225 && val <= 233) return 'NUM ' + (val-224); if(val >= 194 && val <= 205) return 'F' + (val-193); if(val >= 97 && val <= 122) return String.fromCharCode(val-32).toUpperCase(); if(val >= 65 && val <= 90) return String.fromCharCode(val).toUpperCase();
+        const navMap = {176:'ENT',177:'ESC',178:'BKS',179:'TAB',32:'SPC',218:'UP',217:'DWN',216:'LFT',215:'RGT'};
+        if(navMap[val]) return navMap[val]; return String.fromCharCode(val);
+    }
+
+    // =========================================================================
+    // 6. FUNGSI LOGIKA ANTARMUKA UI
+    // =========================================================================
+    function getProfileObj(b) { return cfg.profiles[b]; }
+    
+    function togglePanicUI() {
+        let m = parseInt(document.getElementById('ui-panic-mode').value);
+        document.getElementById('ui-panic-midi').classList.add('hidden'); document.getElementById('ui-panic-key').classList.add('hidden');
+        if (m == 4) document.getElementById('ui-panic-midi').classList.remove('hidden'); if (m == 5) document.getElementById('ui-panic-key').classList.remove('hidden');
+    }
+
+    function buildOptions() {
+        const mods = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>';
+        ['n','s'].forEach(l => { document.getElementById(`${l}-mod1`).innerHTML = mods; document.getElementById(`${l}-mod2`).innerHTML = mods; document.getElementById(`${l}-enc-mod`).innerHTML = mods; });
+        document.getElementById('ui-panic-mod').innerHTML = mods; let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; 
+        ['n','s'].forEach(l => { document.getElementById(`${l}-chan`).innerHTML = ch; }); document.getElementById('ui-panic-ch').innerHTML = ch;
+    }
+
+    function buildKeyPicker() {
+        let kpHTML = `<button type="button" class="kp-btn" onclick="selectKey(0)" style="background:#ff4757; color:#fff; width: 100%; margin-bottom: 15px;">[ X ] NONE / KOSONG</button>`;
+        const addGroup = (title, items) => { kpHTML += `<div class="kp-section"><div class="kp-title">${title}</div>`; items.forEach(i => { let htmlStr = i.l === '<' ? '&lt;' : (i.l === '>' ? '&gt;' : (i.l === '"' ? '&quot;' : i.l)); kpHTML += `<button type="button" class="kp-btn" onclick="selectKey(${i.v})">${htmlStr}</button>`; }); kpHTML += `</div>`; };
+        let numpad = [{v:234,l:'NUM 0'}]; for(let i=1;i<=9;i++) numpad.push({v:224+i, l:`NUM ${i}`}); addGroup('NUMPAD', numpad);
+        let nav = [{v:176,l:'ENTER'},{v:177,l:'ESC'},{v:178,l:'BKSPACE'},{v:179,l:'TAB'},{v:32,l:'SPACE'},{v:218,l:'UP'},{v:217,l:'DOWN'},{v:216,l:'LEFT'},{v:215,l:'RIGHT'}]; addGroup('NAVIGASI', nav);
+        let fkeys = []; for(let i=1;i<=12;i++) fkeys.push({v:193+i, l:`F${i}`}); addGroup('F1 - F12', fkeys);
+        let alpha = []; for(let i=65;i<=90;i++) alpha.push({v:i+32, l:String.fromCharCode(i)}); addGroup('ALFABET', alpha);
+        let sym = []; '~"()<>!@#$%^&*_+:?-=/?.,'.split('').forEach(s => sym.push({v:s.charCodeAt(0), l:s})); addGroup('SIMBOL', sym);
+        document.getElementById('keyPickerContainer').innerHTML = kpHTML;
+    }
+
+    function openKeyPicker(targetId) { currentKeyTarget = targetId; document.getElementById('keyPickerModal').style.display = 'flex'; }
+    function closeKeyPicker() { document.getElementById('keyPickerModal').style.display = 'none'; }
+    function selectKey(val) { document.getElementById(`${currentKeyTarget}`).value = val; document.getElementById(`${currentKeyTarget}-btn`).innerText = getKeyDisplayLabel(val); closeKeyPicker(); }
+    
+    function updateQuad(idPart, v) {
+        document.getElementById(`val-${idPart}`).innerText = (idPart.includes('speed') ? v : v + '%');
+        let pObj = getProfileObj(curB); if(!pObj) return;
+        let camelKey = idPart.split('-').map((s,i) => i==0 ? s : s.charAt(0).toUpperCase() + s.slice(1)).join('');
+        if (camelKey === 'brightGlobal') camelKey = 'bright'; if (camelKey === 'speedGlobal') camelKey = 'speed';
+        pObj.global[camelKey] = parseInt(v); autoSave();
+    }
+
+    function switchBank(b) {
+        curB = b; ['p0','p1'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
+        let profObj = getProfileObj(b); if (!profObj) return;
+        
+        ['bright-global', 'speed-global', 'bright-top', 'speed-top', 'bright-mid', 'speed-mid', 'bright-bot', 'speed-bot'].forEach(idPart => {
+            let camelKey = idPart.split('-').map((s,i) => i==0 ? s : s.charAt(0).toUpperCase() + s.slice(1)).join('');
+            if (camelKey === 'brightGlobal') camelKey = 'bright'; if (camelKey === 'speedGlobal') camelKey = 'speed';
+            let v = profObj.global[camelKey] !== undefined ? profObj.global[camelKey] : (idPart.includes('speed') ? 5 : 100);
+            document.getElementById(`ui-${idPart}`).value = v; document.getElementById(`val-${idPart}`).innerText = idPart.includes('speed') ? v : v + '%';
+        });
+
+        document.getElementById('ui-anim-top').value = profObj.global.animTop || 0;
+        document.getElementById('ui-anim-mid').value = profObj.global.animMid || 0;
+        document.getElementById('ui-anim-bot').value = profObj.global.animBot || 0;
+
+        document.getElementById('ui-color-top').value = rgbToHex(profObj.global.colTop || [0,255,255]);
+        document.getElementById('ui-color2-top').value = rgbToHex(profObj.global.col2Top || [255,0,255]);
+        document.getElementById('ui-color-mid').value = rgbToHex(profObj.global.colMid || [0,255,255]);
+        document.getElementById('ui-color2-mid').value = rgbToHex(profObj.global.col2Mid || [255,0,255]);
+        document.getElementById('ui-color-bot').value = rgbToHex(profObj.global.colBot || [0,255,255]);
+        document.getElementById('ui-color2-bot').value = rgbToHex(profObj.global.col2Bot || [255,0,255]);
+        document.getElementById('ui-color-active').value = rgbToHex(profObj.global.colActive || [255,255,255]); 
+        document.getElementById('ui-color-shift').value = rgbToHex(profObj.global.colShift || [255,128,0]);
+        
+        const wrapShOn = document.getElementById('wrap-sh-on'), hwB18 = document.getElementById('hw-B18');
+        if (b === 0) { wrapShOn.classList.add('hidden'); if(hwB18) hwB18.classList.remove('btn-b18-locked-state'); } 
+        else { wrapShOn.classList.remove('hidden'); if(hwB18) hwB18.classList.add('btn-b18-locked-state'); }
+        
+        updateAllLabels(); setTimeout(adjustRigScale, 50);
+    }
+
+    const labelModMap = { 0:"", 1:"CT", 2:"SH", 4:"AL", 8:"WIN" };
+    function buildLabel(d) {
+        if(!d) return ""; if(d.lbl && d.lbl.trim() !== "") return d.lbl; if(d.m==0) return "Off";
+        if(d.m==1) { let m=[]; if(d.v1)m.push(labelModMap[d.v1]); if(d.v2)m.push(labelModMap[d.v2]); let k=d.v3?getKeyDisplayLabel(d.v3):""; return (m.join('+')+(m.length&&k?'+':"")+k) || "NONE"; }
+        if(d.m==2) return `CC ${d.v2}`; if(d.m==3) return "MEDIA"; if(d.m==4) return "MACRO";
+        if(d.m==5) return {1:"PG U/D", 2:"SCROLL", 3:"ZOOM", 4:"UNDO/RED", 5:"COPY/PST", 6:"HOME/END", 7:"TRK P/N"}[d.v1] || "PC NAV";
+        if(d.m==7) return "STEP SEQ"; return d.m==6 ? "SHORTCUT" : "";
+    }
+
+    function updateAllLabels() {
+        let pObj = getProfileObj(curB); if (!pObj) return;
+        for(let i=0; i<20; i++) {
+            let dN = pObj.btn[0][i], dS = pObj.btn[1][i];
+            let nEl = document.getElementById(`lbl-b${i}-n`), sEl = document.getElementById(`lbl-b${i}-s`), dEl = document.getElementById(`div-b${i}`);
+            if (i === 17 && curB === 1) { if(nEl) nEl.innerText = "SHIFT"; if(sEl) sEl.innerText = "LOCKED"; if(dEl) dEl.style.display = "block"; } 
+            else { if(nEl) nEl.innerText = buildLabel(dN); if(sEl) sEl.innerText = curB===0 ? "" : buildLabel(dS); if(dEl) dEl.style.display = curB===0 ? "none" : "block"; }
+        }
+        for(let i=0; i<9; i++){
+            let dN = pObj.pot[0][i], dS = pObj.pot[1][i];
+            let nEl = document.getElementById(`lbl-pot${i}-n`), sEl = document.getElementById(`lbl-pot${i}-s`), dEl = document.getElementById(`div-pot${i}`);
+            if(nEl) nEl.innerText = buildLabel(dN); 
+            if(sEl) { if (curB === 0) sEl.innerText = ""; else { if (i === 8) sEl.innerText = dS ? " | " + buildLabel(dS) : ""; else sEl.innerText = buildLabel(dS); } }
+            if(dEl) dEl.style.display = curB===0 ? "none" : "inline";
+        }
+        for(let i=0; i<2; i++) {
+            let dNrot = pObj.enc[i].rot[0], dSrot = pObj.enc[i].rot[1], dNsw = pObj.enc[i].sw[0], dSsw = pObj.enc[i].sw[1];
+            document.getElementById(`lbl-encrot${i}-n`).innerText = buildLabel(dNrot); document.getElementById(`lbl-encrot${i}-s`).innerText = curB===0 ? "" : buildLabel(dSrot);
+            document.getElementById(`div-encrot${i}`).style.display = curB===0 ? "none" : "block";
+            let swN = buildLabel(dNsw), swS = buildLabel(dSsw);
+            document.getElementById(`wrap-encsw${i}`).innerHTML = curB===0 ? `[ <span style="color:var(--dyn-prof-color);">${swN}</span> ]` : `[ <span style="color:var(--dyn-prof-color);">${swN}</span> | <span style="color:#008888;">${swS}</span> ]`;
+        }
+    }
+
+    function toggleSeqType(l) {
+        let t = document.getElementById(`${l}-seq-type`).value, modSel = document.getElementById(`${l}-seq-mod`);
+        if(t == "1") { modSel.innerHTML = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>'; } 
+        else { let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; modSel.innerHTML = ch; }
+        let lHtml = '', rHtml = '';
+        for(let i=1; i<=5; i++) {
+            if(t == "1") { 
+                lHtml += `<button type="button" class="custom-key-btn" style="width:100%; margin-top:2px;" id="${l}-seq-l${i}-btn" onclick="openKeyPicker('${l}-seq-l${i}')">L${i} KEY</button><input type="hidden" id="${l}-seq-l${i}" value="0">`; 
+                rHtml += `<button type="button" class="custom-key-btn" style="width:100%; margin-top:2px;" id="${l}-seq-r${i}-btn" onclick="openKeyPicker('${l}-seq-r${i}')">R${i} KEY</button><input type="hidden" id="${l}-seq-r${i}" value="0">`; 
+            } else { 
+                lHtml += `<input type="number" class="neo-input" style="margin-top:2px;" id="${l}-seq-l${i}" placeholder="L${i} CC" min="0" max="127">`; 
+                rHtml += `<input type="number" class="neo-input" style="margin-top:2px;" id="${l}-seq-r${i}" placeholder="R${i} CC" min="0" max="127">`; 
+            }
+        }
+        document.getElementById(`${l}-seq-l`).innerHTML = lHtml; document.getElementById(`${l}-seq-r`).innerHTML = rHtml;
+    }
+
+    function uiLogic(l) {
+        const m = parseInt(document.getElementById(`${l}-m`).value);
+        ['midi','short','macro','media','nav','enc-short','mult','seq'].forEach(x => { let el = document.getElementById(`${l}-ui-${x}`); if(el) el.classList.add('hidden'); });
+        if(curT === 'btn' || curT === 'encSw') { 
+            if(m==1) document.getElementById(`${l}-ui-short`).classList.remove('hidden'); if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); 
+            if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==4) document.getElementById(`${l}-ui-macro`).classList.remove('hidden'); 
+        } else if (curT === 'encRot') { 
+            if(m==1 || m==4) document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); 
+            if(m==2 || m==4) { document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); let cc2 = document.getElementById(`${l}-cc2`); if(cc2) cc2.classList.toggle('hidden', m!=2); } 
+            if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==5) document.getElementById(`${l}-ui-nav`).classList.remove('hidden'); 
+            if(m==6) document.getElementById(`${l}-ui-enc-short`).classList.remove('hidden'); 
+            if(m==7) { document.getElementById(`${l}-ui-seq`).classList.remove('hidden'); if(document.getElementById(`${l}-seq-l`).innerHTML === '') toggleSeqType(l); } 
+        } else if (curT === 'pot') { 
+            if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); 
+        }
+    }
+
+    function openEditor(type, idx) {
+        if (type === 'btn' && idx === 17 && curB === 1) { showToast("B18 dikunci murni sebagai tombol SHIFT pada Profil A!"); return; }
+        try {
+            curT = type; curI = idx; 
+            let dName = type === 'btn' ? `TOMBOL B${idx+1}` : (type === 'pot' ? `POTENSIO/FADER P${idx+1}` : (type === 'encRot' ? `ENCODER ROTARY EC${idx+1}` : `ENCODER SWITCH EC${idx+1}`));
+            document.getElementById('m-title').innerText = `${dName} (${curB === 1 ? "PROFIL A" : "PROFIL B"})`;
+            
+            let hasShift = curB > 0; let mtabS = document.getElementById('mtab-btn-s');
+            if (hasShift) { mtabS.style.display = 'block'; } else { mtabS.style.display = 'none'; switchMTab('n'); }
+            switchMTab('n'); 
+            
+            const nm = document.getElementById('n-m'), sm = document.getElementById('s-m');
+            if(type==='btn' || type==='encSw') { let opt = '<option value="0">OFF</option><option value="1">SHORTCUT</option><option value="2">MIDI CC</option><option value="3">MEDIA</option><option value="4">TEXT MACRO</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
+            else if(type==='encRot') { const opt = '<option value="0">OFF</option><option value="1">VOLUME HID</option><option value="2">MIDI RELATIF</option><option value="3">MEDIA TRACK</option><option value="4">MIDI ABSOLUT</option><option value="5">PC NAVIGASI</option><option value="6">SHORTCUT KUSTOM</option><option value="7">STEP MACRO SEQ</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
+            else { const opt = '<option value="0">OFF</option><option value="2">MIDI ABSOLUT</option>'; nm.innerHTML = opt; sm.innerHTML = opt; }
+            
+            let pObj = getProfileObj(curB);
+            const fill = (l, d) => {
+                if(!d) d = {...defaultAct}; document.getElementById(`${l}-m`).value = d.m; document.getElementById(`${l}-lbl`).value = d.lbl || ""; 
+                if(type==='pot') { document.getElementById(`${l}-ui-sto`).classList.remove('hidden'); document.getElementById(`${l}-sto`).checked = (d.v3 == 1); } 
+                else { let e = document.getElementById(`${l}-ui-sto`); if(e) e.classList.add('hidden'); }
+                if(type==='encRot' && (d.m==1 || d.m==4)) { document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); document.getElementById(`${l}-enc-mult`).value = d.v3 > 0 ? d.v3 : 1; } 
+                else { let e = document.getElementById(`${l}-ui-mult`); if(e) e.classList.add('hidden'); }
+                if(d.m==1 && (type==='btn' || type==='encSw')) { document.getElementById(`${l}-mod1`).value = d.v1; document.getElementById(`${l}-mod2`).value = d.v2; document.getElementById(`${l}-key`).value = d.v3; document.getElementById(`${l}-key-btn`).innerText = getKeyDisplayLabel(d.v3); }
+                if(d.m==2||d.m==4) { document.getElementById(`${l}-chan`).value = d.v1||1; document.getElementById(`${l}-cc`).value = d.v2; if(type==='encRot'&&d.m==2) { let cc2El = document.getElementById(`${l}-cc2`); if (cc2El) cc2El.value = d.v3; } }
+                if(d.m==3) { document.getElementById(`${l}-med`).value = d.v1||205; }
+                if(d.m==4&&(type==='btn'||type==='encSw')){ document.getElementById(`${l}-mac-init`).value = d.v1||0; document.getElementById(`${l}-mac-act2`).value = d.v2||1; document.getElementById(`${l}-mac-txt1`).value = d.t1||""; }
+                if(d.m==5&&type==='encRot') { document.getElementById(`${l}-nav-opt`).value = d.v1||1; }
+                if(d.m==6&&type==='encRot') { document.getElementById(`${l}-enc-mod`).value=d.v1||0; document.getElementById(`${l}-enc-l`).value=d.v2||0; document.getElementById(`${l}-enc-l-btn`).innerText=getKeyDisplayLabel(d.v2||0); document.getElementById(`${l}-enc-r`).value=d.v3||0; document.getElementById(`${l}-enc-r-btn`).innerText=getKeyDisplayLabel(d.v3||0); }
+                if(d.m==7&&type==='encRot') { 
+                    document.getElementById(`${l}-seq-type`).value = d.v1 & 0x0F || 1; 
+                    document.getElementById(`${l}-seq-reset`).checked = (d.v1 & 0x80) !== 0; 
+                    document.getElementById(`${l}-seq-idle`).checked = (d.v1 & 0x40) !== 0; 
+                    
+                    updateToggleStatus(`${l}-seq-reset`);
+                    updateToggleStatus(`${l}-seq-idle`);
+                    
+                    toggleSeqType(l); document.getElementById(`${l}-seq-mod`).value = d.v2 || 0;
+                    if(d.seq) { 
+                        for(let i=0; i<5; i++) { 
+                            let lv = d.seq[i]; let rv = d.seq[i+5]; 
+                            let lvalEl = document.getElementById(`${l}-seq-l${i+1}`); let rvalEl = document.getElementById(`${l}-seq-r${i+1}`);
+                            if(lvalEl) lvalEl.value = lv; if(rvalEl) rvalEl.value = rv; 
+                            if((d.v1 & 0x0F) == 1) { let lbtn = document.getElementById(`${l}-seq-l${i+1}-btn`); let rbtn = document.getElementById(`${l}-seq-r${i+1}-btn`); if (lbtn) lbtn.innerText = getKeyDisplayLabel(lv); if (rbtn) rbtn.innerText = getKeyDisplayLabel(rv); } 
+                        } 
+                    } 
+                } 
+                uiLogic(l);
+            };
+            
+            let dN, dS;
+            if(type==='btn') { dN = pObj.btn[0][idx]; dS = pObj.btn[1][idx]; } else if(type==='pot') { dN = pObj.pot[0][idx]; dS = pObj.pot[1][idx]; } else if(type==='encRot') { dN = pObj.enc[idx].rot[0]; dS = pObj.enc[idx].rot[1]; } else if(type==='encSw') { dN = pObj.enc[idx].sw[0]; dS = pObj.enc[idx].sw[1]; }
+            
+            fill('n', dN); if(hasShift) fill('s', dS);
+            document.getElementById('modal').style.display = 'flex';
+        } catch(err) { showToast("UI Error: " + err.message); console.error("Popup Error:", err); }
+    }
+
+    function saveConfig() {
+        const get = (l) => {
+            let m = parseInt(document.getElementById(`${l}-m`).value); let d = {m: m, lbl: document.getElementById(`${l}-lbl`).value, v1:0, v2:0, v3:0};
+            if (curT === 'btn' || curT === 'encSw') {
+                if(m==1){ d.v1=parseInt(document.getElementById(`${l}-mod1`).value)||0; d.v2=parseInt(document.getElementById(`${l}-mod2`).value)||0; d.v3=parseInt(document.getElementById(`${l}-key`).value)||0; } else if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; } else if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; } else if(m==4){ d.v1=parseInt(document.getElementById(`${l}-mac-init`).value)||0; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||0; d.t1=document.getElementById(`${l}-mac-txt1`).value; }
+            } else if (curT === 'pot') {
+                if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3 = document.getElementById(`${l}-sto`).checked ? 1 : 0; }
+            } else if (curT === 'encRot') {
+                if(m==1){ d.v3=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; } else if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; } else if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; } else if(m==4){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; } else if(m==5){ d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; } else if(m==6){ d.v1=parseInt(document.getElementById(`${l}-enc-mod`).value)||0; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; } else if(m==7){ d.v1 = (parseInt(document.getElementById(`${l}-seq-type`).value) || 1) | (document.getElementById(`${l}-seq-reset`).checked ? 0x80 : 0) | (document.getElementById(`${l}-seq-idle`).checked ? 0x40 : 0); d.v2 = parseInt(document.getElementById(`${l}-seq-mod`).value) || 0; d.seq = []; for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-l${i}`).value) || 0); for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-r${i}`).value) || 0); }
+            } return d;
+        };
+        let pObj = getProfileObj(curB); let gN = get('n'), gS = curB>0 ? get('s') : {...defaultAct};
+        if(curT==='btn') { pObj.btn[0][curI] = gN; pObj.btn[1][curI] = gS; } else if(curT==='pot') { pObj.pot[0][curI] = gN; pObj.pot[1][curI] = gS; } else if(curT==='encRot') { pObj.enc[curI].rot[0] = gN; pObj.enc[curI].rot[1] = gS; } else if(curT==='encSw') { pObj.enc[curI].sw[0] = gN; pObj.enc[curI].sw[1] = gS; }
+        closeModal(); autoSave(); updateAllLabels(); showToast("PERUBAHAN DISIMPAN!");
+    }
+
+    function closeModal() { document.getElementById('modal').style.display='none'; closeKeyPicker(); }
+    
+    function autoSave() { 
+        let pm = parseInt(document.getElementById('ui-panic-mode').value); 
+        let ps = parseInt(document.getElementById('ui-panic-source').value) || 0;
+        if(!cfg.panic) cfg.panic = {m:0, ch:1, cc:0, val:127}; 
+        cfg.panic.m = (ps << 4) | pm; 
+        
+        if (pm == 4 || pm == 5) { cfg.panic.ch = parseInt(document.getElementById('ui-panic-ch').value)||1; cfg.panic.cc = parseInt(document.getElementById('ui-panic-cc').value)||0; cfg.panic.val = parseInt(document.getElementById('ui-panic-val').value)||127; }
+        
+        let profObj = getProfileObj(curB);
+        profObj.global.animTop = parseInt(document.getElementById('ui-anim-top').value);
+        profObj.global.animMid = parseInt(document.getElementById('ui-anim-mid').value);
+        profObj.global.animBot = parseInt(document.getElementById('ui-anim-bot').value);
+
+        profObj.global.colTop = hexToRgb(document.getElementById('ui-color-top').value); 
+        profObj.global.col2Top = hexToRgb(document.getElementById('ui-color2-top').value); 
+        profObj.global.colMid = hexToRgb(document.getElementById('ui-color-mid').value); 
+        profObj.global.col2Mid = hexToRgb(document.getElementById('ui-color2-mid').value); 
+        profObj.global.colBot = hexToRgb(document.getElementById('ui-color-bot').value); 
+        profObj.global.col2Bot = hexToRgb(document.getElementById('ui-color2-bot').value); 
+        profObj.global.colActive = hexToRgb(document.getElementById('ui-color-active').value); 
+        profObj.global.colShift = hexToRgb(document.getElementById('ui-color-shift').value);
+        
+        localStorage.setItem('baysKONTROL_S3_BIN', JSON.stringify(cfg)); markUnsaved();
+    }
+
+    // =========================================================================
+    // 7. SISTEM PENYEMBUHAN BINER & PENYIMPANAN
+    // =========================================================================
+    function healConfig(temp) {
+        if (!temp || typeof temp !== 'object') return null;
+        if (!temp.panic || typeof temp !== 'object') temp.panic = { m: 0, ch: 1, cc: 0, val: 127 };
+        if (!temp.profiles || !Array.isArray(temp.profiles) || temp.profiles.length !== 2) return null; 
+        
+        for (let p = 0; p < 2; p++) {
+            let prof = temp.profiles[p]; if (!prof || typeof prof !== 'object') return null;
+            if (!prof.global || typeof prof.global !== 'object') {
+                prof.global = { bright: 100, brightTop: 100, brightMid: 100, brightBot: 100, speed: 5, speedTop: 5, speedMid: 5, speedBot: 5, animTop: 1, animMid: 1, animBot: 1, colTop: p === 0 ? [255,0,255] : [0,255,255], col2Top: p === 0 ? [0,255,255] : [255,0,255], colMid: p === 0 ? [255,0,255] : [0,255,255], col2Mid: p === 0 ? [0,255,255] : [255,0,255], colBot: p === 0 ? [255,0,255] : [0,255,255], col2Bot: p === 0 ? [0,255,255] : [255,0,255], colActive: [255,255,255], colShift: [255,128,0] };
+            }
+            if (prof.global.brightTop === undefined) prof.global.brightTop = prof.global.bright || 100;
+            if (prof.global.speedTop === undefined) prof.global.speedTop = prof.global.speed || 5;
+            if (prof.global.brightMid === undefined) prof.global.brightMid = prof.global.bright || 100;
+            if (prof.global.speedMid === undefined) prof.global.speedMid = prof.global.speed || 5;
+            if (prof.global.brightBot === undefined) prof.global.brightBot = prof.global.bright || 100;
+            if (prof.global.speedBot === undefined) prof.global.speedBot = prof.global.speed || 5;
+            
+            if (prof.global.animTop === undefined) prof.global.animTop = prof.global.anim || 1;
+            if (prof.global.animMid === undefined) prof.global.animMid = prof.global.animTop;
+            if (prof.global.animBot === undefined) prof.global.animBot = prof.global.animTop;
+            if (prof.global.colTop === undefined) prof.global.colTop = prof.global.col || (p === 0 ? [255,0,255] : [0,255,255]);
+            if (prof.global.col2Top === undefined) prof.global.col2Top = prof.global.col2 || (p === 0 ? [0,255,255] : [255,0,255]);
+            if (prof.global.colMid === undefined) prof.global.colMid = prof.global.colTop;
+            if (prof.global.col2Mid === undefined) prof.global.col2Mid = prof.global.col2Top;
+            if (prof.global.colBot === undefined) prof.global.colBot = prof.global.colTop;
+            if (prof.global.col2Bot === undefined) prof.global.col2Bot = prof.global.col2Top;
+            if (prof.global.colActive === undefined) prof.global.colActive = [255,255,255];
+            if (prof.global.colShift === undefined) prof.global.colShift = [255,128,0];
+            
+            if (!prof.btn || !Array.isArray(prof.btn) || prof.btn.length !== 2) { prof.btn = [ Array.from({length:20}, () => ({...defaultAct})), Array.from({length:20}, () => ({...defaultAct})) ]; } else { for (let l = 0; l < 2; l++) { if (!prof.btn[l] || !Array.isArray(prof.btn[l]) || prof.btn[l].length !== 20) { prof.btn[l] = Array.from({length:20}, () => ({...defaultAct})); } else { for (let i = 0; i < 20; i++) { if (!prof.btn[l][i] || typeof prof.btn[l][i] !== 'object') { prof.btn[l][i] = {...defaultAct}; } } } } }
+            if (!prof.pot || !Array.isArray(prof.pot) || prof.pot.length !== 2) { prof.pot = [ Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})), Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})) ]; } else { for (let l = 0; l < 2; l++) { if (!prof.pot[l] || !Array.isArray(prof.pot[l]) || prof.pot[l].length !== 9) { prof.pot[l] = Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})); } else { for (let i = 0; i < 9; i++) { if (!prof.pot[l][i] || typeof prof.pot[l][i] !== 'object') { prof.pot[l][i] = {...defaultAct, m:2, v1:1, v2:20+i}; } } } } }
+            let rawEncValid = true;
+            if (!prof.enc || !Array.isArray(prof.enc) || prof.enc.length !== 2) { rawEncValid = false; } else { for (let i = 0; i < 2; i++) { let e = prof.enc[i]; if (!e || typeof e !== 'object' || !e.rot || !Array.isArray(e.rot) || e.rot.length !== 2 || !e.sw || !Array.isArray(e.sw) || e.sw.length !== 2) { rawEncValid = false; break; } } }
+            if (!rawEncValid) { prof.enc = [ { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] }, { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] } ]; } else { for (let i = 0; i < 2; i++) { for (let l = 0; l < 2; l++) { if (!prof.enc[i].rot[l] || typeof prof.enc[i].rot[l] !== 'object') { prof.enc[i].rot[l] = {...defaultAct, m:1}; } if (!prof.enc[i].sw[l] || typeof prof.enc[i].sw[l] !== 'object') { prof.enc[i].sw[l] = {...defaultAct}; } } } }
+        }
+        return temp;
+    }
+
+    function setDefaultMapping() {
+        cfg = { panic: {m:0, ch:1, cc:0, val:127}, profiles: [
+                { id: "B", global: { bright: 100, brightTop: 100, brightMid: 100, brightBot: 100, speed: 5, speedTop: 5, speedMid: 5, speedBot: 5, animTop: 1, animMid: 1, animBot: 1, colTop: [255,0,255], col2Top: [0,255,255], colMid: [255,0,255], col2Mid: [0,255,255], colBot: [255,0,255], col2Bot: [0,255,255], colActive: [255,255,255], colShift: [255,128,0] }, btn: [ Array.from({length:20}, () => ({...defaultAct})), Array.from({length:20}, () => ({...defaultAct})) ], pot: [ Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})), Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})) ], enc: [ { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] }, { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] } ] },
+                { id: "A", global: { bright: 100, brightTop: 100, brightMid: 100, brightBot: 100, speed: 5, speedTop: 5, speedMid: 5, speedBot: 5, animTop: 1, animMid: 1, animBot: 1, colTop: [0,255,255], col2Top: [255,0,255], colMid: [0,255,255], col2Mid: [255,0,255], colBot: [0,255,255], col2Bot: [255,0,255], colActive: [255,255,255], colShift: [255,128,0] }, btn: [ Array.from({length:20}, () => ({...defaultAct})), Array.from({length:20}, () => ({...defaultAct})) ], pot: [ Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})), Array.from({length:9}, (_,i) => ({...defaultAct, m:2, v1:1, v2:20+i})) ], enc: [ { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] }, { rot: [ {...defaultAct, m:1}, {...defaultAct, m:1} ], sw: [ {...defaultAct}, {...defaultAct} ] } ] }
+            ]
+        };
+    }
+
+    function loadAutoSave() { 
+        const s = localStorage.getItem('baysKONTROL_S3_BIN'); 
+        if(s) { try { let temp = JSON.parse(s); let healed = healConfig(temp); if (healed) cfg = healed; else setDefaultMapping(); } catch(e) { setDefaultMapping(); } } else { setDefaultMapping(); }
+        switchBank(1); 
+    }
+
+    // =========================================================================
+    // 8. FUNGSI KOMUNIKASI USB & SERIAL (Injeksi Memori Taktis Quad Zone)
+    // =========================================================================
+    async function connectUSB() { 
+        try { 
+            port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 }); 
+            document.getElementById('serial-status').innerText = "CONNECTED"; document.getElementById('serial-status').style.color = "var(--box-bg)"; document.getElementById('serial-status').style.background = "var(--text-main)"; 
+            serialReader = port.readable.getReader(); showToast("S3 TERHUBUNG!"); return true; 
+        } catch(e) { showToast("Gagal Terhubung: " + e.message); return false; } 
+    }
+
+    function createBinaryConfig() {
+      const buffer = new ArrayBuffer(4268); const view = new DataView(buffer); let offset = 0;
+      view.setUint8(offset++, 'B'.charCodeAt(0)); view.setUint8(offset++, 'K'.charCodeAt(0)); view.setUint8(offset++, 'S'.charCodeAt(0)); view.setUint8(offset++, '3'.charCodeAt(0));
+      view.setUint8(offset++, cfg.panic.m); view.setUint8(offset++, cfg.panic.ch); view.setUint8(offset++, cfg.panic.cc); view.setUint8(offset++, cfg.panic.val);
+      
+      for(let i=0; i<2; i++) {
+        let g = cfg.profiles[i].global;
+        view.setUint8(offset++, g.bright); view.setUint8(offset++, g.animTop || 1); view.setUint8(offset++, g.speed);
+        let ct = g.colTop || [0,255,255]; let c2t = g.col2Top || [255,0,255]; let cm = g.colMid || [0,255,255]; 
+        
+        view.setUint8(offset++, ct[0]); view.setUint8(offset++, ct[1]); view.setUint8(offset++, ct[2]); 
+        view.setUint8(offset++, c2t[0]); view.setUint8(offset++, c2t[1]); view.setUint8(offset++, c2t[2]); 
+        view.setUint8(offset++, g.colActive[0]); view.setUint8(offset++, g.colActive[1]); view.setUint8(offset++, g.colActive[2]); 
+        view.setUint8(offset++, g.colShift[0]); view.setUint8(offset++, g.colShift[1]); view.setUint8(offset++, g.colShift[2]); 
+        view.setUint8(offset++, cm[0]); view.setUint8(offset++, cm[1]); view.setUint8(offset++, cm[2]); 
+      }
+      
+      function writeAction(act) {
+         view.setUint8(offset++, act.m || 0); view.setUint8(offset++, act.v1 || 0); view.setUint8(offset++, act.v2 || 0); view.setUint8(offset++, act.v3 || 0);
+         let str = ""; if (act.m == 7 && act.seq) { for(let k=0; k<10; k++) view.setUint8(offset + k, act.seq[k] || 0); } else { str = act.t1 || act.lbl || ""; }
+         for(let k=0; k<27; k++) { if (act.m != 7) { if (k < str.length) view.setUint8(offset + k, str.charCodeAt(k)); else view.setUint8(offset + k, 0); } }
+         view.setUint8(offset + 27, 0); offset += 28;
+      }
+      
+      for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<20; i++) writeAction(cfg.profiles[p].btn[l][i]);
+      for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<9; i++) writeAction(cfg.profiles[p].pot[l][i]);
+      for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<2; i++) writeAction(cfg.profiles[p].enc[i].rot[l]);
+      for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<2; i++) writeAction(cfg.profiles[p].enc[i].sw[l]);
+      return new Uint8Array(buffer);
+    }
+
+    function parseBinaryConfig(buffer) {
+        const view = new DataView(buffer); let offset = 0;
+        const m0 = String.fromCharCode(view.getUint8(offset++)); const m1 = String.fromCharCode(view.getUint8(offset++)); const m2 = String.fromCharCode(view.getUint8(offset++)); const m3 = String.fromCharCode(view.getUint8(offset++));
+        if (m0+m1+m2+m3 !== 'BKS3') return false;
+        
+        cfg.panic.m = view.getUint8(offset++); cfg.panic.ch = view.getUint8(offset++); cfg.panic.cc = view.getUint8(offset++); cfg.panic.val = view.getUint8(offset++);
+        for(let i=0; i<2; i++) {
+            let g = cfg.profiles[i].global;
+            g.bright = view.getUint8(offset++); g.animTop = view.getUint8(offset++); g.speed = view.getUint8(offset++);
+            g.colTop = [view.getUint8(offset++), view.getUint8(offset++), view.getUint8(offset++)]; g.col2Top = [view.getUint8(offset++), view.getUint8(offset++), view.getUint8(offset++)]; g.colActive = [view.getUint8(offset++), view.getUint8(offset++), view.getUint8(offset++)]; g.colShift = [view.getUint8(offset++), view.getUint8(offset++), view.getUint8(offset++)]; g.colMid = [view.getUint8(offset++), view.getUint8(offset++), view.getUint8(offset++)];
+            offset += 3; g.animMid = g.animTop; g.animBot = g.animTop;
+        }
+        
+        function readAction() {
+            let act = {m: 0, v1: 0, v2: 0, v3: 0, lbl: ""};
+            act.m = view.getUint8(offset++); act.v1 = view.getUint8(offset++); act.v2 = view.getUint8(offset++); act.v3 = view.getUint8(offset++);
+            if (act.m === 7) { act.seq = []; for(let k=0; k<10; k++) act.seq.push(view.getUint8(offset + k)); } 
+            else { let str = ""; for(let k=0; k<27; k++) { let c = view.getUint8(offset + k); if (c === 0) break; str += String.fromCharCode(c); } act.lbl = str; act.t1 = str; }
+            offset += 28; return act;
+        }
+        for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<20; i++) cfg.profiles[p].btn[l][i] = readAction();
+        for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<9; i++) cfg.profiles[p].pot[l][i] = readAction();
+        for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<2; i++) cfg.profiles[p].enc[i].rot[l] = readAction();
+        for(let p=0; p<2; p++) for(let l=0; l<2; l++) for(let i=0; i<2; i++) cfg.profiles[p].enc[i].sw[l] = readAction();
+        return true;
+    }
+
+    async function pushToDevice() {
+        if(isPushing || isSyncing) return; isPushing = true; if(!port) { let connected = await connectUSB(); if(!connected) { isPushing = false; return; } }
+        const writer = port.writable.getWriter(); const autoExport = document.getElementById('cb-autoexport').checked; 
+        try {
+            document.getElementById('btn-push').innerText = "SENDING BINARY TO S3..."; const bin = createBinaryConfig();
+            let topHeader = new TextEncoder().encode("<CFG_BIN>"); let payload = new Uint8Array(topHeader.length + bin.length);
+            payload.set(topHeader, 0); payload.set(bin, topHeader.length);
+            
+            // INJEKSI MEMORI P9 QUAD ZONE UNTUK RC7
+            let p9Offset = topHeader.length + 8 + 36 + (2*2*20*32) + (2*2*8*32) + 4; 
+            
+            // Profile B Data (Normal Layer String P9) - 17 bytes
+            let profB = cfg.profiles[0].global;
+            let c2m_b = profB.col2Mid || [255,0,255], cb_b = profB.colBot || [0,255,255], c2b_b = profB.col2Bot || [255,0,255];
+            payload[p9Offset + 0] = profB.animMid || 0; payload[p9Offset + 1] = profB.animBot || 0;
+            payload[p9Offset + 2] = c2m_b[0]; payload[p9Offset + 3] = c2m_b[1]; payload[p9Offset + 4] = c2m_b[2];
+            payload[p9Offset + 5] = cb_b[0];  payload[p9Offset + 6] = cb_b[1];  payload[p9Offset + 7] = cb_b[2];
+            payload[p9Offset + 8] = c2b_b[0]; payload[p9Offset + 9] = c2b_b[1]; payload[p9Offset + 10] = c2b_b[2];
+            
+            // [FIX] Mengubah operator ?? menjadi Ternary Tradisional untuk jaminan kompatibilitas Webview 100%
+            payload[p9Offset + 11] = (profB.brightTop !== undefined) ? profB.brightTop : profB.bright; 
+            payload[p9Offset + 12] = (profB.speedTop !== undefined) ? profB.speedTop : profB.speed;
+            payload[p9Offset + 13] = (profB.brightMid !== undefined) ? profB.brightMid : profB.bright; 
+            payload[p9Offset + 14] = (profB.speedMid !== undefined) ? profB.speedMid : profB.speed;
+            payload[p9Offset + 15] = (profB.brightBot !== undefined) ? profB.brightBot : profB.bright; 
+            payload[p9Offset + 16] = (profB.speedBot !== undefined) ? profB.speedBot : profB.speed;
+
+            // Profile A Data (Shift Layer String P9) - 17 bytes
+            let p9ShiftOffset = p9Offset + 32; 
+            let profA = cfg.profiles[1].global;
+            let c2m_a = profA.col2Mid || [255,0,255], cb_a = profA.colBot || [0,255,255], c2b_a = profA.col2Bot || [255,0,255];
+            payload[p9ShiftOffset + 0] = profA.animMid || 0; payload[p9ShiftOffset + 1] = profA.animBot || 0;
+            payload[p9ShiftOffset + 2] = c2m_a[0]; payload[p9ShiftOffset + 3] = c2m_a[1]; payload[p9ShiftOffset + 4] = c2m_a[2];
+            payload[p9ShiftOffset + 5] = cb_a[0];  payload[p9ShiftOffset + 6] = cb_a[1];  payload[p9ShiftOffset + 7] = cb_a[2];
+            payload[p9ShiftOffset + 8] = c2b_a[0]; payload[p9ShiftOffset + 9] = c2b_a[1]; payload[p9ShiftOffset + 10] = c2b_a[2];
+            
+            // [FIX] Mengubah operator ?? menjadi Ternary Tradisional untuk jaminan kompatibilitas Webview 100%
+            payload[p9ShiftOffset + 11] = (profA.brightTop !== undefined) ? profA.brightTop : profA.bright; 
+            payload[p9ShiftOffset + 12] = (profA.speedTop !== undefined) ? profA.speedTop : profA.speed;
+            payload[p9ShiftOffset + 13] = (profA.brightMid !== undefined) ? profA.brightMid : profA.bright; 
+            payload[p9ShiftOffset + 14] = (profA.speedMid !== undefined) ? profA.speedMid : profA.speed;
+            payload[p9ShiftOffset + 15] = (profA.brightBot !== undefined) ? profA.brightBot : profA.bright; 
+            payload[p9ShiftOffset + 16] = (profA.speedBot !== undefined) ? profA.speedBot : profA.speed;
+
+            const chunkSize = 64;
+            for (let i = 0; i < payload.length; i += chunkSize) {
+                const chunk = payload.slice(i, i + chunkSize); await writer.write(chunk);
+                await new Promise(r => setTimeout(r, 10)); 
+            }
+            markSaved(); showToast("SUKSES SUNTIK BINER KE S3!"); if(autoExport) exportData(); 
+        } catch(e) { showToast(e.message || e); } 
+        writer.releaseLock(); isPushing = false;
+    }
+
+    async function syncDevice() {
+        if(isSyncing || isPushing) return; isSyncing = true; if(!port) { let connected = await connectUSB(); if(!connected) { isSyncing = false; return; } }
+        const writer = port.writable.getWriter(); const encoder = new TextEncoder();
+        try {
+            document.getElementById('btn-push').innerText = "SYNCING..."; showToast("MENARIK BINER S3...");
+            await writer.write(encoder.encode("<SYNC_GET>\n")); await new Promise(r => setTimeout(r, 100));
+            let start = Date.now(); let rxBytes = new Uint8Array(5000); let rxLen = 0; let receivingBin = false; let headerStr = "";
+            while(Date.now() - start < 4000) { 
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 1000));
+                try {
+                    const {value, done} = await Promise.race([serialReader.read(), timeoutPromise]); if (done) break;
+                    if(value) {
+                        for(let i=0; i<value.length; i++) {
+                            let c = value[i];
+                            if (!receivingBin) { headerStr += String.fromCharCode(c); if (headerStr.endsWith("<CFG_BIN>")) receivingBin = true; if (headerStr.length > 50) headerStr = headerStr.substring(headerStr.length - 20); } else { rxBytes[rxLen++] = c; if (rxLen === 4268) break; }
+                        }
+                        if (rxLen === 4268) break;
+                    } 
+                } catch(err) { break; }
+            }
+            if (rxLen === 4268) {
+                if (parseBinaryConfig(rxBytes.buffer.slice(0, 4268))) {
+                    let p9Offset = 8 + 36 + (2*2*20*32) + (2*2*8*32) + 4; let dv = new DataView(rxBytes.buffer);
+                    
+                    let pB = cfg.profiles[0].global;
+                    pB.animMid = dv.getUint8(p9Offset + 0); pB.animBot = dv.getUint8(p9Offset + 1);
+                    pB.col2Mid = [dv.getUint8(p9Offset + 2), dv.getUint8(p9Offset + 3), dv.getUint8(p9Offset + 4)];
+                    pB.colBot = [dv.getUint8(p9Offset + 5), dv.getUint8(p9Offset + 6), dv.getUint8(p9Offset + 7)];
+                    pB.col2Bot = [dv.getUint8(p9Offset + 8), dv.getUint8(p9Offset + 9), dv.getUint8(p9Offset + 10)];
+                    pB.brightTop = dv.getUint8(p9Offset + 11); pB.speedTop = dv.getUint8(p9Offset + 12);
+                    pB.brightMid = dv.getUint8(p9Offset + 13); pB.speedMid = dv.getUint8(p9Offset + 14);
+                    pB.brightBot = dv.getUint8(p9Offset + 15); pB.speedBot = dv.getUint8(p9Offset + 16);
+
+                    let p9ShiftOffset = p9Offset + 32; let pA = cfg.profiles[1].global;
+                    pA.animMid = dv.getUint8(p9ShiftOffset + 0); pA.animBot = dv.getUint8(p9ShiftOffset + 1);
+                    pA.col2Mid = [dv.getUint8(p9ShiftOffset + 2), dv.getUint8(p9ShiftOffset + 3), dv.getUint8(p9ShiftOffset + 4)];
+                    pA.colBot = [dv.getUint8(p9ShiftOffset + 5), dv.getUint8(p9ShiftOffset + 6), dv.getUint8(p9ShiftOffset + 7)];
+                    pA.col2Bot = [dv.getUint8(p9ShiftOffset + 8), dv.getUint8(p9ShiftOffset + 9), dv.getUint8(p9ShiftOffset + 10)];
+                    pA.brightTop = dv.getUint8(p9ShiftOffset + 11); pA.speedTop = dv.getUint8(p9ShiftOffset + 12);
+                    pA.brightMid = dv.getUint8(p9ShiftOffset + 13); pA.speedMid = dv.getUint8(p9ShiftOffset + 14);
+                    pA.brightBot = dv.getUint8(p9ShiftOffset + 15); pA.speedBot = dv.getUint8(p9ShiftOffset + 16);
+
+                    switchBank(curB); localStorage.setItem('baysKONTROL_S3_BIN', JSON.stringify(cfg)); markSaved(); showToast("SINKRONISASI BINER BERHASIL!");
+                } else { throw "Header Biner Rusak!"; }
+            } else { throw "Timeout / Data Tidak Lengkap (" + rxLen + " byte)"; }
+        } catch(e) { showToast("ERROR SYNC: " + (e.message || e)); } 
+        markSaved(); writer.releaseLock(); isSyncing = false;
+    }
+
+    function exportData() { const blob = new Blob([JSON.stringify(cfg, null, 2)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_s3_config_rc7.json'; a.click(); showToast("EXPORT BERHASIL!"); }
+    function importData() { document.getElementById('f-import').click(); }
+    function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { cfg = JSON.parse(e.target.result); switchBank(curB); markUnsaved(); showToast("IMPORT BERHASIL!"); }; fr.readAsText(i.files[0]); i.value=''; }
+
+    // =========================================================================
+    // 9. ANIMASI PREVIEW ENGINE (Quad Zone Calculation Support)
+    // =========================================================================
+    function startPreviewEngine() {
+        requestAnimationFrame(startPreviewEngine);
+        let profObj = getProfileObj(curB); if (!profObj || !profObj.global) return;
+        let ms = performance.now();
+        
+        let cTop1 = profObj.global.colTop || [0,255,255]; let cTop2 = profObj.global.col2Top || [255,0,255];
+        let cMid1 = profObj.global.colMid || [0,255,255]; let cMid2 = profObj.global.col2Mid || [255,0,255];
+        let cBot1 = profObj.global.colBot || [0,255,255]; let cBot2 = profObj.global.col2Bot || [255,0,255];
+        
+        for(let i=0; i<20; i++) {
+            let el; if(i < 8) { el = document.getElementById(`led-p${i}`); } else { el = document.getElementById(`led-b${i-8}`); }
+            if(!el) continue; let r=0, g=0, b=0;
+            
+            let c1, c2, anim, spd; let local_i = 0, total_leds = 1;
+
+            if (i < 4) { 
+                c1 = cTop1; c2 = cTop2; anim = profObj.global.animTop || 0; 
+                spd = (profObj.global.speedTop !== undefined ? profObj.global.speedTop : (profObj.global.speed || 5)) / 5.0;
+                local_i = i; total_leds = 4;        // LAYER ATAS (L1-L4)
+            } else if (i >= 4 && i < 8) { 
+                c1 = cMid1; c2 = cMid2; anim = profObj.global.animMid || 0; 
+                spd = (profObj.global.speedMid !== undefined ? profObj.global.speedMid : (profObj.global.speed || 5)) / 5.0;
+                local_i = i - 4; total_leds = 4;    // LAYER TENGAH (L5-L8)
+            } else {
+                c1 = cBot1; c2 = cBot2; anim = profObj.global.animBot || 0; 
+                spd = (profObj.global.speedBot !== undefined ? profObj.global.speedBot : (profObj.global.speed || 5)) / 5.0;
+                local_i = i - 8; total_leds = 12;   // LAYER BAWAH (L9-L20)
+            }
+            
+            if (anim == 0) { let blend = (total_leds - 1 - local_i) / ((total_leds - 1) || 1); r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 1) { let blend = Math.sin((ms*0.002*spd) + (local_i*0.3)) * 0.5 + 0.5; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 2) { let act = Math.floor(ms / (1000/(spd==0?1:spd))) % total_leds; if(local_i == act){ r=c1[0]; g=c1[1]; b=c1[2]; } else { r=c2[0]*0.1; g=c2[1]*0.1; b=c2[2]*0.1; } }
+            else if (anim == 3) { let blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 4) { let blend = Math.random(); let fac = (40 + Math.random()*60)/100.0; r = (c1[0]*blend + c2[0]*(1.0-blend)) * fac; g = (c1[1]*blend + c2[1]*(1.0-blend)) * fac; b = (c1[2]*blend + c2[2]*(1.0-blend)) * fac; }
+            else if (anim == 5) { let hueOffset = local_i / total_leds; let hue = ((ms * 0.00025 * spd) + hueOffset) % 1.0; let rgb = HSVtoRGB(hue, 1, 1); r=rgb[0]; g=rgb[1]; b=rgb[2]; }
+            else if (anim == 6) { let blend = Math.sin((ms * 0.001 * spd) + local_i * 0.2) * 0.5 + 0.5; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            
+            r = Math.min(255, Math.max(0, Math.floor(r))); g = Math.min(255, Math.max(0, Math.floor(g))); b = Math.min(255, Math.max(0, Math.floor(b)));
+            
+            if(i < 8) { el.style.backgroundColor = `rgb(${r},${g},${b})`; el.style.boxShadow = `0 0 8px rgb(${r},${g},${b})`; } 
+            else { el.style.setProperty('--glow-color', `rgb(${r},${g},${b})`); }
+        }
+    }
+    
+    // =========================================================================
+    // 10. INISIALISASI HALAMAN (ENTRY POINT & RESIZE BINDING)
+    // =========================================================================
+    window.onload = () => { 
+        const savedTheme = localStorage.getItem('sakuTheme') || 'light'; document.documentElement.setAttribute('data-theme', savedTheme);
+        buildOptions(); buildKeyPicker(); loadAutoSave(); 
+        
+        let pM = document.getElementById('ui-panic-mode'), pS = document.getElementById('ui-panic-source');
+        if (cfg.panic) { pM.value = cfg.panic.m & 0x0F; pS.value = (cfg.panic.m >> 4) & 0x0F; document.getElementById('ui-panic-ch').value = cfg.panic.ch || 1; document.getElementById('ui-panic-cc').value = cfg.panic.cc || 0; document.getElementById('ui-panic-val').value = cfg.panic.val || 127; }
+        togglePanicUI(); adjustRigScale(); startPreviewEngine();
+    };
+
+    window.addEventListener('resize', adjustRigScale);
+</script>
+</body>
+</html>

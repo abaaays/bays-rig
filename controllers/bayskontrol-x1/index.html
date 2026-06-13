@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>baysKONTROL Configurator RC1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        @font-face { font-family: 'Klasikap'; src: local('Klasikap'), url('klasikap.ttf') format('truetype'); }
+
+        :root {
+            --bg-color: #e6e6e6; --box-bg: #f8f8f8; --text-main: #111111; --text-muted: #666666;
+            --border-color: #222222; --shadow-color: #111111; --rig-bg: #2a2a2a; --input-bg: #ffffff;
+            --grid-line: rgba(0,0,0,0.05); --checker-1: #222222; --checker-2: #f8f8f8;
+            --font-main: 'Comic Neue', cursive; --font-logo: 'Klasikap', sans-serif; 
+            --accent-main: #333333; --dyn-prof-color: #00ffff; --dyn-b6-color: #00ffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a; --box-bg: #262626; --text-main: #f0f0f0; --text-muted: #888888;
+            --border-color: #e0e0e0; --shadow-color: #050505; --rig-bg: #222222; --input-bg: #111111;
+            --grid-line: rgba(255,255,255,0.04); --accent-main: #aaaaaa;
+        }
+
+        body, html { 
+            height: 100%; margin: 0; overflow: hidden; 
+            background-color: var(--bg-color); font-family: var(--font-main); color: var(--text-main); 
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px; transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .checker-banner, .checker-bottom { height: 50px; background-image: repeating-conic-gradient(var(--checker-1) 0% 25%, var(--checker-2) 0% 50%); background-size: 50px 50px; width: 100%; position: absolute; z-index: 10; transition: border-color 0.3s;}
+        .checker-banner { top: 0; border-bottom: 6px solid var(--border-color); }
+        .checker-bottom { bottom: 0; border-top: 6px solid var(--border-color); }
+
+        #config-screen { display: flex; height: 100vh; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center; z-index: 5; position: relative;}
+        
+        .config-workspace { transform: scale(0.85); transform-origin: top center; display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 90px;}
+        
+        .canvas-header { font-family: var(--font-logo); font-size: 3.5rem; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: baseline; gap: 15px; letter-spacing: 2px;}
+        .hdr-bays { text-transform: lowercase; } .hdr-kontrol { text-transform: uppercase; }
+        .badge-lite { font-family: var(--font-main); background: var(--text-main); color: var(--box-bg); font-size: 1rem; padding: 4px 12px; border: 4px solid var(--border-color); border-radius: 4px; transform: translateY(-10px) rotate(-5deg); letter-spacing: 2px;}
+
+        .main-canvas { background: var(--box-bg); border: 6px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; padding: 25px; width: 1050px; display: flex; gap: 25px;}
+        .canvas-left-pane { flex: 0 0 60%; display: flex; flex-direction: column; align-items: center; padding-right: 25px; border-right: 4px dashed var(--border-color);}
+        .canvas-right-pane { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;}
+
+        .rig-container { 
+            width: 550px; height: 430px; background: var(--rig-bg); border: 6px solid #111; 
+            border-radius: 20px; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 8px 8px 0px var(--shadow-color);
+            margin: 0 auto; overflow: hidden; transition: border-color 0.3s;
+        }
+        
+        .screw { position: absolute; width: 16px; height: 16px; background: #555; border-radius: 50%; border: 2px solid #222; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.3); }
+        .screw::after { content: '+'; position: absolute; color: #222; top: -3px; left: 2px; font-weight: bold; font-family: sans-serif; font-size: 14px;}
+        .s-tl { top: 10px; left: 10px; } .s-tr { top: 10px; right: 10px; } .s-bl { bottom: 10px; left: 10px; } .s-br { bottom: 10px; right: 10px; }
+
+        .knob-unit { position: absolute; border-radius: 50%; box-shadow: 4px 4px 5px rgba(0,0,0,0.6); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.1s; border: 3px solid #111; }
+        .knob-unit:active { transform: translate(2px, 2px); box-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
+        .pot-unit { width: 55px; height: 55px; background: linear-gradient(135deg, #777, #444); }
+        .pot-unit::after { content: ''; position: absolute; top: 5px; left: 50%; width: 4px; height: 14px; background: rgba(255,255,255,0.7); transform: translateX(-50%); border-radius: 2px; z-index: 1;}
+        .enc-unit { width: 75px; height: 75px; background: linear-gradient(135deg, #ddd, #888); }
+        .enc-unit::after { content: ''; position: absolute; top: 6px; left: 50%; width: 5px; height: 18px; background: #111; transform: translateX(-50%); border-radius: 2px; z-index: 1;}
+        
+        #hw-P1 { top: 35px; left: 80px; } 
+        #hw-P3 { top: 35px; left: 250px; } 
+        #hw-ENC { top: 25px; left: 410px; }
+        #hw-P2 { top: 125px; left: 165px; } 
+        #hw-P4 { top: 125px; left: 335px; }
+
+        .btn-row { position: absolute; width: 100%; display: flex; justify-content: space-evenly; padding: 0 20px; box-sizing: border-box; }
+        .row-1 { top: 250px; } .row-2 { top: 345px; }
+
+        .btn-unit { 
+            width: 55px; height: 55px; background: #151515; border-radius: 50%; border: 4px solid #050505;
+            cursor: pointer; position: relative; box-shadow: inset 0 0 10px #000, 2px 2px 4px rgba(0,0,0,0.5); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.1s; 
+        }
+        .btn-unit:active { transform: translate(1px, 1px); box-shadow: inset 0 0 15px #000; }
+        .btn-unit::before { content: ''; position: absolute; width: 40px; height: 40px; background: #222; border-radius: 50%; border: 1px solid #333; z-index: 1;}
+        
+        .led-strip { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 22px; height: 6px; border-radius: 4px; background: #333; box-shadow: 0 0 0 rgba(0,0,0,0); transition: 0.1s; }
+        
+        .pot-id { position: absolute; bottom: -22px; font-size: 0.75rem; font-weight: 800; color: #fff; z-index: 10; text-shadow: 1px 1px 0 #000;}
+        
+        /* Label Encoder Switch Melayang Sempurna */
+        .enc-sw-label { position: absolute; top: -20px; width: 150px; text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: rgba(255,255,255,0.7); text-shadow: 1px 1px 2px #000; z-index: 20;}
+        .enc-sw-label:hover { color: #ff4757; text-shadow: 0 0 10px rgba(255,71,87,0.8); transform: scale(1.1); }
+
+        .btn-id { position: absolute; top: -8px; right: -8px; background: var(--text-main); color: var(--bg-color); padding: 2px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; z-index: 10; border: 2px solid var(--border-color);} 
+        .btn-lbl-n { font-size: 0.75rem; font-weight: 800; color: #fff; margin-bottom: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
+        .btn-lbl-div { width: 70%; height: 2px; background: rgba(255,255,255,0.4); margin: 2px 0; z-index: 15;}
+        .btn-lbl-s { font-size: 0.75rem; font-weight: 800; color: #aaa; margin-top: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
+
+        .btn-b6-shift::before { background: #1a1a1a !important; border-color: #111 !important; }
+        .btn-b6-shift { cursor: not-allowed; } .btn-b6-shift:active { transform: none; box-shadow: inset 0 0 10px #000; }
+        .btn-b6-shift .btn-id { color: #555; background: #222; border-color: #111; }
+
+        .tab-area { display: flex; gap: 15px; margin-bottom: 20px; }
+        .btn-tab { padding: 8px 30px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; font-size: 1.2rem; cursor: pointer; border-radius: 10px; box-shadow: 4px 4px 0px var(--shadow-color); transition: 0.2s;}
+        .btn-tab.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 0 0 var(--shadow-color); transform: translate(4px,4px); border-color: var(--text-main);}
+
+        .led-box { border: 4px solid var(--border-color); padding: 15px 20px; background: var(--box-bg); border-radius: 15px; box-shadow: 6px 6px 0px var(--shadow-color);}
+        .ctrl-row { margin-bottom: 10px; }
+        .ctrl-row label { font-weight: bold; margin-bottom: 6px; font-size: 1rem; display: flex; align-items: center; gap: 10px;}
+        .badge-percent { background: var(--bg-color); padding: 2px 8px; border: 3px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; box-shadow: 2px 2px 0 var(--shadow-color);}
+        
+        .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 6px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 3px 3px 0px var(--shadow-color); box-sizing: border-box;}
+        
+        /* Grid Warna Simetris Paten 6 Kolom */
+        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .cg-item { display: flex; flex-direction: column; }
+        input[type="color"] { width: 100%; height: 35px; border: 3px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 0;}
+        
+        .slider-wrapper { padding-bottom: 15px; background: var(--input-bg); border: 3px solid var(--border-color); padding: 15px 15px 5px 15px; border-radius: 8px;}
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; background: #999; border: 2px solid var(--border-color); border-radius: 6px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 30px; width: 20px; border-radius: 4px; background: var(--text-main); border: 3px solid var(--border-color); margin-top: -10px; box-shadow: 3px 3px 0 var(--shadow-color);}
+
+        /* Area Aksi Bawah Centered */
+        .bottom-actions { display: flex; flex-wrap: wrap; gap: 15px; background: var(--box-bg); padding: 15px 25px; border-radius: 15px; border: 4px solid var(--border-color); box-shadow: 8px 8px 0 var(--shadow-color); margin-top: 25px; align-items: center; justify-content: center; width: 1050px; margin-left: auto; margin-right: auto;}
+        
+        .btn-action { padding: 10px 20px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 10px; font-family: var(--font-main); font-weight: bold; cursor: pointer; box-shadow: 4px 4px 0px var(--shadow-color); font-size: 1rem; transition: 0.2s;}
+        .btn-action:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--shadow-color);}
+        
+        .btn-main { background: var(--text-main); color: var(--bg-color); font-size: 1.2rem; padding: 12px 30px; flex: 1; min-width: 250px; font-family: var(--font-main); font-weight: bold; cursor: pointer; border: 4px solid var(--border-color); box-shadow: 4px 4px 0 var(--shadow-color); border-radius: 10px; transition: 0.2s;}
+        .btn-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--shadow-color);}
+        .btn-main.unsaved { background: #ff4757; color: #ffffff; border-color: #ff4757; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } }
+
+        /* Teks Checkbox Warna Dinamis */
+        .cb-container { display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; gap: 8px; cursor: pointer; color: var(--text-main); }
+        .cb-neo { appearance: none; width: 18px; height: 18px; border: 3px solid var(--border-color); border-radius: 4px; background: var(--input-bg); position: relative; box-shadow: 2px 2px 0 var(--shadow-color);}
+        .cb-neo:checked { background: var(--text-main); }
+        .cb-neo:checked::after { content: '✔'; position: absolute; color: var(--bg-color); font-weight: bold; top: -3px; left: 1px; }
+
+        .btn-sync { padding: 10px 20px; border: 4px solid var(--border-color); border-radius: 10px; background: var(--box-bg); color: var(--text-main); font-weight: bold; box-shadow: 4px 4px 0 var(--shadow-color); cursor: pointer; transition: 0.2s; font-family: var(--font-main); font-size: 1rem;}
+        .btn-sync:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--shadow-color); }
+        
+        #serial-status { text-align: center; padding: 10px 25px; border: 4px solid var(--border-color); border-radius: 10px; background: var(--box-bg); color: var(--text-main); font-weight: bold; box-shadow: 4px 4px 0 var(--shadow-color); cursor: pointer; transition: 0.2s; font-size: 1rem;}
+
+        /* Theme Toggle Dikembalikan ke Bawah */
+        .theme-toggle-wrap { display: flex; justify-content: center; width: 100%; margin-top: 25px; margin-bottom: 25px;}
+        .theme-switch { width: 60px; height: 30px; border: 4px solid var(--border-color); background: var(--checker-2); box-shadow: 4px 4px 0 var(--shadow-color); cursor: pointer; position: relative; transition: 0.2s;}
+        .theme-switch:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--shadow-color); }
+        .theme-switch-knob { width: 22px; height: 22px; background: var(--checker-1); position: absolute; top: 0px; left: 0px; transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        [data-theme="dark"] .theme-switch-knob { left: 30px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--box-bg); width: 750px; max-height: 90vh; overflow-y: auto; border: 5px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; color: var(--text-main);}
+        .modal-header { background: var(--border-color); color: var(--bg-color); padding: 15px 25px; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; position: sticky; top: 0; z-index: 10;}
+        [data-theme="dark"] .modal-header { color: #000; background: #fff; }
+        
+        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .layer-unit { border: 4px solid var(--border-color); border-radius: 12px; padding: 20px; background: var(--box-bg); position: relative; box-shadow: 5px 5px 0 var(--shadow-color); }
+        .layer-lbl { position: absolute; top: -15px; left: 15px; background: var(--text-main); color: var(--bg-color); padding: 2px 12px; font-weight: bold; border-radius: 5px; }
+        [data-theme="dark"] .layer-lbl { background: #fff; color: #000; }
+        .shift-lbl { background: var(--text-muted); color: var(--box-bg); }
+        [data-theme="dark"] .shift-lbl { background: #555; color: #fff; }
+        
+        .row-edit { display: flex; gap: 10px; align-items: center; margin-top: 10px;}
+        .hidden { display: none !important; }
+
+        .toast-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999; visibility: hidden; opacity: 0; transition: all 0.2s; }
+        .toast-overlay.active { visibility: visible; opacity: 1; }
+        .toast-box { background-color: var(--box-bg); border: 6px solid var(--border-color); padding: 30px 50px; box-shadow: 15px 15px 0 var(--text-main); transform: rotate(-2deg); color: var(--text-main);}
+        .toast-msg { font-size: 1.5rem; font-weight: 900; text-transform: uppercase;}
+        
+        .custom-key-btn { background-color: var(--input-bg); color: var(--text-main); border: 3px solid var(--border-color); padding: 8px 15px; font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); flex: 1; text-align: left; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px;}
+        .kp-section { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; background: var(--rig-bg); border: 3px solid var(--border-color); padding: 12px; border-radius: 8px;}
+        .kp-title { width: 100%; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid var(--border-color); padding-bottom: 4px; color: #fff;}
+        .kp-btn { background: var(--box-bg); border: 2px solid var(--border-color); font-family: var(--font-main); font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 6px 10px; border-radius: 4px; color: var(--text-main);}
+        [data-theme="dark"] .kp-btn { background: #222; color: #fff; }
+        .kp-btn:hover { background: var(--text-main); color: var(--bg-color);}
+    </style>
+</head>
+<body>
+
+<div id="toastOverlay" class="toast-overlay"><div class="toast-box"><div id="toastMessage" class="toast-msg">Pesan...</div></div></div>
+<div class="checker-banner"></div>
+
+<div id="config-screen">
+
+    <div class="config-workspace">
+        <div class="canvas-header"><span class="hdr-bays">bays</span><span class="hdr-kontrol">KONTROL</span><span class="badge-lite">CONFIGURATOR</span></div>
+        
+        <div class="main-canvas">
+            <div class="canvas-left-pane">
+                <div class="tab-area">
+                    <button id="p1" class="btn-tab active" onclick="switchBank(1)">Profil A</button>
+                    <button id="p0" class="btn-tab" onclick="switchBank(0)">Profil B</button>
+                </div>
+                
+                <div class="rig-container">
+                    <div class="screw s-tl"></div><div class="screw s-tr"></div>
+                    <div class="screw s-bl"></div><div class="screw s-br"></div>
+                    
+                    <div class="knob-unit pot-unit" id="hw-P1" onclick="openEditor('pot', 0)"><div class="pot-id">P1</div><div class="btn-lbl-n" id="lbl-p0-n">CC</div><div class="btn-lbl-div" id="div-p0"></div><div class="btn-lbl-s" id="lbl-p0-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P3" onclick="openEditor('pot', 2)"><div class="pot-id">P3</div><div class="btn-lbl-n" id="lbl-p2-n">CC</div><div class="btn-lbl-div" id="div-p2"></div><div class="btn-lbl-s" id="lbl-p2-s">CC</div></div>
+                    
+                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditor('encRot', 0)">
+                        <div onclick="openEditor('encSw', 0); event.stopPropagation();" class="enc-sw-label">
+                            [ <span id="lbl-encsw-n">Off</span><span id="lbl-encsw-s"></span> ]
+                        </div>
+                        <div class="btn-lbl-n" id="lbl-encrot-n" style="color:#111; text-shadow:none;">Off</div><div class="btn-lbl-div" id="div-encrot" style="background:#555;"></div><div class="btn-lbl-s" id="lbl-encrot-s" style="color:#444; text-shadow:none;">Off</div>
+                    </div>
+                    
+                    <div class="knob-unit pot-unit" id="hw-P2" onclick="openEditor('pot', 1)"><div class="pot-id">P2</div><div class="btn-lbl-n" id="lbl-p1-n">CC</div><div class="btn-lbl-div" id="div-p1"></div><div class="btn-lbl-s" id="lbl-p1-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P4" onclick="openEditor('pot', 3)"><div class="pot-id">P4</div><div class="btn-lbl-n" id="lbl-p3-n">CC</div><div class="btn-lbl-div" id="div-p3"></div><div class="btn-lbl-s" id="lbl-p3-s">CC</div></div>
+                    
+                    <div class="btn-row row-1">
+                        <div class="btn-unit" onclick="openEditor('btn', 0)"><div class="led-strip" id="led-b0"></div><div class="btn-id">B1</div><div class="btn-lbl-n" id="lbl-b0-n">Off</div><div class="btn-lbl-div" id="div-b0"></div><div class="btn-lbl-s" id="lbl-b0-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 1)"><div class="led-strip" id="led-b1"></div><div class="btn-id">B2</div><div class="btn-lbl-n" id="lbl-b1-n">Off</div><div class="btn-lbl-div" id="div-b1"></div><div class="btn-lbl-s" id="lbl-b1-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 2)"><div class="led-strip" id="led-b2"></div><div class="btn-id">B3</div><div class="btn-lbl-n" id="lbl-b2-n">Off</div><div class="btn-lbl-div" id="div-b2"></div><div class="btn-lbl-s" id="lbl-b2-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 3)"><div class="led-strip" id="led-b3"></div><div class="btn-id">B4</div><div class="btn-lbl-n" id="lbl-b3-n">Off</div><div class="btn-lbl-div" id="div-b3"></div><div class="btn-lbl-s" id="lbl-b3-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 4)"><div class="led-strip" id="led-b4"></div><div class="btn-id">B5</div><div class="btn-lbl-n" id="lbl-b4-n">Off</div><div class="btn-lbl-div" id="div-b4"></div><div class="btn-lbl-s" id="lbl-b4-s">Off</div></div>
+                    </div>
+                    
+                    <div class="btn-row row-2">
+                        <div class="btn-unit" id="hw-B6" onclick="openEditor('btn', 5)"><div class="led-strip" id="led-b5"></div><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div" id="div-b5"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 6)"><div class="led-strip" id="led-b6"></div><div class="btn-id">B7</div><div class="btn-lbl-n" id="lbl-b6-n">Off</div><div class="btn-lbl-div" id="div-b6"></div><div class="btn-lbl-s" id="lbl-b6-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 7)"><div class="led-strip" id="led-b7"></div><div class="btn-id">B8</div><div class="btn-lbl-n" id="lbl-b7-n">Off</div><div class="btn-lbl-div" id="div-b7"></div><div class="btn-lbl-s" id="lbl-b7-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 8)"><div class="led-strip" id="led-b8"></div><div class="btn-id">B9</div><div class="btn-lbl-n" id="lbl-b8-n">Off</div><div class="btn-lbl-div" id="div-b8"></div><div class="btn-lbl-s" id="lbl-b8-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditor('btn', 9)"><div class="led-strip" id="led-b9"></div><div class="btn-id">B10</div><div class="btn-lbl-n" id="lbl-b9-n">Off</div><div class="btn-lbl-div" id="div-b9"></div><div class="btn-lbl-s" id="lbl-b9-s">Off</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-right-pane">
+                <div class="led-box" style="margin-bottom: 10px;">
+                    <h4 style="margin-top:0; margin-bottom:10px; border-bottom:2px solid var(--border-color); padding-bottom:5px; text-transform:uppercase;">Global Settings</h4>
+                    <div class="ctrl-row">
+                        <label style="font-size:0.85rem;">Panic Action (Double-Click Enc)</label>
+                        <select id="ui-panic-mode" class="neo-select" onchange="togglePanicUI(); autoSave();">
+                            <option value="0">OFF (Zero-Latency)</option>
+                            <option value="1">CC 123 (All Notes Off)</option>
+                            <option value="2">CC 120 (All Sound Off)</option>
+                            <option value="3">CC 121 (Reset Controllers)</option>
+                            <option value="4">Custom MIDI CC</option>
+                            <option value="5">Custom Keyboard</option>
+                        </select>
+                    </div>
+                    <div id="ui-panic-midi" class="row-edit hidden">
+                         <select id="ui-panic-ch" class="neo-select" style="width:100px" onchange="autoSave()"></select>
+                         <input type="number" id="ui-panic-cc" class="neo-input" placeholder="CC (0-127)" onchange="autoSave()">
+                         <input type="number" id="ui-panic-val" class="neo-input" placeholder="Val (0-127)" onchange="autoSave()">
+                    </div>
+                    <div id="ui-panic-key" class="row-edit hidden">
+                         <select id="ui-panic-mod" class="neo-select" onchange="autoSave()"></select>
+                         <button type="button" id="ui-panic-btn" class="custom-key-btn" onclick="openKeyPicker('ui-panic-keyval')">PILIH KEY</button>
+                         <input type="hidden" id="ui-panic-keyval" value="0">
+                    </div>
+                </div>
+
+                <div class="led-box" id="led-panel">
+                    <div class="ctrl-row">
+                        <label>Brightness (<span id="curP">A</span>) <span id="bright-val" class="badge-percent">100%</span></label>
+                        <div class="slider-wrapper"><input type="range" id="ui-bright" min="0" max="100" step="10" value="100" oninput="updateBright(this.value)"></div>
+                    </div>
+                    <div class="ctrl-row">
+                        <label>Speed (Kecepatan) <span id="speed-val" class="badge-percent">5</span></label>
+                        <div class="slider-wrapper"><input type="range" id="ui-speed" min="1" max="10" step="1" value="5" oninput="updateSpeed(this.value)"></div>
+                    </div>
+                    <div class="ctrl-row">
+                        <label>Animasi LED</label>
+                        <select id="ui-anim" class="neo-select" onchange="autoSave();">
+                            <option value="0">Statis</option><option value="1">Wave (Color)</option>
+                            <option value="2">Sweep (Color)</option><option value="3">Breath (Color)</option>
+                            <option value="4">Flame (Color)</option><option value="5">Rainbow (RGB)</option>
+                            <option value="6">Gradient Sweep</option>
+                        </select>
+                    </div>
+                    
+                    <div class="color-grid" id="color-grid-container">
+                        <div class="cg-item" style="grid-column: span 3;"><label style="font-size:0.75rem; font-weight:bold;">BASE</label><input type="color" id="ui-color" onchange="autoSave()"></div>
+                        <div class="cg-item" style="grid-column: span 3;"><label style="font-size:0.75rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color2" onchange="autoSave()"></div>
+                        <div class="cg-item" id="wrap-push" style="grid-column: span 2;"><label style="font-size:0.75rem; font-weight:bold;">PUSH</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
+                        <div class="cg-item" id="wrap-sh-on" style="grid-column: span 2;"><label style="font-size:0.75rem; font-weight:bold;">SHIFT ON</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
+                        <div class="cg-item" id="wrap-sh-btn" style="grid-column: span 2;"><label style="font-size:0.75rem; font-weight:bold;">SHIFT BTN</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-actions">
+            <button class="btn-action btn-sec" onclick="exportData()">Export Config</button>
+            <button class="btn-action btn-sec" onclick="importData()">Import Config</button>
+            <label class="cb-container"><input type="checkbox" id="cb-autoexport" class="cb-neo" checked> Auto-Backup JSON</label>
+            <button class="btn-main" id="btn-push" onclick="pushToEEPROM()">⚡ PUSH TO DEVICE</button>
+            <button class="btn-sync" onclick="syncDevice()">SYNC</button>
+            <div id="serial-status" onclick="connectUSB()">CONNECT</div>
+        </div>
+
+        <div class="theme-toggle-wrap"><div class="theme-switch" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><div class="theme-switch-knob"></div></div></div>
+
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><span id="m-title">EDITOR</span><span onclick="closeModal()" style="cursor:pointer">[X]</span></div>
+        <div class="modal-body">
+            <div class="layer-unit">
+                <div class="layer-lbl">NORMAL LAYER</div>
+                <div class="row-edit">
+                    <select id="n-m" class="neo-select" style="flex:1;" onchange="uiLogic('n')"></select>
+                    <input type="text" id="n-lbl" class="neo-input" placeholder="Custom Label" style="flex:1;">
+                </div>
+                <div id="n-ui-sto" class="row-edit hidden" style="margin-top:10px;">
+                    <label class="cb-container"><input type="checkbox" id="n-sto" class="cb-neo"> Enable Soft Takeover (STO)</label>
+                </div>
+                
+                <div id="n-ui-mult" class="row-edit hidden">
+                    <label style="width:120px; font-weight:bold; font-size:0.9rem;">Kelipatan Step:</label>
+                    <input type="number" id="n-enc-mult" class="neo-input" min="1" max="10" value="1">
+                </div>
+
+                <div id="n-ui-midi" class="row-edit hidden">
+                    <select id="n-chan" class="neo-select" style="width:140px"></select>
+                    <input type="number" id="n-cc" class="neo-input" placeholder="CC Num" min="0" max="127">
+                    <input type="number" id="n-cc2" class="neo-input hidden" placeholder="CC Right" min="0" max="127">
+                </div>
+                <div id="n-ui-short" class="row-edit hidden">
+                    <select id="n-mod1" class="neo-select"></select><select id="n-mod2" class="neo-select"></select>
+                    <button type="button" id="n-key-btn" class="custom-key-btn" onclick="openKeyPicker('n-key')">- PILIH KEY -</button>
+                    <input type="hidden" id="n-key" value="0">
+                </div>
+                <div id="n-ui-media" class="row-edit hidden">
+                    <select id="n-med" class="neo-select"><option value="205">PLAY/PAUSE</option><option value="182">PREV</option><option value="181">NEXT</option><option value="226">MUTE</option><option value="233">VOL UP</option><option value="234">VOL DN</option></select>
+                </div>
+                <div id="n-ui-nav" class="row-edit hidden">
+                    <select id="n-nav-opt" class="neo-select"><option value="1">Page Up/Down</option><option value="2">Scroll Up/Down</option><option value="3">Zoom In/Out</option><option value="4">Undo/Redo</option><option value="5">Copy/Paste</option><option value="6">Home/End</option><option value="7">Prev/Next</option></select>
+                </div>
+                <div id="n-ui-enc-short" class="row-edit hidden">
+                    <select id="n-enc-mod" class="neo-select" style="width:100px"></select>
+                    <button type="button" id="n-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-l')">KIRI</button><input type="hidden" id="n-enc-l" value="0">
+                    <button type="button" id="n-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-r')">KANAN</button><input type="hidden" id="n-enc-r" value="0">
+                </div>
+                <div id="n-ui-macro" class="hidden">
+                    <div class="row-edit"><label style="width:80px">Init Key:</label><select id="n-mac-init" class="neo-select"><option value="0">WIN+R</option></select><select id="n-mac-act1" class="neo-select"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
+                    <div class="row-edit"><input type="text" id="n-mac-txt1" class="neo-input" placeholder="Teks App/URL..."></div>
+                    <div class="row-edit"><label style="width:80px">Act 2:</label><select id="n-mac-act2" class="neo-select" onchange="uiLogic('n')"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
+                    <div id="n-mac-sub" class="hidden"><div class="row-edit"><input type="text" id="n-mac-txt2" class="neo-input" placeholder="Lanjutan..."></div></div>
+                </div>
+
+                <div id="n-ui-seq" class="hidden" style="margin-top:10px; background:var(--rig-bg); padding:10px; border-radius:8px; border:2px solid var(--border-color);">
+                    <div class="row-edit">
+                        <select id="n-seq-type" class="neo-select" onchange="toggleSeqType('n')"><option value="1">KEYBOARD SEQ</option><option value="2">MIDI CC SEQ</option></select>
+                        <select id="n-seq-mod" class="neo-select"></select>
+                        <label class="cb-container" style="flex:1;"><input type="checkbox" id="n-seq-reset" class="cb-neo"> Auto-Reset</label>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <div style="flex:1; border:2px solid #555; padding:8px; border-radius:5px;">
+                            <div style="text-align:center; font-weight:bold; margin-bottom:8px; color:#fff;">PUTAR KIRI (L1-L5)</div><div id="n-seq-l" style="display:flex; flex-direction:column; gap:5px;"></div>
+                        </div>
+                        <div style="flex:1; border:2px solid #555; padding:8px; border-radius:5px;">
+                            <div style="text-align:center; font-weight:bold; margin-bottom:8px; color:#fff;">PUTAR KANAN (R1-R5)</div><div id="n-seq-r" style="display:flex; flex-direction:column; gap:5px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layer-unit" id="s-box">
+                <div class="layer-lbl shift-lbl">SHIFT LAYER</div>
+                <div class="row-edit">
+                    <select id="s-m" class="neo-select" style="flex:1;" onchange="uiLogic('s')"></select>
+                    <input type="text" id="s-lbl" class="neo-input" placeholder="Custom Label" style="flex:1;">
+                </div>
+                <div id="s-ui-sto" class="row-edit hidden" style="margin-top:10px;">
+                    <label class="cb-container"><input type="checkbox" id="s-sto" class="cb-neo"> Enable Soft Takeover (STO)</label>
+                </div>
+                
+                <div id="s-ui-mult" class="row-edit hidden">
+                    <label style="width:120px; font-weight:bold; font-size:0.9rem;">Kelipatan Step:</label>
+                    <input type="number" id="s-enc-mult" class="neo-input" min="1" max="10" value="1">
+                </div>
+
+                <div id="s-ui-midi" class="row-edit hidden">
+                    <select id="s-chan" class="neo-select" style="width:140px"></select>
+                    <input type="number" id="s-cc" class="neo-input" placeholder="CC Num" min="0" max="127">
+                    <input type="number" id="s-cc2" class="neo-input hidden" placeholder="CC Right" min="0" max="127">
+                </div>
+                <div id="s-ui-short" class="row-edit hidden">
+                    <select id="s-mod1" class="neo-select"></select><select id="s-mod2" class="neo-select"></select>
+                    <button type="button" id="s-key-btn" class="custom-key-btn" onclick="openKeyPicker('s-key')">- PILIH KEY -</button>
+                    <input type="hidden" id="s-key" value="0">
+                </div>
+                <div id="s-ui-media" class="row-edit hidden">
+                    <select id="s-med" class="neo-select"><option value="205">PLAY/PAUSE</option><option value="182">PREV</option><option value="181">NEXT</option><option value="226">MUTE</option><option value="233">VOL UP</option><option value="234">VOL DN</option></select>
+                </div>
+                <div id="s-ui-nav" class="row-edit hidden">
+                    <select id="s-nav-opt" class="neo-select"><option value="1">Page Up/Down</option><option value="2">Scroll Up/Down</option><option value="3">Zoom In/Out</option><option value="4">Undo/Redo</option><option value="5">Copy/Paste</option><option value="6">Home/End</option><option value="7">Prev/Next</option></select>
+                </div>
+                <div id="s-ui-enc-short" class="row-edit hidden">
+                    <select id="s-enc-mod" class="neo-select" style="width:100px"></select>
+                    <button type="button" id="s-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-l')">KIRI</button><input type="hidden" id="s-enc-l" value="0">
+                    <button type="button" id="s-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-r')">KANAN</button><input type="hidden" id="s-enc-r" value="0">
+                </div>
+                <div id="s-ui-macro" class="hidden">
+                    <div class="row-edit"><label style="width:80px">Init Key:</label><select id="s-mac-init" class="neo-select"><option value="0">WIN+R</option></select><select id="s-mac-act1" class="neo-select"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
+                    <div class="row-edit"><input type="text" id="s-mac-txt1" class="neo-input" placeholder="Teks App/URL..."></div>
+                    <div class="row-edit"><label style="width:80px">Act 2:</label><select id="s-mac-act2" class="neo-select" onchange="uiLogic('s')"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
+                    <div id="s-mac-sub" class="hidden"><div class="row-edit"><input type="text" id="s-mac-txt2" class="neo-input" placeholder="Lanjutan..."></div></div>
+                </div>
+
+                <div id="s-ui-seq" class="hidden" style="margin-top:10px; background:var(--rig-bg); padding:10px; border-radius:8px; border:2px solid var(--border-color);">
+                    <div class="row-edit">
+                        <select id="s-seq-type" class="neo-select" onchange="toggleSeqType('s')"><option value="1">KEYBOARD SEQ</option><option value="2">MIDI CC SEQ</option></select>
+                        <select id="s-seq-mod" class="neo-select"></select>
+                        <label class="cb-container" style="flex:1;"><input type="checkbox" id="s-seq-reset" class="cb-neo"> Auto-Reset</label>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <div style="flex:1; border:2px solid #555; padding:8px; border-radius:5px;">
+                            <div style="text-align:center; font-weight:bold; margin-bottom:8px; color:#fff;">PUTAR KIRI (L1-L5)</div><div id="s-seq-l" style="display:flex; flex-direction:column; gap:5px;"></div>
+                        </div>
+                        <div style="flex:1; border:2px solid #555; padding:8px; border-radius:5px;">
+                            <div style="text-align:center; font-weight:bold; margin-bottom:8px; color:#fff;">PUTAR KANAN (R1-R5)</div><div id="s-seq-r" style="display:flex; flex-direction:column; gap:5px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-action btn-main" style="margin-top:5px; background: #2ed573; color: #111; border-color: #2ed573;" onclick="saveConfig()">SIMPAN PERUBAHAN</button>
+        </div>
+    </div>
+</div>
+
+<div id="keyPickerModal" class="modal" style="z-index: 150;">
+    <div class="modal-content" style="width: 800px; padding: 20px;">
+        <div class="modal-header" style="margin-bottom: 15px; font-size: 1.2rem;"><span>PILIH KEYBOARD KEY</span><span onclick="closeKeyPicker()" style="cursor:pointer">[X]</span></div>
+        <div id="keyPickerContainer"></div>
+    </div>
+</div>
+
+<div class="checker-bottom"></div>
+<input type="file" id="f-import" hidden onchange="handleImport(this)">
+
+<script>
+    const act6 = {m:0, v1:0, v2:0, v3:0, lbl:"", seq:null}; 
+    const act10 = {m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""};
+
+    let cfg = {
+        panic: {m:0, v1:1, v2:0, v3:127}, 
+        bank0: { btn: Array.from({length:10}, () => ({...act6})), pot: Array.from({length:4}, (_,i) => ({...act6, m:2, v1:1, v2:71+i})), encRot: {...act6, m:1}, encSw: {...act6}, bright: 100, anim: 1, speed: 5, col: [0,255,255], col2: [255,0,255], colActive: [255,255,255], colShift: [255,128,0] },
+        bank1: { btn: Array.from({length:2}, () => Array.from({length:10}, () => ({...act10}))), pot: Array.from({length:2}, () => Array.from({length:4}, (_,i) => ({...act6, m:2, v1:1, v2:71+i}))), encRot: Array.from({length:2}, () => ({...act6, m:1})), encSw: Array.from({length:2}, () => ({...act10})), bright: 100, anim: 1, speed: 5, col: [255,0,255], col2: [0,255,255], colActive: [255,255,255], colShift: [255,128,0], colB6: [0,255,255] }
+    };
+    
+    let curB = 1, curT = '', curI = 0, port, serialReader, currentKeyTarget = ''; 
+
+    function toggleTheme() { const doc = document.documentElement; const cur = doc.getAttribute('data-theme'); const next = cur === 'dark' ? 'light' : 'dark'; doc.setAttribute('data-theme', next); localStorage.setItem('sakuTheme', next); }
+    function showToast(msg) { const o = document.getElementById('toastOverlay'); document.getElementById('toastMessage').innerText = msg; o.classList.add('active'); setTimeout(()=>o.classList.remove('active'), 2500); }
+    function markUnsaved() { const b = document.getElementById('btn-push'); b.classList.add('unsaved'); b.innerText = "⚠️ UNSAVED CHANGES!"; }
+    function markSaved() { const b = document.getElementById('btn-push'); b.classList.remove('unsaved'); b.innerText = "⚡ PUSH TO DEVICE"; }
+
+    window.onload = () => { 
+        const savedTheme = localStorage.getItem('sakuTheme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        buildOptions(); buildKeyPicker(); loadAutoSave(); 
+        
+        let pM = document.getElementById('ui-panic-mode');
+        if (cfg.panic) {
+            pM.value = cfg.panic.m;
+            document.getElementById('ui-panic-ch').value = cfg.panic.v1 || 1;
+            document.getElementById('ui-panic-cc').value = cfg.panic.v2 || 0;
+            document.getElementById('ui-panic-val').value = cfg.panic.v3 || 127;
+            document.getElementById('ui-panic-mod').value = cfg.panic.v1 || 0;
+            document.getElementById('ui-panic-keyval').value = cfg.panic.v2 || 0;
+            document.getElementById('ui-panic-btn').innerText = getKeyDisplayLabel(cfg.panic.v2 || 0);
+        }
+        togglePanicUI();
+        startPreviewEngine(); // LIVE PREVIEW INIT
+    };
+
+    function togglePanicUI() {
+        let m = parseInt(document.getElementById('ui-panic-mode').value);
+        document.getElementById('ui-panic-midi').classList.add('hidden'); document.getElementById('ui-panic-key').classList.add('hidden');
+        if (m == 4) document.getElementById('ui-panic-midi').classList.remove('hidden'); if (m == 5) document.getElementById('ui-panic-key').classList.remove('hidden');
+    }
+
+    function getKeyDisplayLabel(val) {
+        if(val == 0) return 'NONE'; if(val == 234) return 'NUM 0'; if(val >= 225 && val <= 233) return 'NUM ' + (val-224); if(val >= 194 && val <= 205) return 'F' + (val-193); if(val >= 97 && val <= 122) return String.fromCharCode(val-32).toUpperCase(); if(val >= 65 && val <= 90) return String.fromCharCode(val).toUpperCase();
+        const navMap = {176:'ENT',177:'ESC',178:'BKS',179:'TAB',32:'SPC',218:'UP',217:'DWN',216:'LFT',215:'RGT'};
+        if(navMap[val]) return navMap[val]; return String.fromCharCode(val);
+    }
+
+    function buildOptions() {
+        const mods = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>';
+        ['n','s'].forEach(l => { document.getElementById(`${l}-mod1`).innerHTML = mods; document.getElementById(`${l}-mod2`).innerHTML = mods; document.getElementById(`${l}-enc-mod`).innerHTML = mods; });
+        document.getElementById('ui-panic-mod').innerHTML = mods; let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; 
+        ['n','s'].forEach(l => { document.getElementById(`${l}-chan`).innerHTML = ch; }); document.getElementById('ui-panic-ch').innerHTML = ch;
+    }
+
+    function buildKeyPicker() {
+        let kpHTML = `<button type="button" class="kp-btn" onclick="selectKey(0)" style="background:#ff4757; color:#fff; width: 100%; margin-bottom: 15px;">[ X ] NONE / KOSONG</button>`;
+        const addGroup = (title, items) => { kpHTML += `<div class="kp-section"><div class="kp-title">${title}</div>`; items.forEach(i => { let htmlStr = i.l === '<' ? '&lt;' : (i.l === '>' ? '&gt;' : (i.l === '"' ? '&quot;' : i.l)); kpHTML += `<button type="button" class="kp-btn" onclick="selectKey(${i.v})">${htmlStr}</button>`; }); kpHTML += `</div>`; };
+        let numpad = [{v:234,l:'NUM 0'}]; for(let i=1;i<=9;i++) numpad.push({v:224+i, l:`NUM ${i}`}); addGroup('NUMPAD', numpad);
+        let nav = [{v:176,l:'ENTER'},{v:177,l:'ESC'},{v:178,l:'BKSPACE'},{v:179,l:'TAB'},{v:32,l:'SPACE'},{v:218,l:'UP'},{v:217,l:'DOWN'},{v:216,l:'LEFT'},{v:215,l:'RIGHT'}]; addGroup('NAVIGASI', nav);
+        let fkeys = []; for(let i=1;i<=12;i++) fkeys.push({v:193+i, l:`F${i}`}); addGroup('F1 - F12', fkeys);
+        let alpha = []; for(let i=65;i<=90;i++) alpha.push({v:i+32, l:String.fromCharCode(i)}); addGroup('ALFABET', alpha);
+        let sym = []; '~"()<>!@#$%^&*_+:?-=/?.,'.split('').forEach(s => sym.push({v:s.charCodeAt(0), l:s})); addGroup('SIMBOL', sym);
+        document.getElementById('keyPickerContainer').innerHTML = kpHTML;
+    }
+
+    function openKeyPicker(targetId) { currentKeyTarget = targetId; document.getElementById('keyPickerModal').style.display = 'flex'; }
+    function closeKeyPicker() { document.getElementById('keyPickerModal').style.display = 'none'; }
+    function selectKey(val) { document.getElementById(`${currentKeyTarget}`).value = val; document.getElementById(`${currentKeyTarget}-btn`).innerText = getKeyDisplayLabel(val); closeKeyPicker(); autoSave(); }
+    function getBankObj(b) { return b === 0 ? cfg.bank0 : cfg.bank1; }
+
+    function switchBank(b) {
+        curB = b; ['p0','p1'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
+        document.getElementById('curP').innerText = (b === 1) ? 'A' : 'B'; let bankObj = getBankObj(b);
+        document.getElementById('ui-bright').value = bankObj.bright; document.getElementById('bright-val').innerText = bankObj.bright + '%';
+        document.getElementById('ui-anim').value = bankObj.anim || 0; 
+        document.getElementById('ui-speed').value = bankObj.speed || 5; document.getElementById('speed-val').innerText = bankObj.speed || 5;
+        
+        document.getElementById('ui-color').value = rgbToHex(bankObj.col);
+        if(bankObj.col2) document.getElementById('ui-color2').value = rgbToHex(bankObj.col2);
+        document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive); 
+        document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift);
+        if(bankObj.colB6) document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6);
+        
+        const wrapShOn = document.getElementById('wrap-sh-on');
+        const wrapShBtn = document.getElementById('wrap-sh-btn');
+        const wrapPush = document.getElementById('wrap-push');
+        const b6 = document.getElementById('hw-B6');
+        
+        if (b === 0) { 
+            wrapShOn.classList.add('hidden'); wrapShBtn.classList.add('hidden'); wrapPush.style.gridColumn = 'span 6';
+            b6.classList.remove('btn-b6-shift'); b6.onclick = () => openEditor('btn', 5); 
+        } else { 
+            wrapShOn.classList.remove('hidden'); wrapShBtn.classList.remove('hidden'); wrapPush.style.gridColumn = 'span 2';
+            document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6); 
+            b6.classList.add('btn-b6-shift'); b6.onclick = null; 
+        }
+        
+        updateAllLabels();
+    }
+
+    const labelModMap = { 0:"", 1:"CT", 2:"SH", 4:"AL", 8:"WIN" };
+    function buildLabel(d) {
+        if(!d) return ""; if(d.lbl && d.lbl.trim() !== "") return d.lbl; if(d.m==0) return "Off";
+        if(d.m==1) { let m=[]; if(d.v1)m.push(labelModMap[d.v1]); if(d.v2)m.push(labelModMap[d.v2]); let k=d.v3?getKeyDisplayLabel(d.v3):""; return (m.join('+')+(m.length&&k?'+':"")+k) || "NONE"; }
+        if(d.m==2) return `CC ${d.v2}`; if(d.m==3) return "MEDIA"; if(d.m==4) return "MACRO";
+        if(d.m==5) return {1:"PG U/D", 2:"SCROLL", 3:"ZOOM", 4:"UNDO/RED", 5:"COPY/PST", 6:"HOME/END", 7:"TRK P/N"}[d.v1] || "PC NAV";
+        if(d.m==7) return "STEP SEQ"; return d.m==6 ? "SHORTCUT" : "";
+    }
+
+    function updateAllLabels() {
+        for(let i=0; i<10; i++) {
+            if (curB > 0 && i === 5) { document.getElementById('lbl-b5-n').innerText = "[SHIFT]"; document.getElementById('lbl-b5-s').innerText = ""; document.getElementById('div-b5').style.display = "none"; continue; }
+            let dN, dS;
+            if (curB === 0) { dN = cfg.bank0.btn[i]; } else { dN = cfg.bank1.btn[0][i]; dS = cfg.bank1.btn[1][i]; }
+            document.getElementById(`lbl-b${i}-n`).innerText = buildLabel(dN); document.getElementById(`lbl-b${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); document.getElementById(`div-b${i}`).style.display = curB===0 ? "none" : "block";
+        }
+        for(let i=0; i<4; i++){
+            let dN = curB===0 ? cfg.bank0.pot[i] : cfg.bank1.pot[0][i]; let dS = curB===0 ? null : cfg.bank1.pot[1][i];
+            document.getElementById(`lbl-p${i}-n`).innerText = buildLabel(dN); document.getElementById(`lbl-p${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); document.getElementById(`div-p${i}`).style.display = curB===0 ? "none" : "block";
+        }
+        let dENrot = curB===0 ? cfg.bank0.encRot : cfg.bank1.encRot[0]; let dESrot = curB===0 ? null : cfg.bank1.encRot[1];
+        document.getElementById(`lbl-encrot-n`).innerText = buildLabel(dENrot); document.getElementById(`lbl-encrot-s`).innerText = curB===0 ? "" : buildLabel(dESrot); document.getElementById(`div-encrot`).style.display = curB===0 ? "none" : "block";
+        let dENsw = curB===0 ? cfg.bank0.encSw : cfg.bank1.encSw[0]; let dESsw = curB===0 ? null : cfg.bank1.encSw[1];
+        document.getElementById(`lbl-encsw-n`).innerText = buildLabel(dENsw); document.getElementById(`lbl-encsw-s`).innerText = curB===0 ? "" : " | " + buildLabel(dESsw);
+    }
+
+    function updateBright(v) { document.getElementById('bright-val').innerText = v + '%'; getBankObj(curB).bright = parseInt(v); autoSave(); }
+    function updateSpeed(v) { document.getElementById('speed-val').innerText = v; getBankObj(curB).speed = parseInt(v); autoSave(); }
+
+    function toggleSeqType(l) {
+        let t = document.getElementById(`${l}-seq-type`).value; let modSel = document.getElementById(`${l}-seq-mod`);
+        if(t == "1") { modSel.innerHTML = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>'; } 
+        else { let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; modSel.innerHTML = ch; }
+        let lHtml = '', rHtml = '';
+        for(let i=1; i<=5; i++) {
+            if(t == "1") {
+                lHtml += `<button type="button" class="custom-key-btn" style="width:100%;" id="${l}-seq-l${i}-btn" onclick="openKeyPicker('${l}-seq-l${i}')">L${i} KEY</button><input type="hidden" id="${l}-seq-l${i}" value="0">`;
+                rHtml += `<button type="button" class="custom-key-btn" style="width:100%;" id="${l}-seq-r${i}-btn" onclick="openKeyPicker('${l}-seq-r${i}')">R${i} KEY</button><input type="hidden" id="${l}-seq-r${i}" value="0">`;
+            } else {
+                lHtml += `<input type="number" class="neo-input" id="${l}-seq-l${i}" placeholder="L${i} CC (0-127)" min="0" max="127">`;
+                rHtml += `<input type="number" class="neo-input" id="${l}-seq-r${i}" placeholder="R${i} CC (0-127)" min="0" max="127">`;
+            }
+        }
+        document.getElementById(`${l}-seq-l`).innerHTML = lHtml; document.getElementById(`${l}-seq-r`).innerHTML = rHtml;
+    }
+
+    function openEditor(type, idx) {
+        curT = type; curI = idx; let dName = type === 'btn' ? `B${idx+1}` : (type === 'pot' ? `POTENSIO ${idx+1}` : (type === 'encRot' ? "ENCODER ROTARY" : "ENCODER SWITCH"));
+        let profName = curB === 1 ? "PROFIL A" : "PROFIL B"; document.getElementById('m-title').innerText = `${dName} (${profName})`;
+        let hasShift = curB > 0; document.getElementById('s-box').style.display = hasShift ? 'block' : 'none';
+        let maxLen = (curB > 0 && (type === 'btn' || type === 'encSw')) ? 10 : 6; document.getElementById('n-lbl').maxLength = maxLen; document.getElementById('s-lbl').maxLength = maxLen;
+        
+        const nm = document.getElementById('n-m'), sm = document.getElementById('s-m');
+        if(type==='btn' || type==='encSw') { let opt = '<option value="0">OFF</option><option value="1">SHORTCUT</option><option value="2">MIDI CC</option><option value="3">MEDIA</option><option value="4">MACRO MK-I</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
+        else if(type==='encRot') { const opt = '<option value="0">OFF</option><option value="1">VOLUME HID</option><option value="2">MIDI RELATIF</option><option value="3">MEDIA TRACK</option><option value="4">MIDI ABSOLUT</option><option value="5">PC NAVIGASI</option><option value="6">SHORTCUT KUSTOM</option><option value="7">STEP MACRO SEQ</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
+        else { const opt = '<option value="0">OFF</option><option value="2">MIDI ABSOLUT</option>'; nm.innerHTML = opt; sm.innerHTML = opt; }
+        
+        const fill = (l, d) => {
+            if(!d) return; document.getElementById(`${l}-m`).value = d.m; document.getElementById(`${l}-lbl`).value = d.lbl || ""; 
+            if(type==='pot') { document.getElementById(`${l}-ui-sto`).classList.remove('hidden'); document.getElementById(`${l}-sto`).checked = (d.v3 == 1); } else { let e = document.getElementById(`${l}-ui-sto`); if(e) e.classList.add('hidden'); }
+            if(type==='encRot' && (d.m==1 || d.m==4)) { document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); document.getElementById(`${l}-enc-mult`).value = d.v3 > 0 ? d.v3 : 1; } else { let e = document.getElementById(`${l}-ui-mult`); if(e) e.classList.add('hidden'); }
+            if(d.m==1) { document.getElementById(`${l}-mod1`).value = d.v1; document.getElementById(`${l}-mod2`).value = d.v2; document.getElementById(`${l}-key`).value = d.v3; document.getElementById(`${l}-key-btn`).innerText = getKeyDisplayLabel(d.v3); }
+            if(d.m==2||d.m==4) { document.getElementById(`${l}-chan`).value = d.v1||1; document.getElementById(`${l}-cc`).value = d.v2; if(type==='encRot'&&d.m==2) document.getElementById(`${l}-cc2`).value=d.v3; }
+            if(d.m==3) { document.getElementById(`${l}-med`).value = d.v1||205; }
+            if(d.m==4&&(type==='btn'||type==='encSw')){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
+            if(d.m==5&&type==='encRot') { document.getElementById(`${l}-nav-opt`).value = d.v1||1; }
+            if(d.m==6&&type==='encRot') { document.getElementById(`${l}-enc-mod`).value=d.v1||0; document.getElementById(`${l}-enc-l`).value=d.v2||0; document.getElementById(`${l}-enc-l-btn`).innerText=getKeyDisplayLabel(d.v2||0); document.getElementById(`${l}-enc-r`).value=d.v3||0; document.getElementById(`${l}-enc-r-btn`).innerText=getKeyDisplayLabel(d.v3||0); }
+            if(d.m==7&&type==='encRot') { 
+                document.getElementById(`${l}-seq-type`).value = d.v1 & 0x0F || 1; document.getElementById(`${l}-seq-reset`).checked = (d.v1 & 0x80) !== 0; 
+                toggleSeqType(l); document.getElementById(`${l}-seq-mod`).value = d.v2 || 0;
+                if(d.seq) { for(let i=0; i<5; i++) { let lv = d.seq[i]; let rv = d.seq[i+5]; document.getElementById(`${l}-seq-l${i+1}`).value = lv; document.getElementById(`${l}-seq-r${i+1}`).value = rv; if((d.v1 & 0x0F) == 1) { document.getElementById(`${l}-seq-l${i+1}-btn`).innerText = getKeyDisplayLabel(lv); document.getElementById(`${l}-seq-r${i+1}-btn`).innerText = getKeyDisplayLabel(rv); } } }
+            } uiLogic(l);
+        };
+        
+        let dN, dS;
+        if(curB === 0) { if(type==='btn') dN=cfg.bank0.btn[idx]; else if(type==='pot') dN=cfg.bank0.pot[idx]; else if(type==='encRot') dN=cfg.bank0.encRot; else if(type==='encSw') dN=cfg.bank0.encSw; } 
+        else { if(type==='btn') { dN=cfg.bank1.btn[0][idx]; dS=cfg.bank1.btn[1][idx]; } else if(type==='pot') { dN=cfg.bank1.pot[0][idx]; dS=cfg.bank1.pot[1][idx]; } else if(type==='encRot') { dN=cfg.bank1.encRot[0]; dS=cfg.bank1.encRot[1]; } else if(type==='encSw') { dN=cfg.bank1.encSw[0]; dS=cfg.bank1.encSw[1]; } }
+        fill('n', dN); if(hasShift) fill('s', dS);
+        
+        document.getElementById('modal').style.display = 'flex'; setTimeout(() => document.getElementById('n-m').focus(), 50);
+    }
+
+    function uiLogic(l) {
+        const m = parseInt(document.getElementById(`${l}-m`).value);
+        ['midi','short','macro','media','nav','enc-short','mult','seq'].forEach(x => { let el = document.getElementById(`${l}-ui-${x}`); if(el) el.classList.add('hidden'); });
+        if(curT === 'btn' || curT === 'encSw') { if(m==1) document.getElementById(`${l}-ui-short`).classList.remove('hidden'); if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==4) { document.getElementById(`${l}-ui-macro`).classList.remove('hidden'); let sub=document.getElementById(`${l}-mac-sub`); if(sub) sub.classList.toggle('hidden', document.getElementById(`${l}-mac-act2`).value!=2); } } 
+        else if (curT === 'encRot') { if(m==1 || m==4) document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); if(m==2 || m==4) { document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); let cc2=document.getElementById(`${l}-cc2`); if(cc2) cc2.classList.toggle('hidden', m!=2); } if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==5) document.getElementById(`${l}-ui-nav`).classList.remove('hidden'); if(m==6) document.getElementById(`${l}-ui-enc-short`).classList.remove('hidden'); if(m==7) { document.getElementById(`${l}-ui-seq`).classList.remove('hidden'); if(document.getElementById(`${l}-seq-l`).innerHTML === '') toggleSeqType(l); } } 
+        else if (curT === 'pot') { if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); }
+    }
+
+    // BUGFIX LACI VARIABEL v3 (Encoder Mult tidak ditimpa lagi)
+    function saveConfig() {
+        const get = (l) => {
+            let m = parseInt(document.getElementById(`${l}-m`).value); let d = (curB > 0 && (curT==='btn' || curT==='encSw')) ? {...act10} : {...act6}; d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
+            
+            if (curT === 'btn' || curT === 'encSw') {
+                if(m==1){ d.v1=parseInt(document.getElementById(`${l}-mod1`).value)||0; d.v2=parseInt(document.getElementById(`${l}-mod2`).value)||0; d.v3=parseInt(document.getElementById(`${l}-key`).value)||0; }
+                else if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; }
+                else if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
+                else if(m==4){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
+            } else if (curT === 'pot') {
+                if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3 = document.getElementById(`${l}-sto`).checked ? 1 : 0; }
+            } else if (curT === 'encRot') {
+                if(m==1){ d.v3=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; }
+                else if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; }
+                else if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
+                else if(m==4){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; }
+                else if(m==5){ d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; }
+                else if(m==6){ d.v1=parseInt(document.getElementById(`${l}-enc-mod`).value)||0; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; }
+                else if(m==7){ 
+                    d.v1 = (parseInt(document.getElementById(`${l}-seq-type`).value) || 1) | (document.getElementById(`${l}-seq-reset`).checked ? 0x80 : 0);
+                    d.v2 = parseInt(document.getElementById(`${l}-seq-mod`).value) || 0; d.seq = [];
+                    for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-l${i}`).value) || 0); 
+                    for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-r${i}`).value) || 0);
+                }
+            }
+            return d;
+        };
+        
+        let gN = get('n'), gS = curB>0 ? get('s') : null;
+        if(curB === 0) { if(curT==='btn') cfg.bank0.btn[curI] = gN; if(curT==='pot') cfg.bank0.pot[curI] = gN; if(curT==='encRot') cfg.bank0.encRot = gN; if(curT==='encSw') cfg.bank0.encSw = gN; } 
+        else { if(curT==='btn') { cfg.bank1.btn[0][curI]=gN; cfg.bank1.btn[1][curI]=gS; } if(curT==='pot') { cfg.bank1.pot[0][curI]=gN; cfg.bank1.pot[1][curI]=gS; } if(curT==='encRot') { cfg.bank1.encRot[0]=gN; cfg.bank1.encRot[1]=gS; } if(curT==='encSw') { cfg.bank1.encSw[0]=gN; cfg.bank1.encSw[1]=gS; } }
+        closeModal(); autoSave(); updateAllLabels(); showToast("TERSIPMAN SEMENTARA!");
+    }
+
+    function closeModal() { document.getElementById('modal').style.display='none'; closeKeyPicker(); }
+    
+    function autoSave() { 
+        let pm = parseInt(document.getElementById('ui-panic-mode').value); if(!cfg.panic) cfg.panic = {m:0, v1:1, v2:0, v3:127}; cfg.panic.m = pm;
+        if (pm == 4) { cfg.panic.v1 = parseInt(document.getElementById('ui-panic-ch').value)||1; cfg.panic.v2 = parseInt(document.getElementById('ui-panic-cc').value)||0; cfg.panic.v3 = parseInt(document.getElementById('ui-panic-val').value)||127; }
+        else if (pm == 5) { cfg.panic.v1 = parseInt(document.getElementById('ui-panic-mod').value)||0; cfg.panic.v2 = parseInt(document.getElementById('ui-panic-keyval').value)||0; }
+
+        let bObj = getBankObj(curB);
+        bObj.anim = parseInt(document.getElementById('ui-anim').value); 
+        bObj.col = hexToRgb(document.getElementById('ui-color').value);
+        bObj.col2 = hexToRgb(document.getElementById('ui-color2').value);
+        bObj.colActive = hexToRgb(document.getElementById('ui-color-active').value); 
+        bObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value);
+        if (curB > 0) bObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value);
+        localStorage.setItem('baysKONTROL', JSON.stringify(cfg)); markUnsaved();
+    }
+    
+    function sanitizeConfig(c) {
+        if (!c || !c.bank0) return c; let nc = JSON.parse(JSON.stringify(c)); nc.magic = ['B','K','1']; if (!nc.panic) nc.panic = {m:0, v1:1, v2:0, v3:127};
+        if (!nc.bank0.col2) { nc.bank0.col2 = [255,0,255]; nc.bank0.speed = 5; nc.bank1.col2 = [0,255,255]; nc.bank1.speed = 5; }
+        if (!nc.bank0.colB6) nc.bank0.colB6 = [0,255,255];
+
+        if (nc.bank1 && nc.bank1.btn1_5) {
+            let b1 = { btn: [[], []], pot: nc.bank1.pot, encRot: [], encSw: [{m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}, {m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}], bright: nc.bank1.bright, anim: nc.bank1.anim, speed: 5, col: nc.bank1.col, col2:[0,255,255], colActive: nc.bank1.colActive, colShift: nc.bank1.colShift, colB6: nc.bank1.colB6 };
+            if(nc.bank1.enc) { b1.encRot = nc.bank1.enc; } 
+            for(let l=0; l<2; l++) { for(let i=0; i<5; i++) b1.btn[l].push(nc.bank1.btn1_5[l][i]); b1.btn[l].push({m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""}); for(let i=0; i<4; i++) { let old = nc.bank1.btn7_10[l][i]; b1.btn[l].push({m: old.m, v1: old.v1, v2: old.v2, v3: old.v3, t1:"", t2:"", lbl: old.lbl}); } }
+            nc.bank1 = b1;
+        }
+
+        if (nc.bank0.enc) { nc.bank0.encRot = nc.bank0.enc; delete nc.bank0.enc; nc.bank0.encSw = {m:0, v1:0, v2:0, v3:0, lbl:""}; }
+        if (nc.bank1.enc) { nc.bank1.encRot = nc.bank1.enc; delete nc.bank1.enc; nc.bank1.encSw = [{m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}, {m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}]; }
+
+        const upgradeEnc = (enc) => { if (enc && enc.m === 7 && (enc.v1 & 0x80) === 0) { enc.v1 = enc.v1 | 0x80; } };
+        upgradeEnc(nc.bank0.encRot); if(nc.bank1.encRot) { upgradeEnc(nc.bank1.encRot[0]); upgradeEnc(nc.bank1.encRot[1]); }
+        return nc;
+    }
+
+    function loadAutoSave() { const s = localStorage.getItem('baysKONTROL'); if(s) { try { let loaded = JSON.parse(s); cfg = sanitizeConfig(loaded); } catch(e) {} } switchBank(1); } 
+    function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+    function rgbToHex(arr) { return "#" + arr.map(x=>x.toString(16).padStart(2,'0')).join(''); }
+
+    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_rc1.json'; a.click(); showToast("EXPORT BERHASIL!"); }
+    function importData() { document.getElementById('f-import').click(); }
+    function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { cfg = sanitizeConfig(JSON.parse(e.target.result)); switchBank(1); markUnsaved(); showToast("IMPORT & MIGRASI SUKSES!"); }; fr.readAsText(i.files[0]); i.value=''; }
+
+    async function connectUSB() {
+        try { port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 }); document.getElementById('serial-status').innerText = "CONNECTED"; document.getElementById('serial-status').style.color = "var(--box-bg)"; document.getElementById('serial-status').style.background = "var(--text-main)"; const decoder = new TextDecoderStream(); port.readable.pipeTo(decoder.writable); serialReader = decoder.readable.getReader(); showToast("DEVICE TERHUBUNG!"); return true; } catch(e) { return false; }
+    }
+
+    async function pushToEEPROM() {
+        if(!port) { let connected = await connectUSB(); if(!connected) return; }
+        const writer = port.writable.getWriter(); const encoder = new TextEncoder(); const btn = document.getElementById('btn-push'); const autoExport = document.getElementById('cb-autoexport').checked; 
+        try {
+            btn.innerText = "COMPILING..."; let pool = new Uint8Array(150), pOff = 0; let b = new Uint8Array(718), off = 0; b[off++] = 66; b[off++] = 75; b[off++] = 49; 
+            
+            b[off++] = cfg.panic.m; b[off++] = cfg.panic.v1; b[off++] = cfg.panic.v2; b[off++] = cfg.panic.v3;
+
+            for(let l=0; l<2; l++) for(let i=0; i<10; i++) {
+                let d = cfg.bank1.btn[l][i];
+                if(d.m==4) { let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); let total = s1.length + (d.v2==2 ? s2.length : 0); if(pOff + total <= 150) { d.v3 = pOff; pool.set(s1, pOff); pOff += s1.length; if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } } else throw "MACRO PENUH!"; }
+            }
+            for(let l=0; l<2; l++) {
+                let d = cfg.bank1.encSw[l];
+                if(d.m==4) { let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); let total = s1.length + (d.v2==2 ? s2.length : 0); if(pOff + total <= 150) { d.v3 = pOff; pool.set(s1, pOff); pOff += s1.length; if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } } else throw "MACRO PENUH!"; }
+            }
+            const processEncSeq = (enc) => { if(enc.m == 7 && enc.seq) { if(pOff + 10 <= 150) { enc.v3 = pOff; for(let k=0; k<10; k++) pool[pOff++] = enc.seq[k]; } else throw "MACRO PENUH!"; } };
+            processEncSeq(cfg.bank0.encRot); processEncSeq(cfg.bank1.encRot[0]); processEncSeq(cfg.bank1.encRot[1]); 
+
+            const pack_6 = (o) => { b[off++]=o.m; b[off++]=o.v1; b[off++]=o.v2; b[off++]=o.v3; let lArr = encoder.encode(o.lbl||""); for(let i=0; i<6; i++) b[off++] = i < lArr.length ? lArr[i] : 0; };
+            const pack_10 = (o) => { b[off++]=o.m; b[off++]=o.v1; b[off++]=o.v2; b[off++]=o.v3; let lArr = encoder.encode(o.lbl||""); for(let i=0; i<10; i++) b[off++] = i < lArr.length ? lArr[i] : 0; };
+
+            cfg.bank0.btn.forEach(pack_6); cfg.bank0.pot.forEach(pack_6); pack_6(cfg.bank0.encRot); pack_6(cfg.bank0.encSw);
+            b[off++] = cfg.bank0.bright; b[off++] = cfg.bank0.anim; b[off++] = cfg.bank0.speed; cfg.bank0.col.forEach(c=>b[off++]=c); cfg.bank0.col2.forEach(c=>b[off++]=c); cfg.bank0.colActive.forEach(c=>b[off++]=c); cfg.bank0.colShift.forEach(c=>b[off++]=c);
+
+            for(let l=0; l<2; l++) cfg.bank1.btn[l].forEach(pack_10); for(let l=0; l<2; l++) cfg.bank1.pot[l].forEach(pack_6); for(let l=0; l<2; l++) pack_6(cfg.bank1.encRot[l]); for(let l=0; l<2; l++) pack_10(cfg.bank1.encSw[l]);
+            b[off++] = cfg.bank1.bright; b[off++] = cfg.bank1.anim; b[off++] = cfg.bank1.speed; cfg.bank1.col.forEach(c=>b[off++]=c); cfg.bank1.col2.forEach(c=>b[off++]=c); cfg.bank1.colActive.forEach(c=>b[off++]=c); cfg.bank1.colShift.forEach(c=>b[off++]=c); cfg.bank1.colB6.forEach(c=>b[off++]=c); 
+            pool.forEach(p => b[off++] = p);
+
+            const hex = Array.from(b, x => x.toString(16).padStart(2,'0').toUpperCase()).join('');
+            await writer.write(encoder.encode("<PAUSE>\n")); if(!(await waitFor("<NEXT>"))) throw "No Response";
+            await writer.write(encoder.encode("<CFG>\n")); if(!(await waitFor("<NEXT>"))) throw "Sync Error";
+            for(let i=0; i<hex.length; i+=64) { await writer.write(encoder.encode(hex.substring(i, i+64) + "\n")); let pct = Math.round((i/hex.length)*100); btn.innerText = `BURNING... ${pct}%`; if(!(await waitFor("<NEXT>"))) throw "Comm Error"; }
+            await writer.write(encoder.encode("</CFG>\n")); if(!(await waitFor("<SUCCESS>"))) throw "Verify Fail";
+            markSaved(); showToast("SUKSES SUNTIK KE ALAT!"); if(autoExport) exportData(); 
+        } catch(e) { showToast(e); btn.innerText = "⚡ PUSH TO DEVICE"; } writer.releaseLock();
+    }
+
+    async function syncDevice() {
+        if(!port) { let connected = await connectUSB(); if(!connected) return; }
+        const writer = port.writable.getWriter(); const encoder = new TextEncoder();
+        try {
+            document.querySelector('.btn-sync').innerText = "SYNCING..."; showToast("MENARIK DATA...");
+            await writer.write(encoder.encode("<SYNC>\n")); let start = Date.now(), syncHex = "";
+            while(Date.now() - start < 4000) { const {value} = await serialReader.read(); if(value) syncHex += value; if(syncHex.includes("\n")) break; }
+            syncHex = syncHex.trim(); 
+            if(syncHex.length >= 1436) { parseHexToConfig(syncHex); switchBank(curB); localStorage.setItem('baysKONTROL', JSON.stringify(cfg)); markSaved(); showToast("SINKRONISASI BERHASIL!"); } else { throw "Versi Firmware Tidak Dikenal!"; }
+        } catch(e) { showToast("ERROR: " + e); } document.querySelector('.btn-sync').innerText = "SYNC"; writer.releaseLock();
+    }
+
+    function parseHexToConfig(hex) {
+        let off = 0; const getB = () => parseInt(hex.substr(off++*2, 2), 16); 
+        let b0 = getB(), b1 = getB(), b2 = getB(); let magic = String.fromCharCode(b0) + String.fromCharCode(b1) + String.fromCharCode(b2);
+
+        if (magic === 'BK1') {
+            cfg.panic = { m: getB(), v1: getB(), v2: getB(), v3: getB() };
+
+            const read_6 = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl=""; for(let i=0;i<6;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, lbl}; };
+            const read_10 = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl=""; for(let i=0;i<10;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, t1:"", t2:"", lbl}; };
+            
+            for(let i=0; i<10; i++) cfg.bank0.btn[i] = read_6(); for(let i=0; i<4; i++) cfg.bank0.pot[i] = read_6(); cfg.bank0.encRot = read_6(); cfg.bank0.encSw = read_6();
+            cfg.bank0.bright=getB(); cfg.bank0.anim=getB(); cfg.bank0.speed=getB(); cfg.bank0.col=[getB(),getB(),getB()]; cfg.bank0.col2=[getB(),getB(),getB()]; cfg.bank0.colActive=[getB(),getB(),getB()]; cfg.bank0.colShift=[getB(),getB(),getB()];
+
+            for(let l=0; l<2; l++) for(let i=0; i<10; i++) cfg.bank1.btn[l][i] = read_10();
+            for(let l=0; l<2; l++) for(let i=0; i<4; i++) cfg.bank1.pot[l][i] = read_6(); for(let l=0; l<2; l++) cfg.bank1.encRot[l] = read_6(); for(let l=0; l<2; l++) cfg.bank1.encSw[l] = read_10();
+            cfg.bank1.bright=getB(); cfg.bank1.anim=getB(); cfg.bank1.speed=getB(); cfg.bank1.col=[getB(),getB(),getB()]; cfg.bank1.col2=[getB(),getB(),getB()]; cfg.bank1.colActive=[getB(),getB(),getB()]; cfg.bank1.colShift=[getB(),getB(),getB()]; cfg.bank1.colB6=[getB(),getB(),getB()];
+
+            let poolArr = []; for(let i=0; i<150; i++) poolArr.push(getB());
+            
+            for(let l=0; l<2; l++) for(let i=0; i<10; i++) { let act = cfg.bank1.btn[l][i]; if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 150 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 150 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } } }
+            for(let l=0; l<2; l++) { let act = cfg.bank1.encSw[l]; if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 150 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 150 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } } }
+
+            const readEncSeq = (enc) => { if(enc.m === 7) { enc.seq = []; let idx = enc.v3; for(let k=0; k<10; k++) { enc.seq.push(idx + k < 150 ? poolArr[idx + k] : 0); } } };
+            readEncSeq(cfg.bank0.encRot); readEncSeq(cfg.bank1.encRot[0]); readEncSeq(cfg.bank1.encRot[1]); 
+            
+            let pM = document.getElementById('ui-panic-mode');
+            if(pM) {
+                pM.value = cfg.panic.m; document.getElementById('ui-panic-ch').value = cfg.panic.v1 || 1; document.getElementById('ui-panic-cc').value = cfg.panic.v2 || 0; document.getElementById('ui-panic-val').value = cfg.panic.v3 || 127;
+                document.getElementById('ui-panic-mod').value = cfg.panic.v1 || 0; document.getElementById('ui-panic-keyval').value = cfg.panic.v2 || 0; document.getElementById('ui-panic-btn').innerText = getKeyDisplayLabel(cfg.panic.v2 || 0); togglePanicUI();
+            }
+        }
+    }
+
+    async function waitFor(exp) { let start = Date.now(), buf = ""; while(Date.now() - start < 3000) { const {value} = await serialReader.read(); if(value) buf += value; if(buf.includes(exp)) return true; await new Promise(r=>setTimeout(r,10)); } return false; }
+
+    function HSVtoRGB(h, s, v) {
+        var r, g, b, i, f, p, q, t;
+        i = Math.floor(h * 6); f = h * 6 - i; p = v * (1 - s); q = v * (1 - f * s); t = v * (1 - (1 - f) * s);
+        switch (i % 6) { case 0: r=v, g=t, b=p; break; case 1: r=q, g=v, b=p; break; case 2: r=p, g=v, b=t; break; case 3: r=p, g=q, b=v; break; case 4: r=t, g=p, b=v; break; case 5: r=v, g=p, b=q; break; }
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+
+    // MESIN LIVE PREVIEW VIRTUAL
+    function startPreviewEngine() {
+        requestAnimationFrame(startPreviewEngine);
+        let bObj = getBankObj(curB); let anim = bObj.anim || 0; let spd = (bObj.speed || 5) / 5.0; let ms = performance.now();
+        let c1 = bObj.col || [0,255,255]; let c2 = bObj.col2 || [255,0,255];
+        
+        for(let i=0; i<10; i++) {
+            let el = document.getElementById(`led-b${i}`); if(!el) continue; let r=0, g=0, b=0;
+            
+            if (curB === 1 && i === 5) { 
+                let cB6 = bObj.colB6 || [0,255,255]; r = cB6[0]; g = cB6[1]; b = cB6[2];
+            } else {
+                if (anim == 0) { 
+                    let blend = (9-i) / 9.0; 
+                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
+                }
+                else if (anim == 1) { 
+                    let blend = Math.sin((ms*0.002*spd) + (i*0.5)) * 0.5 + 0.5; 
+                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
+                }
+                else if (anim == 2) { 
+                    let act = Math.floor(ms / (1500/spd)) % 10; 
+                    if(i==act){ r=c1[0]; g=c1[1]; b=c1[2]; } else { r=c2[0]*0.1; g=c2[1]*0.1; b=c2[2]*0.1; } 
+                }
+                else if (anim == 3) { 
+                    let blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; 
+                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
+                }
+                else if (anim == 4) { 
+                    let blend = Math.random(); let fac = (40 + Math.random()*60)/100.0; 
+                    r = (c1[0]*blend + c2[0]*(1.0-blend)) * fac; 
+                    g = (c1[1]*blend + c2[1]*(1.0-blend)) * fac; 
+                    b = (c1[2]*blend + c2[2]*(1.0-blend)) * fac; 
+                }
+                else if (anim == 5) { 
+                    let hue = ((ms * 10 * spd + (i * 3000)) % 65535) / 65535; let rgb = HSVtoRGB(hue, 1, 1); 
+                    r=rgb[0]; g=rgb[1]; b=rgb[2]; 
+                }
+                else if (anim == 6) { 
+                    let blend = Math.sin((ms * 0.001 * spd) + i * 0.3) * 0.5 + 0.5; 
+                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
+                }
+            }
+            r = Math.min(255, Math.max(0, Math.floor(r))); g = Math.min(255, Math.max(0, Math.floor(g))); b = Math.min(255, Math.max(0, Math.floor(b)));
+            el.style.backgroundColor = `rgb(${r},${g},${b})`; el.style.boxShadow = `0 0 12px rgb(${r},${g},${b})`;
+        }
+    }
+</script>
+</body>
+</html>
