@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>saku-MIDI MKII Configurator</title>
+    <title>saku-MIDI MKII Configurator RC2</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
         @font-face { font-family: 'Klasikap'; src: local('Klasikap'), url('klasikap.ttf') format('truetype'); }
@@ -23,26 +23,28 @@
         }
 
         body, html { 
-            height: 100%; margin: 0; overflow: hidden; 
+            height: 100vh; margin: 0; padding: 0; overflow: hidden; 
             background-color: var(--bg-color); font-family: var(--font-main); color: var(--text-main); 
             background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
             background-size: 30px 30px; transition: background-color 0.3s, color 0.3s;
         }
         
-        .checker-banner, .checker-bottom { height: 50px; background-image: repeating-conic-gradient(var(--checker-1) 0% 25%, var(--checker-2) 0% 50%); background-size: 50px 50px; width: 100%; position: absolute; z-index: 10; transition: border-color 0.3s;}
+        label { color: var(--text-main); transition: color 0.3s; }
+
+        .checker-banner, .checker-bottom { height: 35px; background-image: repeating-conic-gradient(var(--checker-1) 0% 25%, var(--checker-2) 0% 50%); background-size: 40px 40px; width: 100%; position: absolute; z-index: 10; transition: border-color 0.3s;}
         .checker-banner { top: 0; border-bottom: 6px solid var(--border-color); }
         .checker-bottom { bottom: 0; border-top: 6px solid var(--border-color); }
 
         #config-screen { display: flex; height: 100vh; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center; z-index: 5; position: relative;}
         .config-workspace { transform: scale(0.95); transform-origin: center; display: flex; flex-direction: column; align-items: center; width: 100%;}
         
-        .canvas-header { font-family: var(--font-logo); font-size: 3.5rem; color: var(--text-main); margin-bottom: 15px; display: flex; align-items: baseline; gap: 15px; letter-spacing: 2px;}
-        .hdr-bays { text-transform: lowercase; } .hdr-kontrol { text-transform: uppercase; }
-        .badge-lite { font-family: var(--font-main); background: var(--text-main); color: var(--box-bg); font-size: 1rem; padding: 4px 12px; border: 4px solid var(--border-color); border-radius: 4px; transform: translateY(-10px) rotate(-5deg); letter-spacing: 2px;}
+        .canvas-header { font-family: var(--font-logo); font-size: 3rem; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: baseline; gap: 15px; letter-spacing: 2px;}
+        .hdr-bays { text-transform: lowercase; }
+        .badge-lite { font-family: var(--font-main); background: var(--text-main); color: var(--box-bg); font-size: 0.9rem; padding: 4px 12px; border: 4px solid var(--border-color); border-radius: 4px; transform: translateY(-8px) rotate(-5deg); letter-spacing: 2px;}
 
-        .main-canvas { background: var(--box-bg); border: 6px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; padding: 25px; width: 1250px; display: flex; gap: 25px;}
-        .canvas-left-pane { flex: 0 0 65%; display: flex; flex-direction: column; align-items: center; padding-right: 25px; border-right: 4px dashed var(--border-color);}
-        .canvas-right-pane { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .main-canvas { background: var(--box-bg); border: 6px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; padding: 20px; width: 1250px; display: flex; gap: 20px;}
+        .canvas-left-pane { flex: 0 0 58%; display: flex; flex-direction: column; align-items: center; padding-right: 20px; border-right: 4px dashed var(--border-color);}
+        .canvas-right-pane { flex: 1; display: flex; flex-direction: column; gap: 12px; height: 430px; box-sizing: border-box; justify-content: space-between; }
 
         .rig-container { 
             width: 700px; height: 430px; background: var(--rig-bg); border: 6px solid #111; 
@@ -82,16 +84,31 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; transition: box-shadow 0.2s, transform 0.1s; 
         }
         
-        /* Dark Mode Fixes - Button Shadows */
         [data-theme="dark"] .btn-unit { box-shadow: inset 0 0 10px #000, 0 0 8px rgba(255,255,255,0.15); border-color: #111; }
         [data-theme="dark"] .btn-unit:active { box-shadow: inset 0 0 15px #000, 0 0 4px rgba(255,255,255,0.2); }
         [data-theme="dark"] .knob-unit { box-shadow: 4px 4px 5px rgba(0,0,0,0.8), 0 0 6px rgba(255,255,255,0.1); }
         
-        .btn-row .btn-unit { position: relative; } /* Override absolute for flex row items */
+        .btn-row .btn-unit { position: relative; } 
         .btn-unit:active { transform: translate(1px, 1px); box-shadow: inset 0 0 15px #000; }
         .btn-unit::before { content: ''; position: absolute; width: 40px; height: 40px; background: #222; border-radius: 8px; border: 1px solid #333; z-index: 1;}
         
-        .led-strip { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 30px; height: 6px; border-radius: 4px; background: #333; box-shadow: 0 0 0 rgba(0,0,0,0); transition: 0.3s; }
+        /* Unified Strip LED design */
+        .led-strip { 
+            position: absolute; width: 30px; height: 6px; border-radius: 4px; background: #333; 
+            box-shadow: 0 0 0 rgba(0,0,0,0); transition: background-color 0.1s, box-shadow 0.1s; 
+        }
+        
+        /* Specific positioning for pot strips */
+        #led-p0 { top: 23px; left: 212px; }
+        #led-p1 { top: 23px; left: 302px; }
+        #led-p2 { top: 23px; left: 392px; }
+        #led-p3 { top: 23px; left: 482px; }
+        #led-p4 { top: 23px; left: 572px; }
+        
+        /* Specific positioning for button strips */
+        #hw-B11 .led-strip { top: -18px; left: 50%; transform: translateX(-50%); }
+        #hw-B12 .led-strip { top: -18px; left: 50%; transform: translateX(-50%); }
+        .btn-row .led-strip { top: -18px; left: 50%; transform: translateX(-50%); }
         
         .pot-id, .enc-id { position: absolute; bottom: -22px; font-size: 0.75rem; font-weight: 800; color: #fff; z-index: 10; text-shadow: 1px 1px 0 #000;}
         .btn-id { position: absolute; top: -8px; right: -8px; background: var(--text-main); color: var(--bg-color); padding: 2px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; z-index: 10; border: 2px solid var(--border-color);} 
@@ -99,57 +116,94 @@
         .btn-lbl-div { width: 70%; height: 2px; background: rgba(255,255,255,0.4); margin: 2px 0; z-index: 15;}
         .btn-lbl-s { font-size: 0.75rem; font-weight: 800; color: #aaa; margin-top: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
 
-        /* B12 Hardcode Visual - Subtle Grey */
-        #hw-B12 { border-color: #666 !important; }
-        #hw-B12::before { background: #444 !important; }
-        #hw-B12 .btn-id { background: #222; color: #ddd; border-color: #111;}
-        .btn-b12-shift { cursor: not-allowed; } .btn-b12-shift:active { transform: none; box-shadow: inset 0 0 10px #000; }
-        .b12-lbl { color: #f0f0f0 !important; font-size: 0.85rem;}
+        /* B12 Shift Styling on Profile A */
+        .btn-b12-locked { border-color: #555 !important; cursor: not-allowed; }
+        .btn-b12-locked::before { background: #333 !important; }
+        .btn-b12-locked .btn-lbl-n { color: #f0f0f0 !important; font-size: 0.85rem; }
 
-        .tab-area { display: flex; gap: 15px; margin-bottom: 20px; }
-        .btn-tab { padding: 8px 25px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; font-size: 1.2rem; cursor: pointer; border-radius: 10px; box-shadow: 4px 4px 0px var(--shadow-color); transition: 0.2s;}
+        /* Encoder Switch Dedicated Label */
+        .enc-sw-label {
+            position: absolute;
+            top: 10px;
+            left: 40px;
+            width: 85px;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: var(--dyn-prof-color);
+            background: var(--rig-bg);
+            border: 2px solid var(--dyn-prof-color);
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 20;
+            box-sizing: border-box;
+            padding: 2px 0;
+            transition: 0.2s;
+        }
+        .enc-sw-label:hover {
+            background: var(--dyn-prof-color);
+            color: var(--rig-bg);
+        }
+
+        .tab-area { display: flex; gap: 15px; margin-bottom: 15px; }
+        .btn-tab { padding: 6px 20px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; font-size: 1rem; cursor: pointer; border-radius: 10px; box-shadow: 4px 4px 0px var(--shadow-color); transition: 0.2s;}
         .btn-tab.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 0 0 var(--shadow-color); transform: translate(4px,4px); border-color: var(--text-main);}
 
-        .led-box { border: 4px solid var(--border-color); padding: 15px 20px; background: var(--box-bg); border-radius: 15px; box-shadow: 6px 6px 0px var(--shadow-color); margin-bottom: 15px;}
-        .ctrl-row { margin-bottom: 10px; }
-        .ctrl-row label { font-weight: bold; margin-bottom: 6px; font-size: 1rem; display: flex; align-items: center; gap: 10px;}
-        .badge-percent { background: var(--bg-color); padding: 2px 8px; border: 3px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; box-shadow: 2px 2px 0 var(--shadow-color);}
+        .led-box { border: 4px solid var(--border-color); padding: 10px 15px; background: var(--box-bg); border-radius: 15px; box-shadow: 5px 5px 0px var(--shadow-color); margin-bottom: 0px; display: flex; flex-direction: column; gap: 8px;}
+        .led-box h4 { margin: 0 0 2px 0; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px dashed var(--border-color); padding-bottom: 2px; }
         
-        .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 6px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 3px 3px 0px var(--shadow-color); box-sizing: border-box;}
+        /* Baris Gabungan Compact One-Page Layout */
+        .compact-row { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: space-between; }
+        .compact-col { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+        .compact-col label { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; }
         
-        .color-flex { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
-        input[type="color"] { width: 100%; height: 35px; border: 3px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 0;}
-        .slider-wrapper { padding-bottom: 15px; background: var(--input-bg); border: 3px solid var(--border-color); padding: 15px 15px 5px 15px; border-radius: 8px;}
+        .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 4px 6px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 2px 2px 0px var(--shadow-color); box-sizing: border-box; font-size: 0.8rem;}
+        
+        .color-grid-compact { display: flex; gap: 8px; width: 100%; justify-content: space-between; }
+        .color-item-compact { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .color-item-compact label { font-size: 0.65rem; font-weight: bold; text-transform: uppercase; text-align: center; }
+        
+        input[type="color"] { width: 100%; height: 28px; border: 3px solid var(--border-color); border-radius: 6px; cursor: pointer; padding: 0;}
+        .slider-wrapper { background: var(--input-bg); border: 2px solid var(--border-color); padding: 6px 8px 1px 8px; border-radius: 6px;}
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; background: #999; border: 2px solid var(--border-color); border-radius: 6px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 30px; width: 20px; border-radius: 4px; background: var(--text-main); border: 3px solid var(--border-color); margin-top: -10px; box-shadow: 3px 3px 0 var(--shadow-color);}
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #999; border: 1.5px solid var(--border-color); border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 12px; border-radius: 3px; background: var(--text-main); border: 2px solid var(--border-color); margin-top: -6px; box-shadow: 1px 1px 0 var(--shadow-color);}
 
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .btn-action { padding: 10px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 10px; font-family: var(--font-main); font-weight: bold; cursor: pointer; box-shadow: 4px 4px 0px var(--shadow-color); font-size: 0.95rem;}
-        .btn-main { background: var(--text-main); color: var(--bg-color); font-size: 1.2rem; grid-column: span 2; padding: 15px; }
+        /* External Bottom Actions Area */
+        .bottom-actions-container {
+            width: 1250px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; gap: 15px;
+        }
+        .bottom-actions-left {
+            display: flex; gap: 10px; align-items: center; flex: 1;
+        }
+        .bottom-actions-right {
+            display: flex; gap: 10px; align-items: center; justify-content: flex-end;
+        }
+        
+        .btn-action { padding: 8px 16px; border: 3px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 8px; font-family: var(--font-main); font-weight: bold; cursor: pointer; box-shadow: 3px 3px 0px var(--shadow-color); font-size: 0.85rem; transition: 0.1s;}
+        .btn-action:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow-color); }
+        .btn-main { background: var(--text-main); color: var(--bg-color); font-size: 0.95rem; font-weight: bold; }
         .btn-main.unsaved { background: #ff4757; color: #ffffff; border-color: #ff4757; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } }
 
-        .cb-container { display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; gap: 8px; cursor: pointer; color: var(--text-main); }
-        .cb-neo { appearance: none; width: 18px; height: 18px; border: 3px solid var(--border-color); border-radius: 4px; background: var(--input-bg); position: relative; box-shadow: 2px 2px 0 var(--shadow-color);}
+        .cb-container { display: flex; align-items: center; justify-content: flex-start; font-weight: bold; font-size: 0.8rem; gap: 6px; cursor: pointer; color: var(--text-main); }
+        .cb-neo { appearance: none; width: 16px; height: 18px; border: 3px solid var(--border-color); border-radius: 4px; background: var(--input-bg); position: relative; box-shadow: 2px 2px 0 var(--shadow-color); flex-shrink: 0;}
         .cb-neo:checked { background: var(--text-main); }
-        .cb-neo:checked::after { content: '✔'; position: absolute; color: var(--bg-color); font-weight: bold; top: -3px; left: 1px; }
+        .cb-neo:checked::after { content: '✔'; position: absolute; color: var(--bg-color); font-weight: bold; top: -3px; left: 1px; font-size: 0.8rem;}
 
         .mod-checks { display: flex; gap: 10px; justify-content: space-between; background: var(--rig-bg); padding: 10px; border-radius: 8px; border: 2px solid var(--border-color); margin-bottom: 10px; color: #fff;}
         .mod-checks label { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; color: #fff; }
 
-        .serial-box { display: flex; gap: 10px; margin-top: 5px; }
-        .btn-sync { flex: 1; padding: 8px; border: 3px solid var(--border-color); border-radius: 8px; background: var(--box-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); cursor: pointer;}
-        #serial-status { flex: 2; text-align: center; padding: 8px; border: 3px solid var(--border-color); border-radius: 8px; background: var(--box-bg); color: var(--text-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); cursor: pointer;}
+        .btn-sync { padding: 8px 18px; border: 3px solid var(--border-color); border-radius: 8px; background: var(--box-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); cursor: pointer;}
+        #serial-status { padding: 8px 18px; border: 3px solid var(--border-color); border-radius: 8px; background: var(--box-bg); color: var(--text-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); cursor: pointer; text-align: center;}
         
-        .theme-toggle-wrap { display: flex; justify-content: center; width: 100%; margin-top: 25px;}
-        .theme-switch { width: 60px; height: 30px; border: 4px solid var(--border-color); background: var(--checker-2); box-shadow: 4px 4px 0 var(--shadow-color); cursor: pointer; position: relative; transition: 0.2s;}
-        .theme-switch:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--shadow-color); }
-        .theme-switch-knob { width: 22px; height: 22px; background: var(--checker-1); position: absolute; top: 0px; left: 0px; transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        [data-theme="dark"] .theme-switch-knob { left: 30px; }
+        .theme-toggle-wrap { display: flex; align-items: center; }
+        .theme-switch { width: 50px; height: 26px; border: 3px solid var(--border-color); background: var(--checker-2); box-shadow: 3px 3px 0 var(--shadow-color); cursor: pointer; position: relative; border-radius: 15px;}
+        .theme-switch-knob { width: 18px; height: 18px; background: var(--checker-1); position: absolute; top: 1px; left: 1px; transition: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); border-radius: 50%; }
+        [data-theme="dark"] .theme-switch-knob { left: 25px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .modal-content { background: var(--box-bg); width: 700px; max-height: 90vh; overflow-y: auto; border: 5px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px;}
+        .modal-content { background: var(--box-bg); width: 750px; max-height: 90vh; overflow-y: auto; border: 5px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px;}
         .modal-header { background: var(--border-color); color: var(--bg-color); padding: 15px 25px; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; position: sticky; top: 0; z-index: 10;}
         .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .layer-unit { border: 4px solid var(--border-color); border-radius: 12px; padding: 20px; background: var(--box-bg); position: relative; box-shadow: 5px 5px 0 var(--shadow-color); }
@@ -161,12 +215,14 @@
         .toast-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 9999; visibility: hidden; opacity: 0; transition: all 0.2s; }
         .toast-overlay.active { visibility: visible; opacity: 1; }
         .toast-box { background-color: var(--box-bg); border: 6px solid var(--border-color); padding: 30px 50px; box-shadow: 15px 15px 0 var(--text-main); transform: rotate(-2deg); }
-        .toast-msg { font-size: 1.5rem; font-weight: 900; text-transform: uppercase;}
+        .toast-msg { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; text-align: center;}
         
-        .custom-key-btn { background-color: var(--input-bg); border: 3px solid var(--border-color); padding: 8px 15px; font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); flex: 1; text-align: left; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px;}
+        .custom-key-btn { background-color: var(--input-bg); border: 3px solid var(--border-color); padding: 8px 15px; font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); flex: 1; text-align: left; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px; color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
+        
         .kp-section { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; background: var(--rig-bg); border: 3px solid var(--border-color); padding: 12px; border-radius: 8px;}
         .kp-title { width: 100%; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid var(--border-color); padding-bottom: 4px; color: #fff;}
-        .kp-btn { background: var(--box-bg); border: 2px solid var(--border-color); font-family: var(--font-main); font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 6px 10px; border-radius: 4px; color: var(--text-main);}
+        
+        .kp-btn { background: var(--box-bg); border: 2px solid var(--border-color); font-family: var(--font-main); font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 6px 10px; border-radius: 4px; color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
         .kp-btn:hover { background: var(--text-main); color: var(--bg-color);}
     </style>
 </head>
@@ -177,14 +233,13 @@
 
 <div id="config-screen">
     <div class="config-workspace">
-        <div class="canvas-header"><span class="hdr-bays">saku</span><span class="hdr-kontrol">MIDI</span><span class="badge-lite">MKII</span></div>
+        <div class="canvas-header"><span class="hdr-bays">saku-MIDI</span><span class="badge-lite">RC2</span></div>
         
         <div class="main-canvas">
             <div class="canvas-left-pane">
                 <div class="tab-area">
-                    <button id="p0" class="btn-tab active" onclick="switchBank(0)">Bank 0</button>
-                    <button id="p1" class="btn-tab" onclick="switchBank(1)">Bank 1</button>
-                    <button id="p2" class="btn-tab" onclick="switchBank(2)">Bank 2</button>
+                    <button id="p1" class="btn-tab" onclick="switchBank(1)">A</button>
+                    <button id="p0" class="btn-tab active" onclick="switchBank(0)">B</button>
                 </div>
                 
                 <div class="rig-container">
@@ -192,9 +247,17 @@
                     <div class="screw s-bl"></div><div class="screw s-br"></div>
                     <div class="divider"></div>
                     
+                    <div class="led-strip" id="led-p0"></div>
+                    <div class="led-strip" id="led-p1"></div>
+                    <div class="led-strip" id="led-p2"></div>
+                    <div class="led-strip" id="led-p3"></div>
+                    <div class="led-strip" id="led-p4"></div>
+
+                    <div class="enc-sw-label" id="lbl-enc-sw" onclick="openEditor('encSw', 0)">[ NORM ]</div>
+
                     <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditor('enc', 0)"><div class="enc-id">ENC</div><div class="btn-lbl-n" id="lbl-enc-n" style="color:#111; text-shadow:none;">Off</div><div class="btn-lbl-div" id="div-enc" style="background:#555;"></div><div class="btn-lbl-s" id="lbl-enc-s" style="color:#444; text-shadow:none;">Off</div></div>
                     <div class="btn-unit" id="hw-B11" onclick="openEditor('btn', 10)"><div class="led-strip" id="led-b10"></div><div class="btn-id">B11</div><div class="btn-lbl-n" id="lbl-b10-n">Off</div><div class="btn-lbl-div" id="div-b10"></div><div class="btn-lbl-s" id="lbl-b10-s">Off</div></div>
-                    <div class="btn-unit btn-b12-shift" id="hw-B12"><div class="led-strip" id="led-b11"></div><div class="btn-id">B12</div><div class="btn-lbl-n b12-lbl" id="lbl-b11-n">SHIFT</div><div class="btn-lbl-div" id="div-b11" style="display:none;"></div><div class="btn-lbl-s b12-lbl" id="lbl-b11-s"></div></div>
+                    <div class="btn-unit" id="hw-B12" onclick="openEditor('btn', 11)"><div class="led-strip" id="led-b11"></div><div class="btn-id">B12</div><div class="btn-lbl-n" id="lbl-b11-n">Off</div><div class="btn-lbl-div" id="div-b11"></div><div class="btn-lbl-s" id="lbl-b11-s">Off</div></div>
 
                     <div class="knob-unit pot-unit" id="hw-P1" onclick="openEditor('pot', 0)"><div class="pot-id">P1</div><div class="btn-lbl-n" id="lbl-p0-n">CC</div><div class="btn-lbl-div" id="div-p0"></div><div class="btn-lbl-s" id="lbl-p0-s">CC</div></div>
                     <div class="knob-unit pot-unit" id="hw-P2" onclick="openEditor('pot', 1)"><div class="pot-id">P2</div><div class="btn-lbl-n" id="lbl-p1-n">CC</div><div class="btn-lbl-div" id="div-p1"></div><div class="btn-lbl-s" id="lbl-p1-s">CC</div></div>
@@ -221,46 +284,102 @@
             </div>
 
             <div class="canvas-right-pane">
-                <div class="led-box" id="led-panel">
-                    <div class="ctrl-row">
-                        <label>Brightness (<span id="curP">0</span>) <span id="bright-val" class="badge-percent">100%</span></label>
-                        <div class="slider-wrapper"><input type="range" id="ui-bright" min="0" max="100" step="10" value="100" oninput="updateBright(this.value)"></div>
-                    </div>
-                    <div class="ctrl-row">
-                        <label>Animasi LED</label>
-                        <select id="ui-anim" class="neo-select" onchange="autoSave()">
-                            <option value="0">Statis</option><option value="1">Wave (Color)</option>
-                            <option value="2">Sweep (Color)</option><option value="3">Breath (Color)</option>
-                            <option value="4">Flame (Color)</option><option value="5">Rainbow (RGB)</option>
-                            <option value="6">Raindrop (Random)</option>
-                        </select>
-                    </div>
-                    <div class="ctrl-row">
-                        <label>Kecepatan Animasi <span id="speed-val" class="badge-percent">50%</span></label>
-                        <div class="slider-wrapper"><input type="range" id="ui-speed" min="1" max="100" step="1" value="50" oninput="updateSpeed(this.value)"></div>
-                    </div>
-                    <div class="color-flex">
-                        <div><label style="font-size:0.75rem; font-weight:bold;">BASE</label><input type="color" id="ui-color" onchange="autoSave()"></div>
-                        <div><label style="font-size:0.75rem; font-weight:bold;">PUSH / B11</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
-                        <div><label style="font-size:0.75rem; font-weight:bold;">SHIFT LAYER</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
-                        <div id="col-b6-wrap" class="hidden"><label style="font-size:0.75rem; font-weight:bold;">B12 INDICATOR</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
+                <div class="led-box">
+                    <h4>Layer Atas (P1 - P5)</h4>
+                    <div class="compact-row">
+                        <div class="compact-col" style="flex: 2;">
+                            <label>Brightness Atas <span id="bright-top-val" class="badge-percent">100%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-bright-top" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightTop', this.value)"></div>
+                        </div>
+                        <div class="compact-col" style="flex: 1;">
+                            <label>Color</label>
+                            <input type="color" id="ui-color-top" onchange="autoSave()">
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <div class="action-grid">
-                        <button class="btn-action btn-sec" onclick="exportData()">Export Config</button>
-                        <button class="btn-action btn-sec" onclick="importData()">Import Config</button>
-                        <label class="cb-container" style="grid-column: span 2;"><input type="checkbox" id="cb-autoexport" class="cb-neo" checked> Auto-Backup JSON</label>
-                        <button class="btn-action btn-main" id="btn-push" onclick="pushToEEPROM()">⚡ PUSH TO DEVICE</button>
+
+                <div class="led-box" style="flex: 1; justify-content: space-between;">
+                    <h4>Layer Bawah (B1 - B12)</h4>
+                    <div class="compact-row">
+                        <div class="compact-col">
+                            <label>Brightness <span id="bright-bot-val" class="badge-percent">100%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-bright-bot" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightBot', this.value)"></div>
+                        </div>
+                        <div class="compact-col">
+                            <label>Speed <span id="speed-bot-val" class="badge-percent">50%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-speed-bot" min="1" max="100" step="1" value="50" oninput="updateLEDParam('speedBot', this.value)"></div>
+                        </div>
                     </div>
-                    <div class="serial-box">
-                        <button class="btn-sync" onclick="syncDevice()">SYNC</button>
-                        <div id="serial-status" onclick="connectUSB()">CONNECT</div>
+                    
+                    <div class="compact-row">
+                        <div class="compact-col">
+                            <label>Animasi Bawah</label>
+                            <select id="ui-anim" class="neo-select" onchange="autoSave()">
+                                <option value="0">Statis (Gradasi Base - Target)</option>
+                                <option value="1">Wave (Color)</option>
+                                <option value="2">Sweep (Color)</option>
+                                <option value="3">Breath (Color)</option>
+                                <option value="4">Flame (Color)</option>
+                                <option value="5">Rainbow (RGB)</option>
+                                <option value="6">Raindrop (Random)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="color-grid-compact">
+                        <div class="color-item-compact"><label>Base</label><input type="color" id="ui-color-base" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Target</label><input type="color" id="ui-color-target" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Active</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
+                        <div class="color-item-compact id-shift" id="col-shift-wrap"><label>Shift</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
+                        <div class="color-item-compact id-b6" id="col-b6-wrap"><label>B12 Ind</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
+                    </div>
+                </div>
+
+                <div class="led-box">
+                    <h4>Smart Panic Settings</h4>
+                    <div class="compact-row">
+                        <div class="compact-col">
+                            <label>Panic Button</label>
+                            <select id="ui-panic-source" class="neo-select" onchange="autoSave()">
+                                <option value="0">DISABLED / OFF</option>
+                                <option value="1">B1</option><option value="2">B2</option><option value="3">B3</option>
+                                <option value="4">B4</option><option value="5">B5</option><option value="6">B6</option>
+                                <option value="7">B7</option><option value="8">B8</option><option value="9">B9</option>
+                                <option value="10">B10</option><option value="11">B11</option><option value="12">B12</option>
+                                <option value="13">Encoder Switch</option>
+                            </select>
+                        </div>
+                        <div class="compact-col">
+                            <label>Panic MIDI CC (0-127)</label>
+                            <input type="number" id="ui-panic-mode" class="neo-input" min="0" max="127" oninput="autoSave()">
+                        </div>
+                        <div class="compact-col hidden" style="flex: 0.8;">
+                            <label>Panic Channel</label>
+                            <select id="ui-panic-chan" class="neo-select" onchange="autoSave()">
+                                <option value="1">CH 1</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="theme-toggle-wrap"><div class="theme-switch" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><div class="theme-switch-knob"></div></div></div>
+
+        <div class="bottom-actions-container">
+            <div class="bottom-actions-left">
+                <button class="btn-action btn-main" id="btn-push" onclick="pushToEEPROM()">⚡ PUSH TO DEVICE</button>
+                <button class="btn-sync" onclick="syncDevice()">SYNC</button>
+                <div id="serial-status" onclick="connectUSB()">CONNECT</div>
+            </div>
+            <div class="bottom-actions-right">
+                <button class="btn-action" onclick="exportData()">EXPORT</button>
+                <button class="btn-action" onclick="importData()">IMPORT</button>
+                <label class="cb-container">
+                    <input type="checkbox" id="cb-autoexport" class="cb-neo" checked>
+                    Auto-Backup JSON
+                </label>
+                <div class="theme-toggle-wrap"><div class="theme-switch" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><div class="theme-switch-knob"></div></div></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -310,6 +429,26 @@
                     <div class="row-edit">
                         <button type="button" id="n-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-l')">KIRI</button><input type="hidden" id="n-enc-l" value="0">
                         <button type="button" id="n-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-r')">KANAN</button><input type="hidden" id="n-enc-r" value="0">
+                    </div>
+                </div>
+                <div id="n-ui-enc-mult" class="row-edit hidden" style="margin-top:10px;">
+                    <label>Multiplier/Step (1-10):</label>
+                    <input type="number" id="n-enc-mult" class="neo-input" min="1" max="10" value="1" style="width:80px;">
+                </div>
+                <div id="n-ui-enc-seq" class="hidden" style="margin-top:10px;">
+                    <div class="row-edit" style="justify-content: space-between; margin-bottom: 8px;">
+                        <label class="cb-container"><input type="checkbox" id="n-auto-reset" class="cb-neo" onchange="syncAutoResetCheckboxes('n')"> Enable Auto-Reset Seq (2s)</label>
+                    </div>
+                    <div id="n-seq-chan-wrap" class="row-edit hidden"><label>Channel:</label><select id="n-seq-chan" class="neo-select" style="width:120px;"></select></div>
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <div style="flex:1; background:var(--rig-bg); padding:10px; border-radius:8px;">
+                            <div style="color:#fff; font-weight:bold; margin-bottom:5px; text-align:center; font-size:0.8rem;">PUTAR KIRI (-5)</div>
+                            <div id="n-seq-l-k"></div><div id="n-seq-l-m" class="hidden"></div>
+                        </div>
+                        <div style="flex:1; background:var(--rig-bg); padding:10px; border-radius:8px;">
+                            <div style="color:#fff; font-weight:bold; margin-bottom:5px; text-align:center; font-size:0.8rem;">PUTAR KANAN (+5)</div>
+                            <div id="n-seq-r-k"></div><div id="n-seq-r-m" class="hidden"></div>
+                        </div>
                     </div>
                 </div>
                 <div id="n-ui-macro" class="hidden">
@@ -364,6 +503,26 @@
                         <button type="button" id="s-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-r')">KANAN</button><input type="hidden" id="s-enc-r" value="0">
                     </div>
                 </div>
+                <div id="s-ui-enc-mult" class="row-edit hidden" style="margin-top:10px;">
+                    <label>Multiplier/Step (1-10):</label>
+                    <input type="number" id="s-enc-mult" class="neo-input" min="1" max="10" value="1" style="width:80px;">
+                </div>
+                <div id="s-ui-enc-seq" class="hidden" style="margin-top:10px;">
+                    <div class="row-edit" style="justify-content: space-between; margin-bottom: 8px;">
+                        <label class="cb-container"><input type="checkbox" id="s-auto-reset" class="cb-neo" onchange="syncAutoResetCheckboxes('s')"> Enable Auto-Reset Seq (2s)</label>
+                    </div>
+                    <div id="s-seq-chan-wrap" class="row-edit hidden"><label>Channel:</label><select id="s-seq-chan" class="neo-select" style="width:120px;"></select></div>
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <div style="flex:1; background:var(--rig-bg); padding:10px; border-radius:8px;">
+                            <div style="color:#fff; font-weight:bold; margin-bottom:5px; text-align:center; font-size:0.8rem;">PUTAR KIRI (-5)</div>
+                            <div id="s-seq-l-k"></div><div id="s-seq-l-m" class="hidden"></div>
+                        </div>
+                        <div style="flex:1; background:var(--rig-bg); padding:10px; border-radius:8px;">
+                            <div style="color:#fff; font-weight:bold; margin-bottom:5px; text-align:center; font-size:0.8rem;">PUTAR KANAN (+5)</div>
+                            <div id="s-seq-r-k"></div><div id="s-seq-r-m" class="hidden"></div>
+                        </div>
+                    </div>
+                </div>
                 <div id="s-ui-macro" class="hidden">
                     <div class="row-edit"><label style="width:80px">Init Key:</label><select id="s-mac-init" class="neo-select"><option value="0">WIN+R</option></select><select id="s-mac-act1" class="neo-select"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
                     <div class="row-edit"><input type="text" id="s-mac-txt1" class="neo-input" placeholder="Teks App/URL..."></div>
@@ -387,16 +546,72 @@
 <input type="file" id="f-import" hidden onchange="handleImport(this)">
 
 <script>
-    const act4 = {m:0, v1:0, v2:0, v3:0, lbl:""}; 
-    const act10 = {m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""};
+    const makeAct4 = () => ({m:0, v1:0, v2:0, v3:0, lbl:"", seq:[0,0,0,0,0,0,0,0,0,0]}); 
+    const makeAct10 = () => ({m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""});
 
+    // Blueprint saku-MIDI RC2 (Dual Profile A & B)
     let cfg = {
-        bank0: { btn: Array.from({length:11}, () => ({...act4})), pot: Array.from({length:5}, (_,i) => ({...act4, m:2, v1:1, v2:71+i})), enc: {...act4, m:1}, bright: 100, anim: 1, animSpeed: 50, col: [0,255,255], colActive: [255,255,255], colShift: [255,128,0] },
-        bank1: { btn1_2: Array.from({length:2}, () => Array.from({length:2}, () => ({...act4}))), btn3_5: Array.from({length:2}, () => Array.from({length:3}, () => ({...act10}))), btn6_11: Array.from({length:2}, () => Array.from({length:6}, () => ({...act4}))), pot: Array.from({length:2}, () => Array.from({length:5}, (_,i) => ({...act4, m:2, v1:1, v2:71+i}))), enc: Array.from({length:2}, () => ({...act4, m:1})), bright: 100, anim: 1, animSpeed: 50, col: [255,0,255], colActive: [255,255,255], colShift: [255,128,0], colB6: [0,255,255] },
-        bank2: { btn1_2: Array.from({length:2}, () => Array.from({length:2}, () => ({...act4}))), btn3_5: Array.from({length:2}, () => Array.from({length:3}, () => ({...act10}))), btn6_11: Array.from({length:2}, () => Array.from({length:6}, () => ({...act4}))), pot: Array.from({length:2}, () => Array.from({length:5}, (_,i) => ({...act4, m:2, v1:1, v2:71+i}))), enc: Array.from({length:2}, () => ({...act4, m:1})), bright: 100, anim: 1, animSpeed: 50, col: [255,255,0], colActive: [255,255,255], colShift: [255,128,0], colB6: [0,255,255] }
+        panicSource: 0, // Offset 3
+        panicMode: 119, // Offset 6 (v1.3 - Default custom Panic CC 119)
+        panicChan: 1, // Offset 7 (v1.3 - Hardcoded to 1)
+        autoResetB: 0, // Offset 4
+        autoResetA: 0, // Offset 5
+        profilB: { // Eks Bank 0
+            btn: Array.from({length:12}, makeAct4), // B1-B12 fully configurable
+            pot: Array.from({length:5}, (_,i) => { let a=makeAct4(); a.m=2; a.v1=1; a.v2=71+i; return a; }), 
+            enc: makeAct4(), 
+            encSw: makeAct4(), // Tambahan memori khusus Encoder Switch
+            brightTop: 100, brightBot: 100, 
+            animTop: 0, animBot: 1, 
+            speedTop: 50, speedBot: 50, 
+            colTop: [0,255,255], colActive: [255,255,255], 
+            colBaseBot: [0,255,255], colTargetBot: [255,0,255]
+        },
+        profilA: { // Eks Bank 1
+            btn1_2: Array.from({length:2}, () => Array.from({length:2}, makeAct4)), 
+            btn3_5: Array.from({length:2}, () => Array.from({length:3}, makeAct10)), 
+            btn6_11: Array.from({length:2}, () => Array.from({length:6}, makeAct4)), 
+            pot: Array.from({length:2}, () => Array.from({length:5}, (_,i) => { let a=makeAct4(); a.m=2; a.v1=1; a.v2=71+i; return a; })), 
+            enc: Array.from({length:2}, makeAct4), 
+            encSw: [makeAct4(), makeAct4()], // Tambahan memori khusus Encoder Switch
+            brightTop: 100, brightBot: 100, 
+            animTop: 0, animBot: 1, 
+            speedTop: 50, speedBot: 50, 
+            colTop: [255,0,255], colActive: [255,255,255], colShift: [255,128,0], 
+            colBaseBot: [255,0,255], colTargetBot: [0,255,255], colB6: [0,255,255]
+        }
     };
     
     let curB = 0, curT = '', curI = 0, port, serialReader, currentKeyTarget = ''; 
+
+    // HSV to RGB Conversion Helper
+    function hsvToRgb(h, s, v) {
+        let r, g, b;
+        let i = Math.floor(h * 6);
+        let f = h * 6 - i;
+        let p = v * (1 - s);
+        let q = v * (1 - f * s);
+        let t = v * (1 - (1 - f) * s);
+        switch (i % 6) {
+            case 0: r = v; g = t; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t; g = p; b = v; break;
+            case 5: r = v; g = p; b = q; break;
+        }
+        return [r * 255, g * 255, b * 255];
+    }
+
+    // v1.3 - Fungsi sinkronisasi otomatis checkbox Auto-Reset agar tidak saling menimpa
+    function syncAutoResetCheckboxes(sourcePrefix) {
+        const checked = document.getElementById(`${sourcePrefix}-auto-reset`).checked;
+        const targetPrefix = sourcePrefix === 'n' ? 's' : 'n';
+        const targetEl = document.getElementById(`${targetPrefix}-auto-reset`);
+        if (targetEl) {
+            targetEl.checked = checked;
+        }
+    }
 
     function toggleTheme() { const doc = document.documentElement; const cur = doc.getAttribute('data-theme'); const next = cur === 'dark' ? 'light' : 'dark'; doc.setAttribute('data-theme', next); localStorage.setItem('baysMK2Theme', next); }
     function showToast(msg) { const o = document.getElementById('toastOverlay'); document.getElementById('toastMessage').innerText = msg; o.classList.add('active'); setTimeout(()=>o.classList.remove('active'), 2500); }
@@ -407,6 +622,9 @@
         const savedTheme = localStorage.getItem('baysMK2Theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         buildOptions(); buildKeyPicker(); loadAutoSave(); 
+        
+        // Start Real-Time Web Animation Generator
+        requestAnimationFrame(renderMockupLoop);
     };
 
     function getKeyDisplayLabel(val) {
@@ -417,8 +635,40 @@
 
     function buildOptions() {
         ['n','s'].forEach(l => { 
-            let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; document.getElementById(`${l}-chan`).innerHTML = ch; 
+            let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; 
+            if(document.getElementById(`${l}-chan`)) document.getElementById(`${l}-chan`).innerHTML = ch; 
+            if(document.getElementById(`${l}-seq-chan`)) document.getElementById(`${l}-seq-chan`).innerHTML = ch;
+
+            let htmlLK = '', htmlLM = '', htmlRK = '', htmlRM = '';
+            for(let i=0; i<5; i++) {
+                htmlLK += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">L${i+1}</span><button type="button" id="${l}-seq-k-${i}-btn" class="custom-key-btn" style="padding:4px; font-size:0.7rem;" onclick="openKeyPicker('${l}-seq-k-${i}')">NONE</button><input type="hidden" id="${l}-seq-k-${i}" value="0"></div>`;
+                htmlLM += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">L${i+1}</span><input type="number" id="${l}-seq-m-${i}" class="neo-input" style="padding:4px; font-size:0.75rem;" placeholder="CC Num" min="0" max="127"></div>`;
+                htmlRK += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">R${i+1}</span><button type="button" id="${l}-seq-k-${i+5}-btn" class="custom-key-btn" style="padding:4px; font-size:0.7rem;" onclick="openKeyPicker('${l}-seq-k-${i+5}')">NONE</button><input type="hidden" id="${l}-seq-k-${i+5}" value="0"></div>`;
+                htmlRM += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">R${i+1}</span><input type="number" id="${l}-seq-m-${i+5}" class="neo-input" style="padding:4px; font-size:0.75rem;" placeholder="CC Num" min="0" max="127"></div>`;
+            }
+            if(document.getElementById(`${l}-seq-l-k`)) document.getElementById(`${l}-seq-l-k`).innerHTML = htmlLK;
+            if(document.getElementById(`${l}-seq-l-m`)) document.getElementById(`${l}-seq-l-m`).innerHTML = htmlLM;
+            if(document.getElementById(`${l}-seq-r-k`)) document.getElementById(`${l}-seq-r-k`).innerHTML = htmlRK;
+            if(document.getElementById(`${l}-seq-r-m`)) document.getElementById(`${l}-seq-r-m`).innerHTML = htmlRM;
         });
+
+        const panicSourceSelect = document.getElementById('ui-panic-source');
+        panicSourceSelect.innerHTML = `
+            <option value="0">DISABLED / OFF</option>
+            <option value="1">B1</option>
+            <option value="2">B2</option>
+            <option value="3">B3</option>
+            <option value="4">B4</option>
+            <option value="5">B5</option>
+            <option value="6">B6</option>
+            <option value="7">B7</option>
+            <option value="8">B8</option>
+            <option value="9">B9</option>
+            <option value="10">B10</option>
+            <option value="11">B11</option>
+            <option value="12">B12</option>
+            <option value="13">Encoder Switch</option>
+        `;
     }
 
     function buildKeyPicker() {
@@ -435,28 +685,161 @@
     function openKeyPicker(targetId) { currentKeyTarget = targetId; document.getElementById('keyPickerModal').style.display = 'flex'; }
     function closeKeyPicker() { document.getElementById('keyPickerModal').style.display = 'none'; }
     function selectKey(val) { document.getElementById(`${currentKeyTarget}`).value = val; document.getElementById(`${currentKeyTarget}-btn`).innerText = getKeyDisplayLabel(val); closeKeyPicker(); }
-    function getBankObj(b) { return b === 0 ? cfg.bank0 : (b === 1 ? cfg.bank1 : cfg.bank2); }
-
-    function switchBank(b) {
-        curB = b; ['p0','p1','p2'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
-        document.getElementById('curP').innerText = b; let bankObj = getBankObj(b);
-        document.getElementById('ui-bright').value = bankObj.bright; document.getElementById('bright-val').innerText = bankObj.bright + '%';
-        document.getElementById('ui-anim').value = bankObj.anim; 
-        document.getElementById('ui-speed').value = bankObj.animSpeed || 50; document.getElementById('speed-val').innerText = (bankObj.animSpeed || 50) + '%';
-        document.getElementById('ui-color').value = rgbToHex(bankObj.col);
-        document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive); document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift);
-        
-        const b6Wrap = document.getElementById('col-b6-wrap');
-        if (b === 0) { b6Wrap.classList.add('hidden'); } 
-        else { b6Wrap.classList.remove('hidden'); document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6); }
-        updateLedStripsVisual(); updateAllLabels();
+    
+    function getBankObj(b) { 
+        return b === 0 ? cfg.profilB : cfg.profilA; 
     }
 
-    function updateLedStripsVisual() {
-        let bankObj = getBankObj(curB); let baseCol = rgbToHex(bankObj.col);
-        document.documentElement.style.setProperty('--dyn-prof-color', baseCol); 
-        for(let i=0; i<11; i++) { let strip = document.getElementById(`led-b${i}`); if(strip) { strip.style.backgroundColor = baseCol; strip.style.boxShadow = `0 0 10px ${baseCol}`; } }
-        let strip11 = document.getElementById('led-b11'); if(strip11) { strip11.style.backgroundColor = (curB>0) ? rgbToHex(bankObj.colB6) : '#444'; strip11.style.boxShadow = (curB>0) ? `0 0 10px ${rgbToHex(bankObj.colB6)}` : 'none'; }
+    function switchBank(b) {
+        curB = b; ['p0','p1'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
+        let bankObj = getBankObj(b);
+
+        // Update Slider UI
+        document.getElementById('ui-bright-top').value = bankObj.brightTop || 100;
+        document.getElementById('bright-top-val').innerText = (bankObj.brightTop || 100) + '%';
+        document.getElementById('ui-bright-bot').value = bankObj.brightBot || 100;
+        document.getElementById('bright-bot-val').innerText = (bankObj.brightBot || 100) + '%';
+        document.getElementById('ui-anim').value = bankObj.animBot || 0;
+        document.getElementById('ui-speed-bot').value = bankObj.speedBot || 50;
+        document.getElementById('speed-bot-val').innerText = (bankObj.speedBot || 50) + '%';
+
+        // Update Color UI
+        document.getElementById('ui-color-top').value = rgbToHex(bankObj.colTop || [0, 255, 255]);
+        document.getElementById('ui-color-base').value = rgbToHex(bankObj.colBaseBot || [0, 255, 255]);
+        document.getElementById('ui-color-target').value = rgbToHex(bankObj.colTargetBot || [255, 0, 255]);
+        document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive || [255, 255, 255]);
+
+        // Toggle UI Global
+        document.getElementById('ui-panic-source').value = cfg.panicSource || 0;
+        // v1.3 - Menjamin nilai 0 tidak tertimpa falsy check
+        document.getElementById('ui-panic-mode').value = (cfg.panicMode !== undefined && cfg.panicMode !== null) ? cfg.panicMode : 119;
+        document.getElementById('ui-panic-chan').value = cfg.panicChan || 1;
+
+        const colShiftWrap = document.getElementById('col-shift-wrap');
+        const colB6Wrap = document.getElementById('col-b6-wrap');
+        const b12Btn = document.getElementById('hw-B12');
+
+        if (b === 0) { // Profil B (Single)
+            colShiftWrap.style.display = 'none';
+            colB6Wrap.style.display = 'none';
+            b12Btn.classList.remove('btn-b12-locked');
+        } else { // Profil A (Dual)
+            colShiftWrap.style.display = 'flex';
+            colB6Wrap.style.display = 'flex';
+            document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift || [255, 128, 0]);
+            document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6 || [0, 255, 255]);
+            b12Btn.classList.add('btn-b12-locked');
+        }
+        updateAllLabels();
+    }
+
+    // REAL-TIME LED GENERATOR ENGINE FOR WEBUI
+    function renderMockupLoop() {
+        let ms = Date.now();
+        let bankObj = getBankObj(curB);
+
+        // 1. LAYER ATAS: Statis colTop x brightnessTop
+        let brightTop = (bankObj.brightTop || 100) / 100;
+        let cTop = bankObj.colTop || [0, 255, 255];
+        let rTop = cTop[0] * brightTop, gTop = cTop[1] * brightTop, bTop = cTop[2] * brightTop;
+
+        for (let i = 0; i < 5; i++) {
+            let el = document.getElementById(`led-p${i}`);
+            if (el) {
+                el.style.backgroundColor = `rgb(${rTop}, ${gTop}, ${bTop})`;
+                el.style.boxShadow = `0 0 10px rgb(${rTop}, ${gTop}, ${bTop})`;
+            }
+        }
+
+        // 2. LAYER BAWAH: Simulasi Generator Animasi
+        let brightBot = (bankObj.brightBot || 100) / 100;
+        let speed = (bankObj.speedBot || 50);
+        let sFac = (speed * 2) / 100.0; 
+        let sMs = ms * sFac; 
+        let anim = parseInt(document.getElementById('ui-anim').value);
+
+        let colBase = bankObj.colBaseBot || [0, 255, 255];
+        let colTarget = bankObj.colTargetBot || [255, 0, 255];
+
+        // Generator Setup Animasi 4 (Flame / Sparkle)
+        if (!window.mockupFlameBlends) { 
+            window.mockupFlameBlends = Array(12).fill(0.5); 
+            window.mockupFlameTargets = Array(12).fill(0.5); 
+            window.lastFlameUpdate = 0; 
+        }
+        let flameInterval = 280 - (speed * 2);
+        if (ms - window.lastFlameUpdate > flameInterval) { 
+            for (let f = 0; f < 12; f++) window.mockupFlameTargets[f] = 0.1 + Math.random() * 0.9; 
+            window.lastFlameUpdate = ms; 
+        }
+        for (let f = 0; f < 12; f++) {
+            window.mockupFlameBlends[f] += (window.mockupFlameTargets[f] - window.mockupFlameBlends[f]) * 0.12;
+        }
+
+        // Generator Setup Animasi 6 (Raindrop)
+        if (!window.mockupDrops) { 
+            window.mockupDrops = Array(12).fill(0); 
+            window.lastDropTime = 0; 
+        }
+        let dropInterval = 300 / (sFac === 0 ? 1 : sFac);
+        if (ms - window.lastDropTime > dropInterval) { 
+            for (let d = 0; d < 12; d++) window.mockupDrops[d] = Math.max(0, window.mockupDrops[d] - 0.05); 
+            if (Math.random() > 0.8) window.mockupDrops[Math.floor(Math.random() * 12)] = 1.0; 
+            window.lastDropTime = ms; 
+        }
+
+        for (let i = 0; i < 12; i++) {
+            let el = document.getElementById(`led-b${i}`);
+            if (!el) continue;
+
+            let r = 0, g = 0, b = 0, blend = 0.5;
+
+            if (anim === 0) {
+                blend = (11.0 - i) / 11.0;
+                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
+                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
+                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
+            } else if (anim === 1) {
+                blend = 0.2 + (Math.sin((sMs + (i * 200)) * 0.002) * 0.4 + 0.4);
+                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
+                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
+                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
+            } else if (anim === 2) {
+                let activeIdx = Math.floor(sMs / 150) % 12;
+                if (i === activeIdx) { r = colBase[0]; g = colBase[1]; b = colBase[2]; }
+                else { r = colTarget[0]*0.1; g = colTarget[1]*0.1; b = colTarget[2]*0.1; }
+            } else if (anim === 3) {
+                blend = Math.sin(sMs * 0.0015) * 0.5 + 0.5;
+                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
+                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
+                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
+            } else if (anim === 4) {
+                blend = window.mockupFlameBlends[i];
+                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
+                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
+                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
+            } else if (anim === 5) {
+                let hue = (sMs * 0.1 + (i * 30)) % 360;
+                let rgb = hsvToRgb(hue / 360, 1, 1);
+                r = rgb[0]; g = rgb[1]; b = rgb[2];
+            } else if (anim === 6) {
+                blend = window.mockupDrops[i];
+                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
+                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
+                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
+            }
+
+            r *= brightBot; g *= brightBot; b *= brightBot;
+
+            r = Math.min(255, Math.max(0, Math.floor(r)));
+            g = Math.min(255, Math.max(0, Math.floor(g)));
+            b = Math.min(255, Math.max(0, Math.floor(b)));
+
+            el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            el.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+        }
+
+        requestAnimationFrame(renderMockupLoop);
     }
 
     function buildModLabel(v) { let m=[]; if(v&1)m.push("CT"); if(v&2)m.push("SH"); if(v&4)m.push("AL"); if(v&8)m.push("WN"); return m.join('+'); }
@@ -466,38 +849,79 @@
         if(d.m==1) { let ml = buildModLabel(d.v1); let k = d.v2?getKeyDisplayLabel(d.v2):""; return (ml+(ml&&k?'+':"")+k) || "NONE"; }
         if(d.m==2) return `CC ${d.v2}`; if(d.m==3) return "MEDIA"; if(d.m==4) return "MACRO";
         if(d.m==5) return {1:"PG U/D", 2:"SCROLL", 3:"ZOOM", 4:"UNDO/RED", 5:"COPY/PST", 6:"HOME/END", 7:"TRK P/N"}[d.v1] || "PC NAV";
-        return d.m==6 ? "SHORTCUT" : "";
+        if(d.m==6) return "SEQ KEY"; if(d.m==7) return "SEQ MIDI";
+        return d.m==8 ? "SHORTCUT" : "";
     }
 
     function updateAllLabels() {
-        for(let i=0; i<11; i++) {
+        let pObj = getProfileObj(curB);
+
+        // Update Label Menu Config Encoder Switch
+        let swLbl = document.getElementById('lbl-enc-sw');
+        if (swLbl) {
+            swLbl.innerText = curB === 0 ? "[ NORM ]" : "[ NORM | SHFT ]";
+        }
+
+        for(let i=0; i<12; i++) {
             let dN, dS;
-            if (curB === 0) { dN = cfg.bank0.btn[i]; } 
-            else { 
-                let bObj = getBankObj(curB); 
-                if(i<2) { dN = bObj.btn1_2[0][i]; dS = bObj.btn1_2[1][i]; } 
-                else if(i<5) { dN = bObj.btn3_5[0][i-2]; dS = bObj.btn3_5[1][i-2]; } 
-                else { dN = bObj.btn6_11[0][i-5]; dS = bObj.btn6_11[1][i-5]; } 
+            if (curB === 0) { 
+                dN = cfg.profilB.btn[i];
+            } else { 
+                if(i<2) { dN = pObj.btn1_2[0][i]; dS = pObj.btn1_2[1][i]; } 
+                else if(i<5) { dN = pObj.btn3_5[0][i-2]; dS = pObj.btn3_5[1][i-2]; } 
+                else if(i<11) { dN = pObj.btn6_11[0][i-5]; dS = pObj.btn6_11[1][i-5]; }
+                else if(i===11) { dN = {m:0, lbl:"SHIFT"}; dS = {m:0, lbl:"LOCKED"}; }
             }
-            document.getElementById(`lbl-b${i}-n`).innerText = buildLabel(dN); document.getElementById(`lbl-b${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); document.getElementById(`div-b${i}`).style.display = curB===0 ? "none" : "block";
+            document.getElementById(`lbl-b${i}-n`).innerText = buildLabel(dN); 
+            document.getElementById(`lbl-b${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); 
+            document.getElementById(`div-b${i}`).style.display = curB===0 ? "none" : "block";
         }
         for(let i=0; i<5; i++){
-            let dN = curB===0 ? cfg.bank0.pot[i] : getBankObj(curB).pot[0][i]; let dS = curB===0 ? null : getBankObj(curB).pot[1][i];
-            document.getElementById(`lbl-p${i}-n`).innerText = buildLabel(dN); document.getElementById(`lbl-p${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); document.getElementById(`div-p${i}`).style.display = curB===0 ? "none" : "block";
+            let dN = curB===0 ? cfg.profilB.pot[i] : getBankObj(curB).pot[0][i]; 
+            let dS = curB===0 ? null : getBankObj(curB).pot[1][i];
+            document.getElementById(`lbl-p${i}-n`).innerText = buildLabel(dN); 
+            document.getElementById(`lbl-p${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); 
+            document.getElementById(`div-p0`).parentNode.querySelector('.btn-lbl-div').style.display = curB===0 ? "none" : "block";
         }
-        let dEN = curB===0 ? cfg.bank0.enc : getBankObj(curB).enc[0]; let dES = curB===0 ? null : getBankObj(curB).enc[1];
-        document.getElementById(`lbl-enc-n`).innerText = buildLabel(dEN); document.getElementById(`lbl-enc-s`).innerText = curB===0 ? "" : buildLabel(dES); document.getElementById(`div-enc`).style.display = curB===0 ? "none" : "block";
+        let dEN = curB===0 ? cfg.profilB.enc : getBankObj(curB).enc[0]; 
+        let dES = curB===0 ? null : getBankObj(curB).enc[1];
+        document.getElementById(`lbl-enc-n`).innerText = buildLabel(dEN); 
+        document.getElementById(`lbl-enc-s`).innerText = curB===0 ? "" : buildLabel(dES); 
+        document.getElementById(`div-enc`).style.display = curB===0 ? "none" : "block";
     }
 
-    function updateBright(v) { document.getElementById('bright-val').innerText = v + '%'; getBankObj(curB).bright = parseInt(v); autoSave(); }
-    function updateSpeed(v) { document.getElementById('speed-val').innerText = v + '%'; getBankObj(curB).animSpeed = parseInt(v); autoSave(); }
+    function updateLEDParam(param, v) {
+        let bankObj = getBankObj(curB);
+        if (param === 'brightTop') {
+            document.getElementById('bright-top-val').innerText = v + '%';
+            bankObj.brightTop = parseInt(v);
+        } else if (param === 'brightBot') {
+            document.getElementById('bright-bot-val').innerText = v + '%';
+            bankObj.brightBot = parseInt(v);
+        } else if (param === 'speedBot') {
+            document.getElementById('speed-bot-val').innerText = v + '%';
+            bankObj.speedBot = parseInt(v);
+        }
+        autoSave();
+    }
+
+    function getProfileObj(b) {
+        return b === 0 ? cfg.profilB : cfg.profilA;
+    }
 
     function openEditor(type, idx) {
+        // v1.3 - Kuncian Akses Editor B12 Khusus Profil A ditutup secara snappy
+        if (curB === 1 && type === 'btn' && idx === 11) {
+            showToast("B12 dikunci sebagai tombol SHIFT pada Profil A");
+            return;
+        }
+
         curT = type; curI = idx;
-        let dName = type === 'btn' ? `B${idx+1}` : (type === 'pot' ? `POTENSIO ${idx+1}` : "ENCODER");
-        document.getElementById('m-title').innerText = `${dName} (BANK ${curB})`;
+        let dName = type === 'btn' ? `B${idx+1}` : (type === 'pot' ? `POTENSIO ${idx+1}` : (type === 'encSw' ? "ENCODER SWITCH" : "ENCODER ROTARY"));
+        document.getElementById('m-title').innerText = `${dName} (PROFIL ${curB === 0 ? 'B' : 'A'})`;
         
-        let hasShift = curB > 0; document.getElementById('s-box').style.display = hasShift ? 'block' : 'none';
+        let hasShift = curB > 0; 
+        document.getElementById('s-box').style.display = hasShift ? 'block' : 'none';
         let maxLen = (curB > 0 && type === 'btn' && idx >= 2 && idx <= 4) ? 10 : 4;
         document.getElementById('n-lbl').maxLength = maxLen; document.getElementById('s-lbl').maxLength = maxLen;
         document.getElementById('n-lbl').placeholder = `Label (Max ${maxLen})`; document.getElementById('s-lbl').placeholder = `Label (Max ${maxLen})`;
@@ -506,18 +930,33 @@
         if(type==='btn') {
             let opt = '<option value="0">OFF</option><option value="1">SHORTCUT</option><option value="2">MIDI CC</option><option value="3">MEDIA</option>';
             if (curB > 0 && idx >= 2 && idx <= 4) opt += '<option value="4">MACRO</option>'; nm.innerHTML = opt; sm.innerHTML = opt;
+        } else if(type==='encSw') {
+            const opt = '<option value="0">OFF</option><option value="1">SHORTCUT</option><option value="2">MIDI CC</option><option value="3">MEDIA</option>';
+            nm.innerHTML = opt; sm.innerHTML = opt;
         } else if(type==='enc') {
-            const opt = '<option value="0">OFF</option><option value="1">VOLUME HID</option><option value="2">MIDI RELATIF</option><option value="3">MEDIA TRACK</option><option value="4">MIDI ABSOLUT</option><option value="5">PC NAVIGASI</option><option value="6">SHORTCUT KUSTOM</option>'; nm.innerHTML = opt; sm.innerHTML = opt;
+            const opt = '<option value="0">OFF</option><option value="1">VOLUME HID</option><option value="2">MIDI RELATIF</option><option value="3">MEDIA TRACK</option><option value="4">MIDI ABSOLUT</option><option value="5">PC NAVIGASI</option><option value="6">STEP MACRO (KEY)</option><option value="7">STEP MACRO (MIDI)</option><option value="8">SHORTCUT KUSTOM</option>'; nm.innerHTML = opt; sm.innerHTML = opt;
         } else {
             const opt = '<option value="0">OFF</option><option value="2">MIDI ABSOLUT</option>'; nm.innerHTML = opt; sm.innerHTML = opt; 
         }
         
         const fill = (l, d) => {
-            if(!d) return; document.getElementById(`${l}-m`).value = d.m; document.getElementById(`${l}-lbl`).value = d.lbl || ""; 
+            if(!d) return; d.seq = d.seq || [0,0,0,0,0,0,0,0,0,0];
+            document.getElementById(`${l}-m`).value = d.m; document.getElementById(`${l}-lbl`).value = d.lbl || ""; 
             if(type==='pot') { document.getElementById(`${l}-ui-sto`).classList.remove('hidden'); document.getElementById(`${l}-sto`).checked = (d.v3 == 1); } 
             else { let e = document.getElementById(`${l}-ui-sto`); if(e) e.classList.add('hidden'); }
             
-            if(d.m==1) { 
+            if(d.m==1 && type==='enc') { document.getElementById(`${l}-enc-mult`).value = d.v2 || 1; }
+            if(d.m==4 && type==='enc') { document.getElementById(`${l}-enc-mult`).value = d.v3 || 1; }
+            if(d.m==6 || d.m==7) { 
+                document.getElementById(`${l}-seq-chan`).value = d.v1 || 1; 
+                document.getElementById(`${l}-auto-reset`).checked = curB === 0 ? (cfg.autoResetB === 1) : (cfg.autoResetA === 1);
+                for(let i=0; i<10; i++) {
+                    document.getElementById(`${l}-seq-k-${i}`).value = d.seq[i];
+                    document.getElementById(`${l}-seq-k-${i}-btn`).innerText = getKeyDisplayLabel(d.seq[i]);
+                    document.getElementById(`${l}-seq-m-${i}`).value = d.seq[i];
+                }
+            }
+            if(d.m==1 && (type==='btn' || type==='encSw')) { 
                 document.getElementById(`${l}-mod-ctrl`).checked = (d.v1 & 1); document.getElementById(`${l}-mod-shift`).checked = (d.v1 & 2); document.getElementById(`${l}-mod-alt`).checked = (d.v1 & 4); document.getElementById(`${l}-mod-win`).checked = (d.v1 & 8);
                 document.getElementById(`${l}-key`).value = d.v2; document.getElementById(`${l}-key-btn`).innerText = getKeyDisplayLabel(d.v2); 
             }
@@ -525,7 +964,7 @@
             if(d.m==3) { document.getElementById(`${l}-med`).value = d.v1||205; }
             if(d.m==4&&type==='btn') { document.getElementById(`${l}-mac-act1`).value=d.v1||1; document.getElementById(`${l}-mac-act2`).value=d.v2||1; document.getElementById(`${l}-mac-txt1`).value=d.t1||""; document.getElementById(`${l}-mac-txt2`).value=d.t2||""; }
             if(d.m==5&&type==='enc') { document.getElementById(`${l}-nav-opt`).value = d.v1||1; }
-            if(d.m==6&&type==='enc') { 
+            if(d.m==8&&type==='enc') { 
                 document.getElementById(`${l}-enc-mod-ctrl`).checked = (d.v1 & 1); document.getElementById(`${l}-enc-mod-shift`).checked = (d.v1 & 2); document.getElementById(`${l}-enc-mod-alt`).checked = (d.v1 & 4); document.getElementById(`${l}-enc-mod-win`).checked = (d.v1 & 8);
                 document.getElementById(`${l}-enc-l`).value=d.v2||0; document.getElementById(`${l}-enc-l-btn`).innerText=getKeyDisplayLabel(d.v2||0); document.getElementById(`${l}-enc-r`).value=d.v3||0; document.getElementById(`${l}-enc-r-btn`).innerText=getKeyDisplayLabel(d.v3||0); 
             }
@@ -533,15 +972,18 @@
         };
         
         let dN, dS;
-        if(curB === 0) { dN = type==='btn'?cfg.bank0.btn[idx]:(type==='pot'?cfg.bank0.pot[idx]:cfg.bank0.enc); } 
-        else { 
-            let bObj = getBankObj(curB); 
+        if(curB === 0) { 
+            dN = type==='btn'?cfg.profilB.btn[idx]:(type==='pot'?cfg.profilB.pot[idx]:(type==='enc'?cfg.profilB.enc:cfg.profilB.encSw)); 
+        } else { 
+            let pObj = cfg.profilA; 
             if(type==='btn') { 
-                if(idx<2){ dN=bObj.btn1_2[0][idx]; dS=bObj.btn1_2[1][idx]; } 
-                else if(idx<5){ dN=bObj.btn3_5[0][idx-2]; dS=bObj.btn3_5[1][idx-2]; } 
-                else { dN=bObj.btn6_11[0][idx-5]; dS=bObj.btn6_11[1][idx-5]; } 
+                if(idx<2){ dN=pObj.btn1_2[0][idx]; dS=pObj.btn1_2[1][idx]; } 
+                else if(idx<5){ dN=pObj.btn3_5[0][idx-2]; dS=pObj.btn3_5[1][idx-2]; } 
+                else { dN=pObj.btn6_11[0][idx-5]; dS=pObj.btn6_11[1][idx-5]; } 
             } 
-            if(type==='pot') { dN=bObj.pot[0][idx]; dS=bObj.pot[1][idx]; } if(type==='enc') { dN=bObj.enc[0]; dS=bObj.enc[1]; } 
+            else if(type==='pot') { dN=pObj.pot[0][idx]; dS=pObj.pot[1][idx]; } 
+            else if(type==='enc') { dN=pObj.enc[0]; dS=pObj.enc[1]; } 
+            else if(type==='encSw') { dN=pObj.encSw[0]; dS=pObj.encSw[1]; } 
         }
         fill('n', dN); if(hasShift) fill('s', dS);
         document.getElementById('modal').style.display = 'flex';
@@ -549,29 +991,52 @@
 
     function uiLogic(l) {
         const m = parseInt(document.getElementById(`${l}-m`).value);
-        ['midi','short','macro','media','nav','enc-short'].forEach(x => { let el = document.getElementById(`${l}-ui-${x}`); if(el) el.classList.add('hidden'); });
-        if(curT === 'btn') {
-            if(m==1) document.getElementById(`${l}-ui-short`).classList.remove('hidden'); if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden');
-            if(m==4) { document.getElementById(`${l}-ui-macro`).classList.remove('hidden'); let sub=document.getElementById(`${l}-mac-sub`); if(sub) sub.classList.toggle('hidden', document.getElementById(`${l}-mac-act2`).value!=2); }
+        ['midi','short','macro','media','nav','enc-short','enc-mult','enc-seq'].forEach(x => { let el = document.getElementById(`${l}-ui-${x}`); if(el) el.classList.add('hidden'); });
+        if(curT === 'btn' || curT === 'encSw') {
+            if(m==1) document.getElementById(`${l}-ui-short`).classList.remove('hidden'); 
+            if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); 
+            if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden');
+            if(m==4 && curT === 'btn') { document.getElementById(`${l}-ui-macro`).classList.remove('hidden'); let sub=document.getElementById(`${l}-mac-sub`); if(sub) sub.classList.toggle('hidden', document.getElementById(`${l}-mac-act2`).value!=2); }
         } else if (curT === 'enc') {
+            if(m==1 || m==4) { document.getElementById(`${l}-ui-enc-mult`).classList.remove('hidden'); }
             if(m==2 || m==4) { document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); let cc2=document.getElementById(`${l}-cc2`); if(cc2) cc2.classList.toggle('hidden', m!=2); }
-            if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==5) document.getElementById(`${l}-ui-nav`).classList.remove('hidden'); if(m==6) document.getElementById(`${l}-ui-enc-short`).classList.remove('hidden');
+            if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==5) document.getElementById(`${l}-ui-nav`).classList.remove('hidden'); 
+            if(m==6 || m==7) { 
+                document.getElementById(`${l}-ui-enc-seq`).classList.remove('hidden');
+                document.getElementById(`${l}-seq-chan-wrap`).classList.toggle('hidden', m==6);
+                document.getElementById(`${l}-seq-l-k`).classList.toggle('hidden', m!=6);
+                document.getElementById(`${l}-seq-r-k`).classList.toggle('hidden', m!=6);
+                document.getElementById(`${l}-seq-l-m`).classList.toggle('hidden', m!=7);
+                document.getElementById(`${l}-seq-r-m`).classList.toggle('hidden', m!=7);
+            }
+            if(m==8) document.getElementById(`${l}-ui-enc-short`).classList.remove('hidden');
         } else if (curT === 'pot') { if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); }
     }
 
     function saveConfig() {
         const get = (l) => {
-            let m = parseInt(document.getElementById(`${l}-m`).value); let d = (curB > 0 && curT==='btn' && curI>=2 && curI<=4) ? {...act10} : {...act4}; d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
+            let m = parseInt(document.getElementById(`${l}-m`).value); 
+            let d = (curB > 0 && curT==='btn' && curI>=2 && curI<=4) ? makeAct10() : makeAct4(); 
+            d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
             if(curT === 'pot') { d.v3 = document.getElementById(`${l}-sto`).checked ? 1 : 0; }
-            if(m==1){ 
+            if(m==1 && (curT==='btn' || curT==='encSw')){ 
                 let mod = 0; if(document.getElementById(`${l}-mod-ctrl`).checked) mod |= 1; if(document.getElementById(`${l}-mod-shift`).checked) mod |= 2; if(document.getElementById(`${l}-mod-alt`).checked) mod |= 4; if(document.getElementById(`${l}-mod-win`).checked) mod |= 8;
                 d.v1 = mod; d.v2=parseInt(document.getElementById(`${l}-key`).value)||0; d.v3=0; 
             }
+            if(m==1 && curT==='enc') { d.v2 = parseInt(document.getElementById(`${l}-enc-mult`).value) || 1; }
             if(m==2||m==4){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; if(curT==='enc'&&m==2) d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; }
+            if(m==4 && curT==='enc') { d.v3 = parseInt(document.getElementById(`${l}-enc-mult`).value) || 1; }
             if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
             if(m==4&&curT==='btn'){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
             if(m==5&&curT==='enc'){ d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; }
-            if(m==6&&curT==='enc'){ 
+            if(m==6||m==7){ 
+                d.v1 = parseInt(document.getElementById(`${l}-seq-chan`).value) || 1; 
+                // v1.3 FIX: Menyimpan status checkbox Auto-Reset ke Blueprint global agar sinkron penuh
+                let arVal = document.getElementById(`${l}-auto-reset`).checked ? 1 : 0;
+                if (curB === 0) cfg.autoResetB = arVal; else cfg.autoResetA = arVal;
+                for(let i=0; i<10; i++) d.seq[i] = parseInt(document.getElementById(`${l}-seq-${m==6?'k':'m'}-${i}`).value) || 0; 
+            }
+            if(m==8&&curT==='enc'){ 
                 let mod = 0; if(document.getElementById(`${l}-enc-mod-ctrl`).checked) mod |= 1; if(document.getElementById(`${l}-enc-mod-shift`).checked) mod |= 2; if(document.getElementById(`${l}-enc-mod-alt`).checked) mod |= 4; if(document.getElementById(`${l}-enc-mod-win`).checked) mod |= 8;
                 d.v1 = mod; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; 
             }
@@ -579,37 +1044,79 @@
         };
         
         let gN = get('n'), gS = curB>0 ? get('s') : null;
-        if(curB === 0) { if(curT==='btn') cfg.bank0.btn[curI] = gN; if(curT==='pot') cfg.bank0.pot[curI] = gN; if(curT==='enc') cfg.bank0.enc = gN; } 
-        else { 
-            let bObj = getBankObj(curB); 
+        if(curB === 0) { 
+            if(curT==='btn') cfg.profilB.btn[curI] = gN; 
+            if(curT==='pot') cfg.profilB.pot[curI] = gN; 
+            if(curT==='enc') cfg.profilB.enc = gN; 
+            if(curT==='encSw') cfg.profilB.encSw = gN; 
+        } else { 
+            let pObj = cfg.profilA; 
             if(curT==='btn') { 
-                if(curI<2){ bObj.btn1_2[0][curI]=gN; bObj.btn1_2[1][curI]=gS; } 
-                else if(curI<5){ bObj.btn3_5[0][curI-2]=gN; bObj.btn3_5[1][curI-2]=gS; } 
-                else { bObj.btn6_11[0][curI-5]=gN; bObj.btn6_11[1][curI-5]=gS; } 
+                if(curI<2){ pObj.btn1_2[0][curI]=gN; pObj.btn1_2[1][curI]=gS; } 
+                else if(curI<5){ pObj.btn3_5[0][curI-2]=gN; pObj.btn3_5[1][curI-2]=gS; } 
+                else { pObj.btn6_11[0][curI-5]=gN; pObj.btn6_11[1][curI-5]=gS; } 
             } 
-            if(curT==='pot') { bObj.pot[0][curI]=gN; bObj.pot[1][curI]=gS; } if(curT==='enc') { bObj.enc[0]=gN; bObj.enc[1]=gS; } 
+            if(curT==='pot') { pObj.pot[0][curI]=gN; pObj.pot[1][curI]=gS; } 
+            if(curT==='enc') { pObj.enc[0]=gN; pObj.enc[1]=gS; } 
+            if(curT==='encSw') { pObj.encSw[0]=gN; pObj.encSw[1]=gS; } 
         }
-        closeModal(); autoSave(); updateAllLabels(); showToast("TERSIPMAN SEMENTARA!");
+        closeModal(); autoSave(); updateAllLabels();
     }
 
     function closeModal() { document.getElementById('modal').style.display='none'; closeKeyPicker(); }
     
     function autoSave() { 
-        let bObj = getBankObj(curB);
-        bObj.anim = parseInt(document.getElementById('ui-anim').value); bObj.col = hexToRgb(document.getElementById('ui-color').value);
-        bObj.colActive = hexToRgb(document.getElementById('ui-color-active').value); bObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value);
-        if(document.getElementById('ui-speed')) bObj.animSpeed = parseInt(document.getElementById('ui-speed').value);
-        if (curB > 0) bObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value);
-        updateLedStripsVisual(); localStorage.setItem('baysKONTROLMK2', JSON.stringify(cfg)); markUnsaved();
+        let bankObj = getBankObj(curB);
+        bankObj.animBot = parseInt(document.getElementById('ui-anim').value); 
+        bankObj.colTop = hexToRgb(document.getElementById('ui-color-top').value);
+        bankObj.colBaseBot = hexToRgb(document.getElementById('ui-color-base').value);
+        bankObj.colTargetBot = hexToRgb(document.getElementById('ui-color-target').value);
+        bankObj.colActive = hexToRgb(document.getElementById('ui-color-active').value);
+        
+        cfg.panicSource = parseInt(document.getElementById('ui-panic-source').value);
+        
+        // v1.3 - Menjamin nilai 0 tidak tertimpa falsy check
+        let pVal = parseInt(document.getElementById('ui-panic-mode').value);
+        cfg.panicMode = isNaN(pVal) ? 119 : pVal;
+        
+        cfg.panicChan = parseInt(document.getElementById('ui-panic-chan').value) || 1;
+
+        if (curB > 0) {
+            bankObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value);
+            bankObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value);
+        }
+
+        updateAllLabels();
+        localStorage.setItem('sakuMIDI_RC2_Config', JSON.stringify(cfg)); 
+        markUnsaved();
     }
     
-    function loadAutoSave() { const s = localStorage.getItem('baysKONTROLMK2'); if(s) { try { let loaded = JSON.parse(s); if(loaded.bank0) cfg = loaded; } catch(e) {} } switchBank(0); }
+    function loadAutoSave() { 
+        const s = localStorage.getItem('sakuMIDI_RC2_Config'); 
+        if(s) { 
+            try { 
+                let loaded = JSON.parse(s); 
+                if(loaded.profilB) {
+                    cfg = loaded; 
+                    if (!cfg.profilB.encSw) cfg.profilB.encSw = makeAct4();
+                    if (!cfg.profilA.encSw) cfg.profilA.encSw = [makeAct4(), makeAct4()];
+                }
+            } catch(e) {} 
+        } 
+        switchBank(0); 
+    }
+    
     function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
     function rgbToHex(arr) { return "#" + arr.map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_mk2.json'; a.click(); showToast("EXPORT BERHASIL!"); }
+    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='saku-MIDI_RC2_Config.json'; a.click(); showToast("EXPORT BERHASIL!"); }
     function importData() { document.getElementById('f-import').click(); }
-    function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { cfg = JSON.parse(e.target.result); switchBank(0); markUnsaved(); showToast("IMPORT SUKSES!"); }; fr.readAsText(i.files[0]); i.value=''; }
+    function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { 
+        cfg = JSON.parse(e.target.result); 
+        if (!cfg.profilB.encSw) cfg.profilB.encSw = makeAct4();
+        if (!cfg.profilA.encSw) cfg.profilA.encSw = [makeAct4(), makeAct4()];
+        switchBank(0); markUnsaved(); showToast("IMPORT SUKSES!"); 
+    }; fr.readAsText(i.files[0]); i.value=''; }
 
     async function connectUSB() {
         try {
@@ -620,41 +1127,132 @@
         } catch(e) { return false; }
     }
 
-    // CATATAN MESIN: Fungsi Hex builder ini belum menyuntikkan data animSpeed ke struktur buffer 
-    // agar sinkronisasi dengan firmware Arduino (.ino) saat ini tidak rusak. Akan diperbarui di revisi Arduino berikutnya.
     async function pushToEEPROM() {
         if(!port) { let connected = await connectUSB(); if(!connected) return; }
         const writer = port.writable.getWriter(); const encoder = new TextEncoder();
         const btn = document.getElementById('btn-push'); const autoExport = document.getElementById('cb-autoexport').checked; 
         try {
-            btn.innerText = "COMPILING..."; let pool = new Uint8Array(230), pOff = 0; let b = new Uint8Array(1024), off = 0; b[off++] = 66; b[off++] = 75; b[off++] = 50; 
+            btn.innerText = "COMPILING..."; 
+            let b = new Uint8Array(1024); 
             
-            [cfg.bank1, cfg.bank2].forEach(bank => {
-                for(let l=0; l<2; l++) for(let i=0; i<3; i++) {
-                    let d = bank.btn3_5[l][i];
-                    if(d.m==4) {
-                        let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); let total = s1.length + (d.v2==2 ? s2.length : 0);
-                        if(pOff + total <= 230) { d.v3 = pOff; pool.set(s1, pOff); pOff += s1.length; if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } } else { throw "KAPASITAS TEXT MACRO PENUH!"; }
+            b[0] = 83; b[1] = 75; b[2] = 52; 
+
+            b[3] = cfg.panicSource || 0;
+            b[4] = cfg.autoResetB || 0;
+            b[5] = cfg.autoResetA || 0;
+            
+            // v1.3 - Menjamin nilai 0 tidak tertimpa falsy check pada memori biner
+            let pVal = parseInt(document.getElementById('ui-panic-mode').value);
+            b[6] = isNaN(pVal) ? 119 : pVal;
+            
+            b[7] = 1; 
+
+            const write_4 = (offset, o) => {
+                if(!o) return;
+                b[offset] = o.m; b[offset+1] = o.v1; b[offset+2] = o.v2; b[offset+3] = o.v3;
+                let lArr = encoder.encode(o.lbl||"");
+                for(let i=0; i<4; i++) b[offset + 4 + i] = i < lArr.length ? lArr[i] : 0;
+            };
+            const write_10 = (offset, o) => {
+                b[offset] = o.m; b[offset+1] = o.v1; b[offset+2] = o.v2; b[offset+3] = o.v3;
+                let lArr = encoder.encode(o.lbl||"");
+                for(let i=0; i<10; i++) b[offset + 4 + i] = i < lArr.length ? lArr[i] : 0;
+            };
+
+            for(let i=0; i<12; i++) write_4(16 + i * 8, cfg.profilB.btn[i]);
+            for(let i=0; i<5; i++) write_4(112 + i * 8, cfg.profilB.pot[i]);
+            
+            write_4(152, cfg.profilB.enc);
+            write_4(510, cfg.profilB.encSw); 
+            
+            let addrB = 160;
+            b[addrB] = cfg.profilB.brightTop; b[addrB+1] = cfg.profilB.brightBot;
+            b[addrB+2] = cfg.profilB.animTop; b[addrB+3] = cfg.profilB.animBot;
+            b[addrB+4] = cfg.profilB.speedTop; b[addrB+5] = cfg.profilB.speedBot;
+            cfg.profilB.colTop.forEach((c, idx) => b[addrB+6+idx] = c);
+            cfg.profilB.colActive.forEach((c, idx) => b[addrB+9+idx] = c);
+            cfg.profilB.colBaseBot.forEach((c, idx) => b[addrB+12+idx] = c);
+            cfg.profilB.colTargetBot.forEach((c, idx) => b[addrB+15+idx] = c);
+
+            let base = 178;
+            for (let l = 0; l < 2; l++) {
+                for (let i = 0; i < 2; i++) write_4(base + (l * 16) + (i * 8), cfg.profilA.btn1_2[l][i]);
+                for (let i = 0; i < 3; i++) write_10(base + 32 + (l * 42) + (i * 14), cfg.profilA.btn3_5[l][i]);
+                for (let i = 0; i < 6; i++) write_4(base + 116 + (l * 48) + (i * 8), cfg.profilA.btn6_11[l][i]);
+                for (let i = 0; i < 5; i++) write_4(base + 212 + (l * 40) + (i * 8), cfg.profilA.pot[l][i]);
+                
+                write_4(base + 292 + (l * 8), cfg.profilA.enc[l]);
+                write_4(518 + (l * 8), cfg.profilA.encSw[l]); 
+            }
+
+            let addrA = 486;
+            b[addrA] = cfg.profilA.brightTop; b[addrA+1] = cfg.profilA.brightBot;
+            b[addrA+2] = cfg.profilA.animTop; b[addrA+3] = cfg.profilA.animBot;
+            b[addrA+4] = cfg.profilA.speedTop; b[addrA+5] = cfg.profilA.speedBot;
+            cfg.profilA.colTop.forEach((c, idx) => b[addrA+6+idx] = c);
+            cfg.profilA.colActive.forEach((c, idx) => b[addrA+9+idx] = c);
+            cfg.profilA.colShift.forEach((c, idx) => b[addrA+12+idx] = c);
+            cfg.profilA.colBaseBot.forEach((c, idx) => b[addrA+15+idx] = c);
+            cfg.profilA.colTargetBot.forEach((c, idx) => b[addrA+18+idx] = c);
+            cfg.profilA.colB6.forEach((c, idx) => b[addrA+21+idx] = c);
+
+            let pool = new Uint8Array(490); 
+            let pOff = 0;
+
+            for(let l=0; l<2; l++) for(let i=0; i<3; i++) {
+                let d = cfg.profilA.btn3_5[l][i];
+                if(d.m==4) {
+                    let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); 
+                    let total = s1.length + (d.v2==2 ? s2.length : 0);
+                    if(pOff + total <= 490) { 
+                        d.v3 = pOff; 
+                        pool.set(s1, pOff); pOff += s1.length; 
+                        if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } 
+                    } else { 
+                        throw "KAPASITAS TEXT MACRO PENUH!"; 
+                    }
+                }
+            }
+
+            let encs = [cfg.profilB.enc, cfg.profilA.enc[0], cfg.profilA.enc[1]];
+            encs.forEach(enc => {
+                if(enc && (enc.m == 6 || enc.m == 7)) {
+                    if(pOff + 10 <= 490) { 
+                        enc.v2 = pOff; 
+                        for(let k=0; k<10; k++) pool[pOff++] = enc.seq[k]; 
+                    } else { 
+                        throw "KAPASITAS MACRO POOL PENUH!"; 
                     }
                 }
             });
 
-            const pack_4 = (o) => { b[off++]=o.m; b[off++]=o.v1; b[off++]=o.v2; b[off++]=o.v3; let lArr = encoder.encode(o.lbl||""); for(let i=0; i<4; i++) b[off++] = i < lArr.length ? lArr[i] : 0; };
-            const pack_10 = (o) => { b[off++]=o.m; b[off++]=o.v1; b[off++]=o.v2; b[off++]=o.v3; let lArr = encoder.encode(o.lbl||""); for(let i=0; i<10; i++) b[off++] = i < lArr.length ? lArr[i] : 0; };
+            for(let i=0; i<490; i++) {
+                b[534 + i] = pool[i];
+            }
 
-            cfg.bank0.btn.forEach(pack_4); cfg.bank0.pot.forEach(pack_4); pack_4(cfg.bank0.enc);
-            b[off++] = cfg.bank0.bright; b[off++] = cfg.bank0.anim; cfg.bank0.col.forEach(c=>b[off++]=c); cfg.bank0.colActive.forEach(c=>b[off++]=c); cfg.bank0.colShift.forEach(c=>b[off++]=c);
-
-            [cfg.bank1, cfg.bank2].forEach(bank => {
-                for(let l=0; l<2; l++) bank.btn1_2[l].forEach(pack_4); for(let l=0; l<2; l++) bank.btn3_5[l].forEach(pack_10); for(let l=0; l<2; l++) bank.btn6_11[l].forEach(pack_4);
-                for(let l=0; l<2; l++) bank.pot[l].forEach(pack_4); for(let l=0; l<2; l++) pack_4(bank.enc[l]);
-                b[off++] = bank.bright; b[off++] = bank.anim; bank.col.forEach(c=>b[off++]=c); bank.colActive.forEach(c=>b[off++]=c); bank.colShift.forEach(c=>b[off++]=c); bank.colB6.forEach(c=>b[off++]=c); 
-            }); pool.forEach(p => b[off++] = p);
+            // Sync structural pointer biner
+            for (let l = 0; l < 2; l++) {
+                for (let i = 0; i < 3; i++) {
+                    write_10(base + 32 + (l * 42) + (i * 14), cfg.profilA.btn3_5[l][i]);
+                }
+            }
+            write_4(152, cfg.profilB.enc);
+            write_4(510, cfg.profilB.encSw);
+            write_4(base + 292, cfg.profilA.enc[0]);
+            write_4(518, cfg.profilA.encSw[0]);
+            write_4(base + 300, cfg.profilA.enc[1]);
+            write_4(526, cfg.profilA.encSw[1]);
 
             const hex = Array.from(b, x => x.toString(16).padStart(2,'0').toUpperCase()).join('');
+            
             await writer.write(encoder.encode("<PAUSE>\n")); if(!(await waitFor("<NEXT>"))) throw "No Response";
             await writer.write(encoder.encode("<CFG>\n")); if(!(await waitFor("<NEXT>"))) throw "Sync Error";
-            for(let i=0; i<hex.length; i+=64) { await writer.write(encoder.encode(hex.substring(i, i+64) + "\n")); let pct = Math.round((i/hex.length)*100); btn.innerText = `BURNING... ${pct}%`; if(!(await waitFor("<NEXT>"))) throw "Comm Error"; }
+            for(let i=0; i<hex.length; i+=64) { 
+                await writer.write(encoder.encode(hex.substring(i, i+64) + "\n")); 
+                let pct = Math.round((i/hex.length)*100); 
+                btn.innerText = `BURNING... ${pct}%`; 
+                if(!(await waitFor("<NEXT>"))) throw "Comm Error"; 
+            }
             await writer.write(encoder.encode("</CFG>\n")); if(!(await waitFor("<SUCCESS>"))) throw "Verify Fail";
             markSaved(); showToast("SUKSES SUNTIK KE ALAT!"); if(autoExport) exportData(); 
         } catch(e) { showToast(e); btn.innerText = "⚡ PUSH TO DEVICE"; }
@@ -667,34 +1265,109 @@
         try {
             document.querySelector('.btn-sync').innerText = "SYNCING..."; showToast("MENARIK DATA...");
             await writer.write(encoder.encode("<SYNC>\n")); let start = Date.now(), syncHex = "";
-            while(Date.now() - start < 4000) { const {value} = await serialReader.read(); if(value) syncHex += value; if(syncHex.length >= 2048 && syncHex.includes("\n")) break; }
+            while(Date.now() - start < 4000) { 
+                const {value} = await serialReader.read(); 
+                if(value) syncHex += value; 
+                if(syncHex.length >= 2048 && syncHex.includes("\n")) break; 
+            }
             syncHex = syncHex.trim(); 
-            if(syncHex.length >= 2048) { parseHexToConfig(syncHex); switchBank(curB); localStorage.setItem('baysKONTROLMK2', JSON.stringify(cfg)); markSaved(); showToast("SINKRONISASI BERHASIL!"); } else { throw "Versi Firmware Tidak Cocok!"; }
-        } catch(e) { showToast("ERROR: " + e); } document.querySelector('.btn-sync').innerText = "SYNC"; writer.releaseLock();
+            if(syncHex.length >= 2048) { 
+                parseHexToConfig(syncHex); switchBank(0); 
+                localStorage.setItem('sakuMIDI_RC2_Config', JSON.stringify(cfg)); 
+                markSaved(); showToast("SINKRONISASI BERHASIL!"); 
+            } else { 
+                throw "Versi Firmware Tidak Cocok!"; 
+            }
+        } catch(e) { showToast("ERROR: " + e); } 
+        document.querySelector('.btn-sync').innerText = "SYNC"; writer.releaseLock();
     }
 
     function parseHexToConfig(hex) {
-        let off = 0; const getB = () => parseInt(hex.substr(off++*2, 2), 16); getB(); getB(); getB(); 
-        const read_4 = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl=""; for(let i=0;i<4;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, lbl}; };
-        const read_10 = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl=""; for(let i=0;i<10;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, t1:"", t2:"", lbl}; };
+        const getB = (addr) => parseInt(hex.substr(addr * 2, 2), 16); 
         
-        for(let i=0; i<11; i++) cfg.bank0.btn[i] = read_4(); for(let i=0; i<5; i++) cfg.bank0.pot[i] = read_4(); cfg.bank0.enc = read_4();
-        cfg.bank0.bright=getB(); cfg.bank0.anim=getB(); cfg.bank0.col=[getB(),getB(),getB()]; cfg.bank0.colActive=[getB(),getB(),getB()]; cfg.bank0.colShift=[getB(),getB(),getB()];
+        const read_4 = (addr) => { 
+            let m=getB(addr), v1=getB(addr+1), v2=getB(addr+2), v3=getB(addr+3), lbl=""; 
+            for(let i=0; i<4; i++){ 
+                let c=getB(addr+4+i); if(c!=0) lbl+=String.fromCharCode(c); 
+            } 
+            return {m, v1, v2, v3, lbl, seq:[0,0,0,0,0,0,0,0,0,0]}; 
+        };
+        const read_10 = (addr) => { 
+            let m=getB(addr), v1=getB(addr+1), v2=getB(addr+2), v3=getB(addr+3), lbl=""; 
+            for(let i=0; i<10; i++){ 
+                let c=getB(addr+4+i); if(c!=0) lbl+=String.fromCharCode(c); 
+            } 
+            return {m, v1, v2, v3, t1:"", t2:"", lbl}; 
+        };
+        
+        cfg.panicSource = getB(3);
+        cfg.autoResetB = getB(4);
+        cfg.autoResetA = getB(5);
+        cfg.panicMode = getB(6);
+        cfg.panicChan = getB(7);
 
-        [cfg.bank1, cfg.bank2].forEach(bank => {
-            for(let l=0; l<2; l++) for(let i=0; i<2; i++) bank.btn1_2[l][i] = read_4(); for(let l=0; l<2; l++) for(let i=0; i<3; i++) bank.btn3_5[l][i] = read_10(); for(let l=0; l<2; l++) for(let i=0; i<6; i++) bank.btn6_11[l][i] = read_4();
-            for(let l=0; l<2; l++) for(let i=0; i<5; i++) bank.pot[l][i] = read_4(); for(let l=0; l<2; l++) bank.enc[l] = read_4();
-            bank.bright=getB(); bank.anim=getB(); bank.col=[getB(),getB(),getB()]; bank.colActive=[getB(),getB(),getB()]; bank.colShift=[getB(),getB(),getB()]; bank.colB6=[getB(),getB(),getB()];
-        });
+        for(let i=0; i<12; i++) cfg.profilB.btn[i] = read_4(16 + i * 8); 
+        for(let i=0; i<5; i++) cfg.profilB.pot[i] = read_4(112 + i * 8); 
+        cfg.profilB.enc = read_4(152);
+        
+        if(!cfg.profilB.encSw) cfg.profilB.encSw = makeAct4();
+        cfg.profilB.encSw = read_4(510);
+        
+        let addrB = 160;
+        cfg.profilB.brightTop=getB(addrB); cfg.profilB.brightBot=getB(addrB+1); 
+        cfg.profilB.animTop=getB(addrB+2); cfg.profilB.animBot=getB(addrB+3); 
+        cfg.profilB.speedTop=getB(addrB+4); cfg.profilB.speedBot=getB(addrB+5);
+        cfg.profilB.colTop=[getB(addrB+6),getB(addrB+7),getB(addrB+8)]; 
+        cfg.profilB.colActive=[getB(addrB+9),getB(addrB+10),getB(addrB+11)]; 
+        cfg.profilB.colBaseBot=[getB(addrB+12),getB(addrB+13),getB(addrB+14)]; 
+        cfg.profilB.colTargetBot=[getB(addrB+15),getB(addrB+16),getB(addrB+17)];
 
-        let poolArr = []; for(let i=0; i<230; i++) poolArr.push(getB());
-        [cfg.bank1, cfg.bank2].forEach(bank => {
-            for(let l=0; l<2; l++) for(let i=0; i<3; i++) {
-                let act = bank.btn3_5[l][i];
-                if(act.m === 4) { 
-                    let idx = act.v3, str1 = ""; while(idx < 230 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; 
-                    if(act.v2 === 2) { let str2 = ""; while(idx < 230 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } 
-                }
+        let base = 178;
+        if(!cfg.profilA.encSw) cfg.profilA.encSw = [makeAct4(), makeAct4()];
+
+        for(let l=0; l<2; l++) {
+            for(let i=0; i<2; i++) cfg.profilA.btn1_2[l][i] = read_4(base + (l * 16) + (i * 8)); 
+            for(let i=0; i<3; i++) cfg.profilA.btn3_5[l][i] = read_10(base + 32 + (l * 42) + (i * 14)); 
+            for(let i=0; i<6; i++) cfg.profilA.btn6_11[l][i] = read_4(base + 116 + (l * 48) + (i * 8));
+            for(let i=0; i<5; i++) cfg.profilA.pot[l][i] = read_4(base + 212 + (l * 40) + (i * 8)); 
+            
+            cfg.profilA.enc[l] = read_4(base + 292 + (l * 8));
+            cfg.profilA.encSw[l] = read_4(518 + (l * 8)); 
+        }
+
+        let addrA = 486;
+        cfg.profilA.brightTop=getB(addrA); cfg.profilA.brightBot=getB(addrA+1); 
+        cfg.profilA.animTop=getB(addrA+2); cfg.profilA.animBot=getB(addrA+3); 
+        cfg.profilA.speedTop=getB(addrA+4); cfg.profilA.speedBot=getB(addrA+5);
+        cfg.profilA.colTop=[getB(addrA+6),getB(addrA+7),getB(addrA+8)]; 
+        cfg.profilA.colActive=[getB(addrA+9),getB(addrA+10),getB(addrA+11)]; 
+        cfg.profilA.colShift=[getB(addrA+12),getB(addrA+13),getB(addrA+14)]; 
+        cfg.profilA.colBaseBot=[getB(addrA+15),getB(addrA+16),getB(addrA+17)]; 
+        cfg.profilA.colTargetBot=[getB(addrA+18),getB(addrA+19),getB(addrA+20)];
+        cfg.profilA.colB6=[getB(addrA+21),getB(addrA+22),getB(addrA+23)];
+
+        let poolArr = []; 
+        for(let i=0; i<490; i++) poolArr.push(getB(534 + i));
+        
+        for(let l=0; l<2; l++) for(let i=0; i<3; i++) {
+            let act = cfg.profilA.btn3_5[l][i];
+            if(act.m === 4) { 
+                let idx = act.v3, str1 = ""; 
+                while(idx < 490 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); 
+                act.t1 = str1; idx++; 
+                if(act.v2 === 2) { 
+                    let str2 = ""; 
+                    while(idx < 490 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); 
+                    act.t2 = str2; 
+                } 
+            }
+        }
+
+        let encs = [cfg.profilB.enc, cfg.profilA.enc[0], cfg.profilA.enc[1]];
+        encs.forEach((enc, encIdx) => {
+            if(enc && (enc.m == 6 || enc.m == 7)) {
+                enc.seq = []; let idx = enc.v2;
+                for(let k=0; k<10; k++) enc.seq.push(poolArr[idx+k] || 0);
             }
         });
     }
