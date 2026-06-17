@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>baysKONTROL Configurator RC1</title>
+    <title>baysKONTROL X1 Configurator RC2</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
         @font-face { font-family: 'Klasikap'; src: local('Klasikap'), url('klasikap.ttf') format('truetype'); }
 
         :root {
-            --bg-color: #e6e6e6; --box-bg: #f8f8f8; --text-main: #111111; --text-muted: #666666;
+            --bg-color: #e6e6e6; --box-bg: #f8f8f8; --text-main: #111111; --text-muted: #444444;
             --border-color: #222222; --shadow-color: #111111; --rig-bg: #2a2a2a; --input-bg: #ffffff;
             --grid-line: rgba(0,0,0,0.05); --checker-1: #222222; --checker-2: #f8f8f8;
             --font-main: 'Comic Neue', cursive; --font-logo: 'Klasikap', sans-serif; 
             --accent-main: #333333; --dyn-prof-color: #00ffff; --dyn-b6-color: #00ffff;
+            --label-s-color: #666666; /* Kontras tinggi warna sekunder di mode terang */
         }
 
         [data-theme="dark"] {
-            --bg-color: #1a1a1a; --box-bg: #262626; --text-main: #f0f0f0; --text-muted: #888888;
-            --border-color: #e0e0e0; --shadow-color: #050505; --rig-bg: #222222; --input-bg: #111111;
-            --grid-line: rgba(255,255,255,0.04); --accent-main: #aaaaaa;
+            --bg-color: #121212; --box-bg: #1e1e1e; --text-main: #f5f5f5; --text-muted: #bbbbbb;
+            --border-color: #f5f5f5; --shadow-color: #000000; --rig-bg: #1a1a1a; --input-bg: #121212;
+            --grid-line: rgba(255,255,255,0.03); --accent-main: #dddddd;
+            --label-s-color: #b0b0b0; /* Kontras tinggi warna sekunder di mode gelap */
         }
 
         body, html { 
@@ -79,21 +81,22 @@
         .btn-unit:active { transform: translate(1px, 1px); box-shadow: inset 0 0 15px #000; }
         .btn-unit::before { content: ''; position: absolute; width: 40px; height: 40px; background: #222; border-radius: 50%; border: 1px solid #333; z-index: 1;}
         
-        .led-strip { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 22px; height: 6px; border-radius: 4px; background: #333; box-shadow: 0 0 0 rgba(0,0,0,0); transition: 0.1s; }
+        /* LED strip fisik diposisikan tepat di atas tombol B1-B10 */
+        .led-strip { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); width: 22px; height: 6px; border-radius: 4px; background: #333; box-shadow: 0 0 0 rgba(0,0,0,0); transition: 0.1s; }
         
         .pot-id { position: absolute; bottom: -22px; font-size: 0.75rem; font-weight: 800; color: #fff; z-index: 10; text-shadow: 1px 1px 0 #000;}
         
-        /* Label Encoder Switch Melayang Sempurna */
         .enc-sw-label { position: absolute; top: -20px; width: 150px; text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: rgba(255,255,255,0.7); text-shadow: 1px 1px 2px #000; z-index: 20;}
         .enc-sw-label:hover { color: #ff4757; text-shadow: 0 0 10px rgba(255,71,87,0.8); transform: scale(1.1); }
 
         .btn-id { position: absolute; top: -8px; right: -8px; background: var(--text-main); color: var(--bg-color); padding: 2px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; z-index: 10; border: 2px solid var(--border-color);} 
         .btn-lbl-n { font-size: 0.75rem; font-weight: 800; color: #fff; margin-bottom: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
         .btn-lbl-div { width: 70%; height: 2px; background: rgba(255,255,255,0.4); margin: 2px 0; z-index: 15;}
-        .btn-lbl-s { font-size: 0.75rem; font-weight: 800; color: #aaa; margin-top: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
+        .btn-lbl-s { font-size: 0.75rem; font-weight: 800; color: var(--label-s-color); margin-top: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
 
+        /* B6 Dedicated Shift Styling */
         .btn-b6-shift::before { background: #1a1a1a !important; border-color: #111 !important; }
-        .btn-b6-shift { cursor: not-allowed; } .btn-b6-shift:active { transform: none; box-shadow: inset 0 0 10px #000; }
+        .btn-b6-shift { cursor: pointer; } 
         .btn-b6-shift .btn-id { color: #555; background: #222; border-color: #111; }
 
         .tab-area { display: flex; gap: 15px; margin-bottom: 20px; }
@@ -103,14 +106,13 @@
         .led-box { border: 4px solid var(--border-color); padding: 15px 20px; background: var(--box-bg); border-radius: 15px; box-shadow: 6px 6px 0px var(--shadow-color);}
         .ctrl-row { margin-bottom: 10px; }
         .ctrl-row label { font-weight: bold; margin-bottom: 6px; font-size: 1rem; display: flex; align-items: center; gap: 10px;}
-        .badge-percent { background: var(--bg-color); padding: 2px 8px; border: 3px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; box-shadow: 2px 2px 0 var(--shadow-color);}
+        .badge-percent { background: var(--bg-color); padding: 2px 8px; border: 3px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; box-shadow: 2px 2px 0 var(--shadow-color); color: var(--text-main);}
         
         .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 6px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 3px 3px 0px var(--shadow-color); box-sizing: border-box;}
         
-        /* Grid Warna Simetris Paten 6 Kolom */
-        .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
         .cg-item { display: flex; flex-direction: column; }
-        input[type="color"] { width: 100%; height: 35px; border: 3px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 0;}
+        input[type="color"] { width: 100%; height: 35px; border: 3px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 0; background: none;}
         
         .slider-wrapper { padding-bottom: 15px; background: var(--input-bg); border: 3px solid var(--border-color); padding: 15px 15px 5px 15px; border-radius: 8px;}
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
@@ -128,7 +130,6 @@
         .btn-main.unsaved { background: #ff4757; color: #ffffff; border-color: #ff4757; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } }
 
-        /* Teks Checkbox Warna Dinamis */
         .cb-container { display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; gap: 8px; cursor: pointer; color: var(--text-main); }
         .cb-neo { appearance: none; width: 18px; height: 18px; border: 3px solid var(--border-color); border-radius: 4px; background: var(--input-bg); position: relative; box-shadow: 2px 2px 0 var(--shadow-color);}
         .cb-neo:checked { background: var(--text-main); }
@@ -139,7 +140,6 @@
         
         #serial-status { text-align: center; padding: 10px 25px; border: 4px solid var(--border-color); border-radius: 10px; background: var(--box-bg); color: var(--text-main); font-weight: bold; box-shadow: 4px 4px 0 var(--shadow-color); cursor: pointer; transition: 0.2s; font-size: 1rem;}
 
-        /* Theme Toggle Dikembalikan ke Bawah */
         .theme-toggle-wrap { display: flex; justify-content: center; width: 100%; margin-top: 25px; margin-bottom: 25px;}
         .theme-switch { width: 60px; height: 30px; border: 4px solid var(--border-color); background: var(--checker-2); box-shadow: 4px 4px 0 var(--shadow-color); cursor: pointer; position: relative; transition: 0.2s;}
         .theme-switch:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--shadow-color); }
@@ -169,8 +169,10 @@
         .custom-key-btn { background-color: var(--input-bg); color: var(--text-main); border: 3px solid var(--border-color); padding: 8px 15px; font-family: var(--font-main); font-weight: bold; box-shadow: 3px 3px 0 var(--shadow-color); flex: 1; text-align: left; cursor: pointer; display: flex; justify-content: space-between; border-radius: 8px;}
         .kp-section { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; background: var(--rig-bg); border: 3px solid var(--border-color); padding: 12px; border-radius: 8px;}
         .kp-title { width: 100%; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px; border-bottom: 2px solid var(--border-color); padding-bottom: 4px; color: #fff;}
-        .kp-btn { background: var(--box-bg); border: 2px solid var(--border-color); font-family: var(--font-main); font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 6px 10px; border-radius: 4px; color: var(--text-main);}
-        [data-theme="dark"] .kp-btn { background: #222; color: #fff; }
+        
+        /* Kontras tinggi Key Picker pada Mode Gelap */
+        .kp-btn { background: #e0e0e0; border: 2px solid var(--border-color); font-family: var(--font-main); font-size: 0.85rem; font-weight: bold; cursor: pointer; padding: 6px 10px; border-radius: 4px; color: #111111;}
+        [data-theme="dark"] .kp-btn { background: #333333; color: #ffffff; border-color: #555555; }
         .kp-btn:hover { background: var(--text-main); color: var(--bg-color);}
     </style>
 </head>
@@ -180,9 +182,8 @@
 <div class="checker-banner"></div>
 
 <div id="config-screen">
-
     <div class="config-workspace">
-        <div class="canvas-header"><span class="hdr-bays">bays</span><span class="hdr-kontrol">KONTROL</span><span class="badge-lite">CONFIGURATOR</span></div>
+        <div class="canvas-header"><span class="hdr-bays">bays</span><span class="hdr-kontrol">KONTROL</span><span class="badge-lite">X1 RC2</span></div>
         
         <div class="main-canvas">
             <div class="canvas-left-pane">
@@ -195,19 +196,21 @@
                     <div class="screw s-tl"></div><div class="screw s-tr"></div>
                     <div class="screw s-bl"></div><div class="screw s-br"></div>
                     
+                    <!-- LED di atas potensio dihapus sepenuhnya agar sesuai fisik asli -->
                     <div class="knob-unit pot-unit" id="hw-P1" onclick="openEditor('pot', 0)"><div class="pot-id">P1</div><div class="btn-lbl-n" id="lbl-p0-n">CC</div><div class="btn-lbl-div" id="div-p0"></div><div class="btn-lbl-s" id="lbl-p0-s">CC</div></div>
                     <div class="knob-unit pot-unit" id="hw-P3" onclick="openEditor('pot', 2)"><div class="pot-id">P3</div><div class="btn-lbl-n" id="lbl-p2-n">CC</div><div class="btn-lbl-div" id="div-p2"></div><div class="btn-lbl-s" id="lbl-p2-s">CC</div></div>
                     
-                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditor('encRot', 0)">
-                        <div onclick="openEditor('encSw', 0); event.stopPropagation();" class="enc-sw-label">
-                            [ <span id="lbl-encsw-n">Off</span><span id="lbl-encsw-s"></span> ]
+                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditor('enc', 0)">
+                        <div class="enc-sw-label" id="lbl-enc-sw" onclick="openEditor('encSw', 0); event.stopPropagation();">
+                            [ CLICK: OFF ]
                         </div>
-                        <div class="btn-lbl-n" id="lbl-encrot-n" style="color:#111; text-shadow:none;">Off</div><div class="btn-lbl-div" id="div-encrot" style="background:#555;"></div><div class="btn-lbl-s" id="lbl-encrot-s" style="color:#444; text-shadow:none;">Off</div>
+                        <div class="btn-lbl-n" id="lbl-enc-n" style="color:#111; text-shadow:none;">Off</div><div class="btn-lbl-div" id="div-enc" style="background:#555;"></div><div class="btn-lbl-s" id="lbl-enc-s" style="color:#444; text-shadow:none;">Off</div>
                     </div>
                     
                     <div class="knob-unit pot-unit" id="hw-P2" onclick="openEditor('pot', 1)"><div class="pot-id">P2</div><div class="btn-lbl-n" id="lbl-p1-n">CC</div><div class="btn-lbl-div" id="div-p1"></div><div class="btn-lbl-s" id="lbl-p1-s">CC</div></div>
                     <div class="knob-unit pot-unit" id="hw-P4" onclick="openEditor('pot', 3)"><div class="pot-id">P4</div><div class="btn-lbl-n" id="lbl-p3-n">CC</div><div class="btn-lbl-div" id="div-p3"></div><div class="btn-lbl-s" id="lbl-p3-s">CC</div></div>
                     
+                    <!-- LED strip terpasang presisi di atas baris tombol B1-B10 secara linear -->
                     <div class="btn-row row-1">
                         <div class="btn-unit" onclick="openEditor('btn', 0)"><div class="led-strip" id="led-b0"></div><div class="btn-id">B1</div><div class="btn-lbl-n" id="lbl-b0-n">Off</div><div class="btn-lbl-div" id="div-b0"></div><div class="btn-lbl-s" id="lbl-b0-s">Off</div></div>
                         <div class="btn-unit" onclick="openEditor('btn', 1)"><div class="led-strip" id="led-b1"></div><div class="btn-id">B2</div><div class="btn-lbl-n" id="lbl-b1-n">Off</div><div class="btn-lbl-div" id="div-b1"></div><div class="btn-lbl-s" id="lbl-b1-s">Off</div></div>
@@ -217,7 +220,8 @@
                     </div>
                     
                     <div class="btn-row row-2">
-                        <div class="btn-unit" id="hw-B6" onclick="openEditor('btn', 5)"><div class="led-strip" id="led-b5"></div><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div" id="div-b5"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
+                        <!-- B6 interaktif dapat diklik untuk mensimulasikan Shift state di preview visual -->
+                        <div class="btn-unit" id="hw-B6" onclick="toggleSimulatedShift()"><div class="led-strip" id="led-b5"></div><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div" id="div-b5"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
                         <div class="btn-unit" onclick="openEditor('btn', 6)"><div class="led-strip" id="led-b6"></div><div class="btn-id">B7</div><div class="btn-lbl-n" id="lbl-b6-n">Off</div><div class="btn-lbl-div" id="div-b6"></div><div class="btn-lbl-s" id="lbl-b6-s">Off</div></div>
                         <div class="btn-unit" onclick="openEditor('btn', 7)"><div class="led-strip" id="led-b7"></div><div class="btn-id">B8</div><div class="btn-lbl-n" id="lbl-b7-n">Off</div><div class="btn-lbl-div" id="div-b7"></div><div class="btn-lbl-s" id="lbl-b7-s">Off</div></div>
                         <div class="btn-unit" onclick="openEditor('btn', 8)"><div class="led-strip" id="led-b8"></div><div class="btn-id">B9</div><div class="btn-lbl-n" id="lbl-b8-n">Off</div><div class="btn-lbl-div" id="div-b8"></div><div class="btn-lbl-s" id="lbl-b8-s">Off</div></div>
@@ -228,55 +232,73 @@
 
             <div class="canvas-right-pane">
                 <div class="led-box" style="margin-bottom: 10px;">
-                    <h4 style="margin-top:0; margin-bottom:10px; border-bottom:2px solid var(--border-color); padding-bottom:5px; text-transform:uppercase;">Global Settings</h4>
-                    <div class="ctrl-row">
-                        <label style="font-size:0.85rem;">Panic Action (Double-Click Enc)</label>
-                        <select id="ui-panic-mode" class="neo-select" onchange="togglePanicUI(); autoSave();">
-                            <option value="0">OFF (Zero-Latency)</option>
-                            <option value="1">CC 123 (All Notes Off)</option>
-                            <option value="2">CC 120 (All Sound Off)</option>
-                            <option value="3">CC 121 (Reset Controllers)</option>
-                            <option value="4">Custom MIDI CC</option>
-                            <option value="5">Custom Keyboard</option>
-                        </select>
+                    <h4 style="margin-top:0; margin-bottom:10px; border-bottom:2px solid var(--border-color); padding-bottom:5px; text-transform:uppercase;">Smart Panic Settings</h4>
+                    <div class="ctrl-row" style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex:1;">
+                            <label style="font-size:0.85rem;">Panic Trigger</label>
+                            <select id="ui-panic-source" class="neo-select" onchange="autoSave()">
+                                <option value="0">DISABLED / OFF</option>
+                                <option value="1">B1</option><option value="2">B2</option><option value="3">B3</option>
+                                <option value="4">B4</option><option value="5">B5</option><option value="6">B6</option>
+                                <option value="7">B7</option><option value="8">B8</option><option value="9">B9</option>
+                                <option value="10">B10</option>
+                                <option value="13">Encoder Switch</option>
+                            </select>
+                        </div>
+                        <div style="flex:1;">
+                            <label style="font-size:0.85rem;">Learnable CC</label>
+                            <input type="number" id="ui-panic-mode" class="neo-input" min="0" max="127" value="119" oninput="autoSave()">
+                        </div>
                     </div>
-                    <div id="ui-panic-midi" class="row-edit hidden">
-                         <select id="ui-panic-ch" class="neo-select" style="width:100px" onchange="autoSave()"></select>
-                         <input type="number" id="ui-panic-cc" class="neo-input" placeholder="CC (0-127)" onchange="autoSave()">
-                         <input type="number" id="ui-panic-val" class="neo-input" placeholder="Val (0-127)" onchange="autoSave()">
-                    </div>
-                    <div id="ui-panic-key" class="row-edit hidden">
-                         <select id="ui-panic-mod" class="neo-select" onchange="autoSave()"></select>
-                         <button type="button" id="ui-panic-btn" class="custom-key-btn" onclick="openKeyPicker('ui-panic-keyval')">PILIH KEY</button>
-                         <input type="hidden" id="ui-panic-keyval" value="0">
+                </div>
+
+                <div class="led-box" style="margin-bottom: 10px;">
+                    <!-- Rebranding label menjadi LED L1 - L4 -->
+                    <h4 style="margin-top:0; margin-bottom:10px; border-bottom:2px solid var(--border-color); padding-bottom:5px; text-transform:uppercase;">LED L1 - L4 (Potensio)</h4>
+                    <div class="ctrl-row" style="display:flex; gap:10px;">
+                        <div style="flex:2;">
+                            <label>Brightness Atas <span id="bright-top-val" class="badge-percent">100%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-bright-top" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightTop', this.value)"></div>
+                        </div>
+                        <div style="flex:1;">
+                            <label>Color</label>
+                            <input type="color" id="ui-color-top" onchange="autoSave()">
+                        </div>
                     </div>
                 </div>
 
                 <div class="led-box" id="led-panel">
-                    <div class="ctrl-row">
-                        <label>Brightness (<span id="curP">A</span>) <span id="bright-val" class="badge-percent">100%</span></label>
-                        <div class="slider-wrapper"><input type="range" id="ui-bright" min="0" max="100" step="10" value="100" oninput="updateBright(this.value)"></div>
+                    <!-- Rebranding label menjadi LED L7 - L10 -->
+                    <h4 style="margin-top:0; margin-bottom:10px; border-bottom:2px solid var(--border-color); padding-bottom:5px; text-transform:uppercase;">LED L7 - L10 (Tombol Bawah)</h4>
+                    <div class="ctrl-row" style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <label>Brightness Bawah <span id="bright-bot-val" class="badge-percent">100%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-bright-bot" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightBot', this.value)"></div>
+                        </div>
+                        <div style="flex:1;">
+                            <label>Speed Animasi <span id="speed-bot-val" class="badge-percent">50%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-speed-bot" min="1" max="100" step="1" value="50" oninput="updateLEDParam('speedBot', this.value)"></div>
+                        </div>
                     </div>
                     <div class="ctrl-row">
-                        <label>Speed (Kecepatan) <span id="speed-val" class="badge-percent">5</span></label>
-                        <div class="slider-wrapper"><input type="range" id="ui-speed" min="1" max="10" step="1" value="5" oninput="updateSpeed(this.value)"></div>
-                    </div>
-                    <div class="ctrl-row">
-                        <label>Animasi LED</label>
+                        <label>Animasi Bawah</label>
                         <select id="ui-anim" class="neo-select" onchange="autoSave();">
-                            <option value="0">Statis</option><option value="1">Wave (Color)</option>
-                            <option value="2">Sweep (Color)</option><option value="3">Breath (Color)</option>
-                            <option value="4">Flame (Color)</option><option value="5">Rainbow (RGB)</option>
-                            <option value="6">Gradient Sweep</option>
+                            <option value="0">Statis (Gradasi Base - Target)</option>
+                            <option value="1">Wave (Color Cycle)</option>
+                            <option value="2">Sweep (Satu LED Jalan)</option>
+                            <option value="3">Breath (Efek Bernapas)</option>
+                            <option value="4">Flame (Easing Flame Easing)</option>
+                            <option value="5">Rainbow (RGB Pelangi)</option>
+                            <option value="6">Raindrop (Acak Air Hujan)</option>
                         </select>
                     </div>
                     
-                    <div class="color-grid" id="color-grid-container">
-                        <div class="cg-item" style="grid-column: span 3;"><label style="font-size:0.75rem; font-weight:bold;">BASE</label><input type="color" id="ui-color" onchange="autoSave()"></div>
-                        <div class="cg-item" style="grid-column: span 3;"><label style="font-size:0.75rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color2" onchange="autoSave()"></div>
-                        <div class="cg-item" id="wrap-push" style="grid-column: span 2;"><label style="font-size:0.75rem; font-weight:bold;">PUSH</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
-                        <div class="cg-item" id="wrap-sh-on" style="grid-column: span 2;"><label style="font-size:0.75rem; font-weight:bold;">SHIFT ON</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
-                        <div class="cg-item" id="wrap-sh-btn" style="grid-column: span 2;"><label style="font-size:0.75rem; font-weight:bold;">SHIFT BTN</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
+                    <div class="color-grid" id="color-grid-container" style="grid-template-columns: repeat(5, 1fr);">
+                        <div class="cg-item"><label style="font-size:0.65rem; font-weight:bold;">BASE</label><input type="color" id="ui-color-base" onchange="autoSave()"></div>
+                        <div class="cg-item"><label style="font-size:0.65rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color-target" onchange="autoSave()"></div>
+                        <div class="cg-item"><label style="font-size:0.65rem; font-weight:bold;">PUSH</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
+                        <div class="cg-item" id="wrap-sh-on"><label style="font-size:0.65rem; font-weight:bold;">SHIFT</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
+                        <div class="cg-item" id="wrap-sh-btn"><label style="font-size:0.65rem; font-weight:bold;">B6 IND</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
                     </div>
                 </div>
             </div>
@@ -304,6 +326,7 @@
                 <div class="layer-lbl">NORMAL LAYER</div>
                 <div class="row-edit">
                     <select id="n-m" class="neo-select" style="flex:1;" onchange="uiLogic('n')"></select>
+                    <!-- Kebebasan mengetik kustom label maksimal 6 karakter (Opsi A) -->
                     <input type="text" id="n-lbl" class="neo-input" placeholder="Custom Label" style="flex:1;">
                 </div>
                 <div id="n-ui-sto" class="row-edit hidden" style="margin-top:10px;">
@@ -321,9 +344,16 @@
                     <input type="number" id="n-cc2" class="neo-input hidden" placeholder="CC Right" min="0" max="127">
                 </div>
                 <div id="n-ui-short" class="row-edit hidden">
-                    <select id="n-mod1" class="neo-select"></select><select id="n-mod2" class="neo-select"></select>
-                    <button type="button" id="n-key-btn" class="custom-key-btn" onclick="openKeyPicker('n-key')">- PILIH KEY -</button>
-                    <input type="hidden" id="n-key" value="0">
+                    <div class="mod-checks">
+                        <label><input type="checkbox" id="n-mod-ctrl"> CTRL</label>
+                        <label><input type="checkbox" id="n-mod-shift"> SHIFT</label>
+                        <label><input type="checkbox" id="n-mod-alt"> ALT</label>
+                        <label><input type="checkbox" id="n-mod-win"> WIN</label>
+                    </div>
+                    <div class="row-edit">
+                        <button type="button" id="n-key-btn" class="custom-key-btn" onclick="openKeyPicker('n-key')">- PILIH KEY -</button>
+                        <input type="hidden" id="n-key" value="0">
+                    </div>
                 </div>
                 <div id="n-ui-media" class="row-edit hidden">
                     <select id="n-med" class="neo-select"><option value="205">PLAY/PAUSE</option><option value="182">PREV</option><option value="181">NEXT</option><option value="226">MUTE</option><option value="233">VOL UP</option><option value="234">VOL DN</option></select>
@@ -332,9 +362,16 @@
                     <select id="n-nav-opt" class="neo-select"><option value="1">Page Up/Down</option><option value="2">Scroll Up/Down</option><option value="3">Zoom In/Out</option><option value="4">Undo/Redo</option><option value="5">Copy/Paste</option><option value="6">Home/End</option><option value="7">Prev/Next</option></select>
                 </div>
                 <div id="n-ui-enc-short" class="row-edit hidden">
-                    <select id="n-enc-mod" class="neo-select" style="width:100px"></select>
-                    <button type="button" id="n-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-l')">KIRI</button><input type="hidden" id="n-enc-l" value="0">
-                    <button type="button" id="n-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-r')">KANAN</button><input type="hidden" id="n-enc-r" value="0">
+                    <div class="mod-checks">
+                        <label><input type="checkbox" id="n-enc-mod-ctrl"> CTRL</label>
+                        <label><input type="checkbox" id="n-enc-mod-shift"> SHIFT</label>
+                        <label><input type="checkbox" id="n-enc-mod-alt"> ALT</label>
+                        <label><input type="checkbox" id="n-enc-mod-win"> WIN</label>
+                    </div>
+                    <div class="row-edit">
+                        <button type="button" id="n-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-l')">KIRI</button><input type="hidden" id="n-enc-l" value="0">
+                        <button type="button" id="n-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-r')">KANAN</button><input type="hidden" id="n-enc-r" value="0">
+                    </div>
                 </div>
                 <div id="n-ui-macro" class="hidden">
                     <div class="row-edit"><label style="width:80px">Init Key:</label><select id="n-mac-init" class="neo-select"><option value="0">WIN+R</option></select><select id="n-mac-act1" class="neo-select"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
@@ -344,10 +381,12 @@
                 </div>
 
                 <div id="n-ui-seq" class="hidden" style="margin-top:10px; background:var(--rig-bg); padding:10px; border-radius:8px; border:2px solid var(--border-color);">
+                    <div class="row-edit" style="margin-bottom:8px;">
+                        <label class="cb-container" style="flex:1;"><input type="checkbox" id="n-seq-reset" class="cb-neo" onchange="syncAutoResetCheckboxes('n')"> Enable Auto-Reset Seq (2s)</label>
+                    </div>
                     <div class="row-edit">
                         <select id="n-seq-type" class="neo-select" onchange="toggleSeqType('n')"><option value="1">KEYBOARD SEQ</option><option value="2">MIDI CC SEQ</option></select>
                         <select id="n-seq-mod" class="neo-select"></select>
-                        <label class="cb-container" style="flex:1;"><input type="checkbox" id="n-seq-reset" class="cb-neo"> Auto-Reset</label>
                     </div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
                         <div style="flex:1; border:2px solid #555; padding:8px; border-radius:5px;">
@@ -381,9 +420,16 @@
                     <input type="number" id="s-cc2" class="neo-input hidden" placeholder="CC Right" min="0" max="127">
                 </div>
                 <div id="s-ui-short" class="row-edit hidden">
-                    <select id="s-mod1" class="neo-select"></select><select id="s-mod2" class="neo-select"></select>
-                    <button type="button" id="s-key-btn" class="custom-key-btn" onclick="openKeyPicker('s-key')">- PILIH KEY -</button>
-                    <input type="hidden" id="s-key" value="0">
+                    <div class="mod-checks">
+                        <label><input type="checkbox" id="s-mod-ctrl"> CTRL</label>
+                        <label><input type="checkbox" id="s-mod-shift"> SHIFT</label>
+                        <label><input type="checkbox" id="s-mod-alt"> ALT</label>
+                        <label><input type="checkbox" id="s-mod-win"> WIN</label>
+                    </div>
+                    <div class="row-edit">
+                        <button type="button" id="s-key-btn" class="custom-key-btn" onclick="openKeyPicker('s-key')">- PILIH KEY -</button>
+                        <input type="hidden" id="s-key" value="0">
+                    </div>
                 </div>
                 <div id="s-ui-media" class="row-edit hidden">
                     <select id="s-med" class="neo-select"><option value="205">PLAY/PAUSE</option><option value="182">PREV</option><option value="181">NEXT</option><option value="226">MUTE</option><option value="233">VOL UP</option><option value="234">VOL DN</option></select>
@@ -392,9 +438,16 @@
                     <select id="s-nav-opt" class="neo-select"><option value="1">Page Up/Down</option><option value="2">Scroll Up/Down</option><option value="3">Zoom In/Out</option><option value="4">Undo/Redo</option><option value="5">Copy/Paste</option><option value="6">Home/End</option><option value="7">Prev/Next</option></select>
                 </div>
                 <div id="s-ui-enc-short" class="row-edit hidden">
-                    <select id="s-enc-mod" class="neo-select" style="width:100px"></select>
-                    <button type="button" id="s-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-l')">KIRI</button><input type="hidden" id="s-enc-l" value="0">
-                    <button type="button" id="s-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-r')">KANAN</button><input type="hidden" id="s-enc-r" value="0">
+                    <div class="mod-checks">
+                        <label><input type="checkbox" id="s-enc-mod-ctrl"> CTRL</label>
+                        <label><input type="checkbox" id="s-enc-mod-shift"> SHIFT</label>
+                        <label><input type="checkbox" id="s-enc-mod-alt"> ALT</label>
+                        <label><input type="checkbox" id="s-enc-mod-win"> WIN</label>
+                    </div>
+                    <div class="row-edit">
+                        <button type="button" id="s-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-l')">KIRI</button><input type="hidden" id="s-enc-l" value="0">
+                        <button type="button" id="s-enc-r-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-r')">KANAN</button><input type="hidden" id="s-enc-r" value="0">
+                    </div>
                 </div>
                 <div id="s-ui-macro" class="hidden">
                     <div class="row-edit"><label style="width:80px">Init Key:</label><select id="s-mac-init" class="neo-select"><option value="0">WIN+R</option></select><select id="s-mac-act1" class="neo-select"><option value="1">ENTER</option><option value="2">DELAY</option></select></div>
@@ -404,10 +457,12 @@
                 </div>
 
                 <div id="s-ui-seq" class="hidden" style="margin-top:10px; background:var(--rig-bg); padding:10px; border-radius:8px; border:2px solid var(--border-color);">
+                    <div class="row-edit" style="margin-bottom:8px;">
+                        <label class="cb-container" style="flex:1;"><input type="checkbox" id="s-seq-reset" class="cb-neo" onchange="syncAutoResetCheckboxes('s')"> Enable Auto-Reset Seq (2s)</label>
+                    </div>
                     <div class="row-edit">
                         <select id="s-seq-type" class="neo-select" onchange="toggleSeqType('s')"><option value="1">KEYBOARD SEQ</option><option value="2">MIDI CC SEQ</option></select>
                         <select id="s-seq-mod" class="neo-select"></select>
-                        <label class="cb-container" style="flex:1;"><input type="checkbox" id="s-seq-reset" class="cb-neo"> Auto-Reset</label>
                     </div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
                         <div style="flex:1; border:2px solid #555; padding:8px; border-radius:5px;">
@@ -435,46 +490,82 @@
 <input type="file" id="f-import" hidden onchange="handleImport(this)">
 
 <script>
-    const act6 = {m:0, v1:0, v2:0, v3:0, lbl:"", seq:null}; 
-    const act10 = {m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""};
+    // RC2 template aksi 8 byte representatif Action_4
+    const makeAct4 = () => ({m:0, v1:0, v2:0, v3:0, lbl:"", seq:[0,0,0,0,0,0,0,0,0,0], t1:"", t2:""}); 
 
     let cfg = {
-        panic: {m:0, v1:1, v2:0, v3:127}, 
-        bank0: { btn: Array.from({length:10}, () => ({...act6})), pot: Array.from({length:4}, (_,i) => ({...act6, m:2, v1:1, v2:71+i})), encRot: {...act6, m:1}, encSw: {...act6}, bright: 100, anim: 1, speed: 5, col: [0,255,255], col2: [255,0,255], colActive: [255,255,255], colShift: [255,128,0] },
-        bank1: { btn: Array.from({length:2}, () => Array.from({length:10}, () => ({...act10}))), pot: Array.from({length:2}, () => Array.from({length:4}, (_,i) => ({...act6, m:2, v1:1, v2:71+i}))), encRot: Array.from({length:2}, () => ({...act6, m:1})), encSw: Array.from({length:2}, () => ({...act10})), bright: 100, anim: 1, speed: 5, col: [255,0,255], col2: [0,255,255], colActive: [255,255,255], colShift: [255,128,0], colB6: [0,255,255] }
+        panicSource: 13, // Default pemicu: Encoder Switch
+        panicMode: 119,  // Default CC 119
+        panicChan: 1,    // Locked to CH 1 pada biner firmware
+        autoResetB: 0, 
+        autoResetA: 0, 
+        profilB: { 
+            btn: Array.from({length:10}, makeAct4), 
+            pot: Array.from({length:4}, (_,i) => { let a=makeAct4(); a.m=2; a.v1=1; a.v2=71+i; return a; }), 
+            enc: makeAct4(), 
+            encSw: makeAct4(), 
+            brightTop: 100, brightBot: 100, 
+            animTop: 0, animBot: 1, 
+            speedTop: 50, speedBot: 50, 
+            colTop: [0,255,255], colActive: [255,255,255], 
+            colBaseBot: [0,255,255], colTargetBot: [255,0,255]
+        },
+        profilA: { 
+            btn: Array.from({length:2}, () => Array.from({length:10}, makeAct4)), 
+            pot: Array.from({length:2}, () => Array.from({length:4}, (_,i) => { let a=makeAct4(); a.m=2; a.v1=1; a.v2=71+i; return a; })), 
+            enc: Array.from({length:2}, makeAct4), 
+            encSw: [makeAct4(), makeAct4()], 
+            brightTop: 100, brightBot: 100, 
+            animTop: 0, animBot: 1, 
+            speedTop: 50, speedBot: 50, 
+            colTop: [255,0,255], colActive: [255,255,255], colShift: [255,128,0], 
+            colBaseBot: [255,0,255], colTargetBot: [0,255,255], colB6: [0,255,255]
+        }
     };
     
     let curB = 1, curT = '', curI = 0, port, serialReader, currentKeyTarget = ''; 
+    let simShiftActive = false; // Status Shift buatan untuk simulasi preview di WebUI
 
-    function toggleTheme() { const doc = document.documentElement; const cur = doc.getAttribute('data-theme'); const next = cur === 'dark' ? 'light' : 'dark'; doc.setAttribute('data-theme', next); localStorage.setItem('sakuTheme', next); }
-    function showToast(msg) { const o = document.getElementById('toastOverlay'); document.getElementById('toastMessage').innerText = msg; o.classList.add('active'); setTimeout(()=>o.classList.remove('active'), 2500); }
-    function markUnsaved() { const b = document.getElementById('btn-push'); b.classList.add('unsaved'); b.innerText = "⚠️ UNSAVED CHANGES!"; }
-    function markSaved() { const b = document.getElementById('btn-push'); b.classList.remove('unsaved'); b.innerText = "⚡ PUSH TO DEVICE"; }
+    function syncAutoResetCheckboxes(sourcePrefix) {
+        const checked = document.getElementById(`${sourcePrefix}-auto-reset`).checked;
+        const targetPrefix = sourcePrefix === 'n' ? 's' : 'n';
+        const targetEl = document.getElementById(`${targetPrefix}-auto-reset`);
+        if (targetEl) targetEl.checked = checked;
+    }
+
+    function toggleTheme() { 
+        const doc = document.documentElement; 
+        const cur = doc.getAttribute('data-theme'); 
+        const next = cur === 'dark' ? 'light' : 'dark'; 
+        doc.setAttribute('data-theme', next); 
+        localStorage.setItem('baysX1RC2Theme', next); 
+    }
+
+    function showToast(msg) { 
+        const o = document.getElementById('toastOverlay'); 
+        document.getElementById('toastMessage').innerText = msg; 
+        o.classList.add('active'); 
+        setTimeout(()=>o.classList.remove('active'), 2500); 
+    }
+
+    function markUnsaved() { 
+        const b = document.getElementById('btn-push'); 
+        b.classList.add('unsaved'); 
+        b.innerText = "⚠️ UNSAVED CHANGES!"; 
+    }
+
+    function markSaved() { 
+        const b = document.getElementById('btn-push'); 
+        b.classList.remove('unsaved'); 
+        b.innerText = "⚡ PUSH TO DEVICE"; 
+    }
 
     window.onload = () => { 
-        const savedTheme = localStorage.getItem('sakuTheme') || 'light';
+        const savedTheme = localStorage.getItem('baysX1RC2Theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
         buildOptions(); buildKeyPicker(); loadAutoSave(); 
-        
-        let pM = document.getElementById('ui-panic-mode');
-        if (cfg.panic) {
-            pM.value = cfg.panic.m;
-            document.getElementById('ui-panic-ch').value = cfg.panic.v1 || 1;
-            document.getElementById('ui-panic-cc').value = cfg.panic.v2 || 0;
-            document.getElementById('ui-panic-val').value = cfg.panic.v3 || 127;
-            document.getElementById('ui-panic-mod').value = cfg.panic.v1 || 0;
-            document.getElementById('ui-panic-keyval').value = cfg.panic.v2 || 0;
-            document.getElementById('ui-panic-btn').innerText = getKeyDisplayLabel(cfg.panic.v2 || 0);
-        }
-        togglePanicUI();
-        startPreviewEngine(); // LIVE PREVIEW INIT
+        startPreviewEngine(); // Memulai rendering preview visualisasi
     };
-
-    function togglePanicUI() {
-        let m = parseInt(document.getElementById('ui-panic-mode').value);
-        document.getElementById('ui-panic-midi').classList.add('hidden'); document.getElementById('ui-panic-key').classList.add('hidden');
-        if (m == 4) document.getElementById('ui-panic-midi').classList.remove('hidden'); if (m == 5) document.getElementById('ui-panic-key').classList.remove('hidden');
-    }
 
     function getKeyDisplayLabel(val) {
         if(val == 0) return 'NONE'; if(val == 234) return 'NUM 0'; if(val >= 225 && val <= 233) return 'NUM ' + (val-224); if(val >= 194 && val <= 205) return 'F' + (val-193); if(val >= 97 && val <= 122) return String.fromCharCode(val-32).toUpperCase(); if(val >= 65 && val <= 90) return String.fromCharCode(val).toUpperCase();
@@ -483,10 +574,25 @@
     }
 
     function buildOptions() {
-        const mods = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>';
-        ['n','s'].forEach(l => { document.getElementById(`${l}-mod1`).innerHTML = mods; document.getElementById(`${l}-mod2`).innerHTML = mods; document.getElementById(`${l}-enc-mod`).innerHTML = mods; });
-        document.getElementById('ui-panic-mod').innerHTML = mods; let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; 
-        ['n','s'].forEach(l => { document.getElementById(`${l}-chan`).innerHTML = ch; }); document.getElementById('ui-panic-ch').innerHTML = ch;
+        let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; 
+        ['n','s'].forEach(l => { document.getElementById(`${l}-chan`).innerHTML = ch; }); 
+    }
+
+    function toggleSeqType(l) {
+        let t = document.getElementById(`${l}-seq-type`).value; let modSel = document.getElementById(`${l}-seq-mod`);
+        if(t == "1") { modSel.innerHTML = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>'; } 
+        else { let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; modSel.innerHTML = ch; }
+        let lHtml = '', rHtml = '';
+        for(let i=1; i<=5; i++) {
+            if(t == "1") {
+                lHtml += `<div style="display:flex;gap:5px;align-items:center"><span style="color:#aaa;font-size:0.7rem;width:20px;">L${i}</span><button type="button" class="custom-key-btn" style="width:100%;padding:4px;font-size:0.75rem;" id="${l}-seq-l${i}-btn" onclick="openKeyPicker('${l}-seq-l${i}')">NONE</button><input type="hidden" id="${l}-seq-l${i}" value="0"></div>`;
+                rHtml += `<div style="display:flex;gap:5px;align-items:center"><span style="color:#aaa;font-size:0.7rem;width:20px;">R${i}</span><button type="button" class="custom-key-btn" style="width:100%;padding:4px;font-size:0.75rem;" id="${l}-seq-r${i}-btn" onclick="openKeyPicker('${l}-seq-r${i}')">NONE</button><input type="hidden" id="${l}-seq-r${i}" value="0"></div>`;
+            } else {
+                lHtml += `<div style="display:flex;gap:5px;align-items:center"><span style="color:#aaa;font-size:0.7rem;width:20px;">L${i}</span><input type="number" class="neo-input" style="padding:4px;font-size:0.75rem;" id="${l}-seq-l${i}" placeholder="CC Num" min="0" max="127"></div>`;
+                rHtml += `<div style="display:flex;gap:5px;align-items:center"><span style="color:#aaa;font-size:0.7rem;width:20px;">R${i}</span><input type="number" class="neo-input" style="padding:4px;font-size:0.75rem;" id="${l}-seq-r${i}" placeholder="CC Num" min="0" max="127"></div>`;
+            }
+        }
+        document.getElementById(`${l}-seq-l`).innerHTML = lHtml; document.getElementById(`${l}-seq-r`).innerHTML = rHtml;
     }
 
     function buildKeyPicker() {
@@ -502,34 +608,41 @@
 
     function openKeyPicker(targetId) { currentKeyTarget = targetId; document.getElementById('keyPickerModal').style.display = 'flex'; }
     function closeKeyPicker() { document.getElementById('keyPickerModal').style.display = 'none'; }
-    function selectKey(val) { document.getElementById(`${currentKeyTarget}`).value = val; document.getElementById(`${currentKeyTarget}-btn`).innerText = getKeyDisplayLabel(val); closeKeyPicker(); autoSave(); }
-    function getBankObj(b) { return b === 0 ? cfg.bank0 : cfg.bank1; }
+    function selectKey(val) { document.getElementById(`${currentKeyTarget}`).value = val; document.getElementById(`${currentKeyTarget}-btn`).innerText = getKeyDisplayLabel(val); closeKeyPicker(); }
+    
+    function getBankObj(b) { return b === 0 ? cfg.profilB : cfg.profilA; }
 
     function switchBank(b) {
         curB = b; ['p0','p1'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
-        document.getElementById('curP').innerText = (b === 1) ? 'A' : 'B'; let bankObj = getBankObj(b);
-        document.getElementById('ui-bright').value = bankObj.bright; document.getElementById('bright-val').innerText = bankObj.bright + '%';
-        document.getElementById('ui-anim').value = bankObj.anim || 0; 
-        document.getElementById('ui-speed').value = bankObj.speed || 5; document.getElementById('speed-val').innerText = bankObj.speed || 5;
+        let bankObj = getBankObj(b);
+
+        document.getElementById('ui-bright-top').value = bankObj.brightTop || 100; document.getElementById('bright-top-val').innerText = (bankObj.brightTop || 100) + '%';
+        document.getElementById('ui-bright-bot').value = bankObj.brightBot || 100; document.getElementById('bright-bot-val').innerText = (bankObj.brightBot || 100) + '%';
         
-        document.getElementById('ui-color').value = rgbToHex(bankObj.col);
-        if(bankObj.col2) document.getElementById('ui-color2').value = rgbToHex(bankObj.col2);
-        document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive); 
-        document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift);
-        if(bankObj.colB6) document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6);
+        document.getElementById('ui-anim').value = bankObj.animBot || 0; 
+        document.getElementById('ui-speed-bot').value = bankObj.speedBot || 50; document.getElementById('speed-bot-val').innerText = (bankObj.speedBot || 50) + '%';
         
-        const wrapShOn = document.getElementById('wrap-sh-on');
-        const wrapShBtn = document.getElementById('wrap-sh-btn');
-        const wrapPush = document.getElementById('wrap-push');
+        document.getElementById('ui-color-top').value = rgbToHex(bankObj.colTop || [0, 255, 255]);
+        document.getElementById('ui-color-base').value = rgbToHex(bankObj.colBaseBot || [0, 255, 255]);
+        document.getElementById('ui-color-target').value = rgbToHex(bankObj.colTargetBot || [255, 0, 255]);
+        document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive || [255, 255, 255]); 
+        
+        document.getElementById('ui-panic-source').value = cfg.panicSource || 0;
+        document.getElementById('ui-panic-mode').value = (cfg.panicMode !== undefined) ? cfg.panicMode : 119;
+        
+        const wrapShOn = document.getElementById('wrap-sh-on'); const wrapShBtn = document.getElementById('wrap-sh-btn');
         const b6 = document.getElementById('hw-B6');
         
+        simShiftActive = false; // Reset status Shift simulasi saat bertukar bank
+
         if (b === 0) { 
-            wrapShOn.classList.add('hidden'); wrapShBtn.classList.add('hidden'); wrapPush.style.gridColumn = 'span 6';
+            wrapShOn.classList.add('hidden'); wrapShBtn.classList.add('hidden'); 
             b6.classList.remove('btn-b6-shift'); b6.onclick = () => openEditor('btn', 5); 
         } else { 
-            wrapShOn.classList.remove('hidden'); wrapShBtn.classList.remove('hidden'); wrapPush.style.gridColumn = 'span 2';
-            document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6); 
-            b6.classList.add('btn-b6-shift'); b6.onclick = null; 
+            wrapShOn.classList.remove('hidden'); wrapShBtn.classList.remove('hidden'); 
+            document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift || [255, 128, 0]);
+            document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6 || [0, 255, 255]); 
+            b6.classList.add('btn-b6-shift'); b6.onclick = toggleSimulatedShift; 
         }
         
         updateAllLabels();
@@ -538,80 +651,97 @@
     const labelModMap = { 0:"", 1:"CT", 2:"SH", 4:"AL", 8:"WIN" };
     function buildLabel(d) {
         if(!d) return ""; if(d.lbl && d.lbl.trim() !== "") return d.lbl; if(d.m==0) return "Off";
-        if(d.m==1) { let m=[]; if(d.v1)m.push(labelModMap[d.v1]); if(d.v2)m.push(labelModMap[d.v2]); let k=d.v3?getKeyDisplayLabel(d.v3):""; return (m.join('+')+(m.length&&k?'+':"")+k) || "NONE"; }
+        if(d.m==1) { let ml=buildModLabel(d.v1); let k = d.v2?getKeyDisplayLabel(d.v2):""; return (ml+(ml&&k?'+':"")+k) || "NONE"; }
         if(d.m==2) return `CC ${d.v2}`; if(d.m==3) return "MEDIA"; if(d.m==4) return "MACRO";
         if(d.m==5) return {1:"PG U/D", 2:"SCROLL", 3:"ZOOM", 4:"UNDO/RED", 5:"COPY/PST", 6:"HOME/END", 7:"TRK P/N"}[d.v1] || "PC NAV";
-        if(d.m==7) return "STEP SEQ"; return d.m==6 ? "SHORTCUT" : "";
+        if(d.m==6) return "SEQ KEY"; if(d.m==7) return "SEQ MIDI"; return d.m==8 ? "SHORTCUT" : "";
     }
 
+    function buildModLabel(v) { let m=[]; if(v&1)m.push("CT"); if(v&2)m.push("SH"); if(v&4)m.push("AL"); if(v&8)m.push("WN"); return m.join('+'); }
+
     function updateAllLabels() {
+        let pObj = getBankObj(curB);
+        
+        let swLbl = document.getElementById('lbl-enc-sw');
+        if (swLbl) {
+            let actNormal = curB === 0 ? cfg.profilB.encSw : cfg.profilA.encSw[0];
+            let actShift = curB === 0 ? null : cfg.profilA.encSw[1];
+            swLbl.innerText = curB === 0 ? `[ CLICK: ${buildLabel(actNormal)} ]` : `[ ${buildLabel(actNormal)} | ${buildLabel(actShift)} ]`;
+        }
+
         for(let i=0; i<10; i++) {
-            if (curB > 0 && i === 5) { document.getElementById('lbl-b5-n').innerText = "[SHIFT]"; document.getElementById('lbl-b5-s').innerText = ""; document.getElementById('div-b5').style.display = "none"; continue; }
+            if (curB > 0 && i === 5) { 
+                document.getElementById('lbl-b5-n').innerText = "[SHIFT]"; 
+                document.getElementById('lbl-b5-s').innerText = simShiftActive ? "[ACTIVE]" : "[LOCKED]"; 
+                document.getElementById('div-b5').style.display = "block"; 
+                continue; 
+            }
             let dN, dS;
-            if (curB === 0) { dN = cfg.bank0.btn[i]; } else { dN = cfg.bank1.btn[0][i]; dS = cfg.bank1.btn[1][i]; }
+            if (curB === 0) { dN = cfg.profilB.btn[i]; } else { dN = cfg.profilA.btn[0][i]; dS = cfg.profilA.btn[1][i]; }
             document.getElementById(`lbl-b${i}-n`).innerText = buildLabel(dN); document.getElementById(`lbl-b${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); document.getElementById(`div-b${i}`).style.display = curB===0 ? "none" : "block";
         }
         for(let i=0; i<4; i++){
-            let dN = curB===0 ? cfg.bank0.pot[i] : cfg.bank1.pot[0][i]; let dS = curB===0 ? null : cfg.bank1.pot[1][i];
+            let dN = curB===0 ? cfg.profilB.pot[i] : cfg.profilA.pot[0][i]; let dS = curB===0 ? null : cfg.profilA.pot[1][i];
             document.getElementById(`lbl-p${i}-n`).innerText = buildLabel(dN); document.getElementById(`lbl-p${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); document.getElementById(`div-p${i}`).style.display = curB===0 ? "none" : "block";
         }
-        let dENrot = curB===0 ? cfg.bank0.encRot : cfg.bank1.encRot[0]; let dESrot = curB===0 ? null : cfg.bank1.encRot[1];
-        document.getElementById(`lbl-encrot-n`).innerText = buildLabel(dENrot); document.getElementById(`lbl-encrot-s`).innerText = curB===0 ? "" : buildLabel(dESrot); document.getElementById(`div-encrot`).style.display = curB===0 ? "none" : "block";
-        let dENsw = curB===0 ? cfg.bank0.encSw : cfg.bank1.encSw[0]; let dESsw = curB===0 ? null : cfg.bank1.encSw[1];
-        document.getElementById(`lbl-encsw-n`).innerText = buildLabel(dENsw); document.getElementById(`lbl-encsw-s`).innerText = curB===0 ? "" : " | " + buildLabel(dESsw);
+        let dENrot = curB===0 ? cfg.profilB.enc : cfg.profilA.enc[0]; let dESrot = curB===0 ? null : cfg.profilA.enc[1];
+        document.getElementById(`lbl-enc-n`).innerText = buildLabel(dENrot); 
+        document.getElementById(`lbl-enc-s`).innerText = curB===0 ? "" : buildLabel(dESrot); 
+        document.getElementById(`div-enc`).style.display = curB===0 ? "none" : "block";
     }
 
-    function updateBright(v) { document.getElementById('bright-val').innerText = v + '%'; getBankObj(curB).bright = parseInt(v); autoSave(); }
-    function updateSpeed(v) { document.getElementById('speed-val').innerText = v; getBankObj(curB).speed = parseInt(v); autoSave(); }
-
-    function toggleSeqType(l) {
-        let t = document.getElementById(`${l}-seq-type`).value; let modSel = document.getElementById(`${l}-seq-mod`);
-        if(t == "1") { modSel.innerHTML = '<option value="0">NONE</option><option value="1">CTRL</option><option value="2">SHIFT</option><option value="4">ALT</option><option value="8">WIN</option>'; } 
-        else { let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; modSel.innerHTML = ch; }
-        let lHtml = '', rHtml = '';
-        for(let i=1; i<=5; i++) {
-            if(t == "1") {
-                lHtml += `<button type="button" class="custom-key-btn" style="width:100%;" id="${l}-seq-l${i}-btn" onclick="openKeyPicker('${l}-seq-l${i}')">L${i} KEY</button><input type="hidden" id="${l}-seq-l${i}" value="0">`;
-                rHtml += `<button type="button" class="custom-key-btn" style="width:100%;" id="${l}-seq-r${i}-btn" onclick="openKeyPicker('${l}-seq-r${i}')">R${i} KEY</button><input type="hidden" id="${l}-seq-r${i}" value="0">`;
-            } else {
-                lHtml += `<input type="number" class="neo-input" id="${l}-seq-l${i}" placeholder="L${i} CC (0-127)" min="0" max="127">`;
-                rHtml += `<input type="number" class="neo-input" id="${l}-seq-r${i}" placeholder="R${i} CC (0-127)" min="0" max="127">`;
-            }
+    function toggleSimulatedShift() {
+        if (curB === 1) {
+            simShiftActive = !simShiftActive;
+            updateAllLabels();
+            showToast(simShiftActive ? "SHIFT LAYER AKTIF (SIMULASI)" : "SHIFT LAYER DEAKTIF (SIMULASI)");
         }
-        document.getElementById(`${l}-seq-l`).innerHTML = lHtml; document.getElementById(`${l}-seq-r`).innerHTML = rHtml;
+    }
+
+    function updateLEDParam(param, v) {
+        let bankObj = getBankObj(curB);
+        if (param === 'brightTop') { document.getElementById('bright-top-val').innerText = v + '%'; bankObj.brightTop = parseInt(v); } 
+        else if (param === 'brightBot') { document.getElementById('bright-bot-val').innerText = v + '%'; bankObj.brightBot = parseInt(v); } 
+        else if (param === 'speedBot') { document.getElementById('speed-bot-val').innerText = v + '%'; bankObj.speedBot = parseInt(v); }
+        autoSave();
     }
 
     function openEditor(type, idx) {
-        curT = type; curI = idx; let dName = type === 'btn' ? `B${idx+1}` : (type === 'pot' ? `POTENSIO ${idx+1}` : (type === 'encRot' ? "ENCODER ROTARY" : "ENCODER SWITCH"));
+        if (curB === 1 && type === 'btn' && idx === 5) { showToast("B6 dikunci sebagai tombol SHIFT pada Profil A"); return; }
+
+        curT = type; curI = idx; let dName = type === 'btn' ? `B${idx+1}` : (type === 'pot' ? `POTENSIO ${idx+1}` : (type === 'enc' ? "ENCODER ROTARY" : "ENCODER SWITCH"));
         let profName = curB === 1 ? "PROFIL A" : "PROFIL B"; document.getElementById('m-title').innerText = `${dName} (${profName})`;
         let hasShift = curB > 0; document.getElementById('s-box').style.display = hasShift ? 'block' : 'none';
-        let maxLen = (curB > 0 && (type === 'btn' || type === 'encSw')) ? 10 : 6; document.getElementById('n-lbl').maxLength = maxLen; document.getElementById('s-lbl').maxLength = maxLen;
+        
+        // Membuka kebebasan pengetikan 6 karakter kustom pada modal layar editor (Opsi A)
+        let maxLen = 6; document.getElementById('n-lbl').maxLength = maxLen; document.getElementById('s-lbl').maxLength = maxLen;
+        document.getElementById('n-lbl').placeholder = `Label (Max ${maxLen})`; document.getElementById('s-lbl').placeholder = `Label (Max ${maxLen})`;
         
         const nm = document.getElementById('n-m'), sm = document.getElementById('s-m');
-        if(type==='btn' || type==='encSw') { let opt = '<option value="0">OFF</option><option value="1">SHORTCUT</option><option value="2">MIDI CC</option><option value="3">MEDIA</option><option value="4">MACRO MK-I</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
-        else if(type==='encRot') { const opt = '<option value="0">OFF</option><option value="1">VOLUME HID</option><option value="2">MIDI RELATIF</option><option value="3">MEDIA TRACK</option><option value="4">MIDI ABSOLUT</option><option value="5">PC NAVIGASI</option><option value="6">SHORTCUT KUSTOM</option><option value="7">STEP MACRO SEQ</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
+        if(type==='btn' || type==='encSw') { let opt = '<option value="0">OFF</option><option value="1">SHORTCUT</option><option value="2">MIDI CC</option><option value="3">MEDIA</option>'; if(type==='btn') opt += '<option value="4">MACRO MK-I</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
+        else if(type==='enc') { const opt = '<option value="0">OFF</option><option value="1">VOLUME HID</option><option value="2">MIDI RELATIF</option><option value="3">MEDIA TRACK</option><option value="4">MIDI ABSOLUT</option><option value="5">PC NAVIGASI</option><option value="6">STEP MACRO (KEY)</option><option value="7">STEP MACRO (MIDI)</option><option value="8">SHORTCUT KUSTOM</option>'; nm.innerHTML = opt; sm.innerHTML = opt; } 
         else { const opt = '<option value="0">OFF</option><option value="2">MIDI ABSOLUT</option>'; nm.innerHTML = opt; sm.innerHTML = opt; }
         
         const fill = (l, d) => {
-            if(!d) return; document.getElementById(`${l}-m`).value = d.m; document.getElementById(`${l}-lbl`).value = d.lbl || ""; 
+            if(!d) return; d.seq = d.seq || [0,0,0,0,0,0,0,0,0,0]; document.getElementById(`${l}-m`).value = d.m; document.getElementById(`${l}-lbl`).value = d.lbl || ""; 
             if(type==='pot') { document.getElementById(`${l}-ui-sto`).classList.remove('hidden'); document.getElementById(`${l}-sto`).checked = (d.v3 == 1); } else { let e = document.getElementById(`${l}-ui-sto`); if(e) e.classList.add('hidden'); }
-            if(type==='encRot' && (d.m==1 || d.m==4)) { document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); document.getElementById(`${l}-enc-mult`).value = d.v3 > 0 ? d.v3 : 1; } else { let e = document.getElementById(`${l}-ui-mult`); if(e) e.classList.add('hidden'); }
-            if(d.m==1) { document.getElementById(`${l}-mod1`).value = d.v1; document.getElementById(`${l}-mod2`).value = d.v2; document.getElementById(`${l}-key`).value = d.v3; document.getElementById(`${l}-key-btn`).innerText = getKeyDisplayLabel(d.v3); }
-            if(d.m==2||d.m==4) { document.getElementById(`${l}-chan`).value = d.v1||1; document.getElementById(`${l}-cc`).value = d.v2; if(type==='encRot'&&d.m==2) document.getElementById(`${l}-cc2`).value=d.v3; }
+            if(type==='enc' && (d.m==1 || d.m==4)) { document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); document.getElementById(`${l}-enc-mult`).value = d.v2 > 0 ? d.v2 : 1; } else { let e = document.getElementById(`${l}-ui-mult`); if(e) e.classList.add('hidden'); }
+            if(d.m==1 && (type==='btn' || type==='encSw')) { document.getElementById(`${l}-mod-ctrl`).checked = (d.v1 & 1); document.getElementById(`${l}-mod-shift`).checked = (d.v1 & 2); document.getElementById(`${l}-mod-alt`).checked = (d.v1 & 4); document.getElementById(`${l}-mod-win`).checked = (d.v1 & 8); document.getElementById(`${l}-key`).value = d.v2; document.getElementById(`${l}-key-btn`).innerText = getKeyDisplayLabel(d.v2); }
+            if(d.m==2||d.m==4) { document.getElementById(`${l}-chan`).value = d.v1||1; document.getElementById(`${l}-cc`).value = d.v2; if(type==='enc'&&d.m==2) document.getElementById(`${l}-cc2`).value=d.v3; }
             if(d.m==3) { document.getElementById(`${l}-med`).value = d.v1||205; }
-            if(d.m==4&&(type==='btn'||type==='encSw')){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
-            if(d.m==5&&type==='encRot') { document.getElementById(`${l}-nav-opt`).value = d.v1||1; }
-            if(d.m==6&&type==='encRot') { document.getElementById(`${l}-enc-mod`).value=d.v1||0; document.getElementById(`${l}-enc-l`).value=d.v2||0; document.getElementById(`${l}-enc-l-btn`).innerText=getKeyDisplayLabel(d.v2||0); document.getElementById(`${l}-enc-r`).value=d.v3||0; document.getElementById(`${l}-enc-r-btn`).innerText=getKeyDisplayLabel(d.v3||0); }
-            if(d.m==7&&type==='encRot') { 
-                document.getElementById(`${l}-seq-type`).value = d.v1 & 0x0F || 1; document.getElementById(`${l}-seq-reset`).checked = (d.v1 & 0x80) !== 0; 
-                toggleSeqType(l); document.getElementById(`${l}-seq-mod`).value = d.v2 || 0;
-                if(d.seq) { for(let i=0; i<5; i++) { let lv = d.seq[i]; let rv = d.seq[i+5]; document.getElementById(`${l}-seq-l${i+1}`).value = lv; document.getElementById(`${l}-seq-r${i+1}`).value = rv; if((d.v1 & 0x0F) == 1) { document.getElementById(`${l}-seq-l${i+1}-btn`).innerText = getKeyDisplayLabel(lv); document.getElementById(`${l}-seq-r${i+1}-btn`).innerText = getKeyDisplayLabel(rv); } } }
+            if(d.m==4&&type==='btn') { document.getElementById(`${l}-mac-act1`).value=d.v1||1; document.getElementById(`${l}-mac-act2`).value=d.v2||1; document.getElementById(`${l}-mac-txt1`).value=d.t1||""; document.getElementById(`${l}-mac-txt2`).value=d.t2||""; }
+            if(d.m==5&&type==='enc') { document.getElementById(`${l}-nav-opt`).value = d.v1||1; }
+            if(d.m==8&&type==='enc') { document.getElementById(`${l}-enc-mod-ctrl`).checked = (d.v1 & 1); document.getElementById(`${l}-enc-mod-shift`).checked = (d.v1 & 2); document.getElementById(`${l}-enc-mod-alt`).checked = (d.v1 & 4); document.getElementById(`${l}-enc-mod-win`).checked = (d.v1 & 8); document.getElementById(`${l}-enc-l`).value=d.v2||0; document.getElementById(`${l}-enc-l-btn`).innerText=getKeyDisplayLabel(d.v2||0); document.getElementById(`${l}-enc-r`).value=d.v3||0; document.getElementById(`${l}-enc-r-btn`).innerText=getKeyDisplayLabel(d.v3||0); }
+            if((d.m==6 || d.m==7)&&type==='enc') { 
+                document.getElementById(`${l}-seq-type`).value = d.m == 6 ? 1 : 2; document.getElementById(`${l}-seq-reset`).checked = curB === 0 ? (cfg.autoResetB === 1) : (cfg.autoResetA === 1); 
+                toggleSeqType(l); document.getElementById(`${l}-seq-mod`).value = d.v1 || 1;
+                for(let i=0; i<5; i++) { let lv = d.seq[i]; let rv = d.seq[i+5]; document.getElementById(`${l}-seq-l${i+1}`).value = lv; document.getElementById(`${l}-seq-r${i+1}`).value = rv; if(d.m == 6) { document.getElementById(`${l}-seq-l${i+1}-btn`).innerText = getKeyDisplayLabel(lv); document.getElementById(`${l}-seq-r${i+1}-btn`).innerText = getKeyDisplayLabel(rv); } }
             } uiLogic(l);
         };
         
         let dN, dS;
-        if(curB === 0) { if(type==='btn') dN=cfg.bank0.btn[idx]; else if(type==='pot') dN=cfg.bank0.pot[idx]; else if(type==='encRot') dN=cfg.bank0.encRot; else if(type==='encSw') dN=cfg.bank0.encSw; } 
-        else { if(type==='btn') { dN=cfg.bank1.btn[0][idx]; dS=cfg.bank1.btn[1][idx]; } else if(type==='pot') { dN=cfg.bank1.pot[0][idx]; dS=cfg.bank1.pot[1][idx]; } else if(type==='encRot') { dN=cfg.bank1.encRot[0]; dS=cfg.bank1.encRot[1]; } else if(type==='encSw') { dN=cfg.bank1.encSw[0]; dS=cfg.bank1.encSw[1]; } }
+        if(curB === 0) { if(type==='btn') dN=cfg.profilB.btn[idx]; else if(type==='pot') dN=cfg.profilB.pot[idx]; else if(type==='enc') dN=cfg.profilB.enc; else if(type==='encSw') dN=cfg.profilB.encSw; } 
+        else { if(type==='btn') { dN=cfg.profilA.btn[0][idx]; dS=cfg.profilA.btn[1][idx]; } else if(type==='pot') { dN=cfg.profilA.pot[0][idx]; dS=cfg.profilA.pot[1][idx]; } else if(type==='enc') { dN=cfg.profilA.enc[0]; dS=cfg.profilA.enc[1]; } else if(type==='encSw') { dN=cfg.profilA.encSw[0]; dS=cfg.profilA.encSw[1]; } }
         fill('n', dN); if(hasShift) fill('s', dS);
         
         document.getElementById('modal').style.display = 'flex'; setTimeout(() => document.getElementById('n-m').focus(), 50);
@@ -621,89 +751,69 @@
         const m = parseInt(document.getElementById(`${l}-m`).value);
         ['midi','short','macro','media','nav','enc-short','mult','seq'].forEach(x => { let el = document.getElementById(`${l}-ui-${x}`); if(el) el.classList.add('hidden'); });
         if(curT === 'btn' || curT === 'encSw') { if(m==1) document.getElementById(`${l}-ui-short`).classList.remove('hidden'); if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==4) { document.getElementById(`${l}-ui-macro`).classList.remove('hidden'); let sub=document.getElementById(`${l}-mac-sub`); if(sub) sub.classList.toggle('hidden', document.getElementById(`${l}-mac-act2`).value!=2); } } 
-        else if (curT === 'encRot') { if(m==1 || m==4) document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); if(m==2 || m==4) { document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); let cc2=document.getElementById(`${l}-cc2`); if(cc2) cc2.classList.toggle('hidden', m!=2); } if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==5) document.getElementById(`${l}-ui-nav`).classList.remove('hidden'); if(m==6) document.getElementById(`${l}-ui-enc-short`).classList.remove('hidden'); if(m==7) { document.getElementById(`${l}-ui-seq`).classList.remove('hidden'); if(document.getElementById(`${l}-seq-l`).innerHTML === '') toggleSeqType(l); } } 
+        else if (curT === 'enc') { if(m==1 || m==4) document.getElementById(`${l}-ui-mult`).classList.remove('hidden'); if(m==2 || m==4) { document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); let cc2=document.getElementById(`${l}-cc2`); if(cc2) cc2.classList.toggle('hidden', m!=2); } if(m==3) document.getElementById(`${l}-ui-media`).classList.remove('hidden'); if(m==5) document.getElementById(`${l}-ui-nav`).classList.remove('hidden'); if(m==8) document.getElementById(`${l}-ui-enc-short`).classList.remove('hidden'); if(m==6 || m==7) { document.getElementById(`${l}-ui-seq`).classList.remove('hidden'); if(document.getElementById(`${l}-seq-l`).innerHTML === '') toggleSeqType(l); } } 
         else if (curT === 'pot') { if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); }
     }
 
-    // BUGFIX LACI VARIABEL v3 (Encoder Mult tidak ditimpa lagi)
     function saveConfig() {
         const get = (l) => {
-            let m = parseInt(document.getElementById(`${l}-m`).value); let d = (curB > 0 && (curT==='btn' || curT==='encSw')) ? {...act10} : {...act6}; d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
+            let m = parseInt(document.getElementById(`${l}-m`).value); let d = {...act4Template}; d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
             
             if (curT === 'btn' || curT === 'encSw') {
-                if(m==1){ d.v1=parseInt(document.getElementById(`${l}-mod1`).value)||0; d.v2=parseInt(document.getElementById(`${l}-mod2`).value)||0; d.v3=parseInt(document.getElementById(`${l}-key`).value)||0; }
+                if(m==1){ let mod=0; if(document.getElementById(`${l}-mod-ctrl`).checked) mod|=1; if(document.getElementById(`${l}-mod-shift`).checked) mod|=2; if(document.getElementById(`${l}-mod-alt`).checked) mod|=4; if(document.getElementById(`${l}-mod-win`).checked) mod|=8; d.v1=mod; d.v2=parseInt(document.getElementById(`${l}-key`).value)||0; }
                 else if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; }
                 else if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
                 else if(m==4){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
             } else if (curT === 'pot') {
                 if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3 = document.getElementById(`${l}-sto`).checked ? 1 : 0; }
-            } else if (curT === 'encRot') {
-                if(m==1){ d.v3=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; }
+            } else if (curT === 'enc') {
+                if(m==1){ d.v2=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; }
                 else if(m==2){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; }
                 else if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
                 else if(m==4){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-mult`).value)||1; }
                 else if(m==5){ d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; }
-                else if(m==6){ d.v1=parseInt(document.getElementById(`${l}-enc-mod`).value)||0; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; }
-                else if(m==7){ 
-                    d.v1 = (parseInt(document.getElementById(`${l}-seq-type`).value) || 1) | (document.getElementById(`${l}-seq-reset`).checked ? 0x80 : 0);
-                    d.v2 = parseInt(document.getElementById(`${l}-seq-mod`).value) || 0; d.seq = [];
-                    for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-l${i}`).value) || 0); 
-                    for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-r${i}`).value) || 0);
+                else if(m==8){ let mod=0; if(document.getElementById(`${l}-enc-mod-ctrl`).checked) mod|=1; if(document.getElementById(`${l}-enc-mod-shift`).checked) mod|=2; if(document.getElementById(`${l}-enc-mod-alt`).checked) mod|=4; if(document.getElementById(`${l}-enc-mod-win`).checked) mod|=8; d.v1=mod; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; }
+                else if(m==6||m==7){ 
+                    d.v1 = parseInt(document.getElementById(`${l}-seq-mod`).value) || 1; let arVal = document.getElementById(`${l}-seq-reset`).checked ? 1 : 0; if(curB === 0) cfg.autoResetB = arVal; else cfg.autoResetA = arVal;
+                    d.seq = []; for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-l${i}`).value) || 0); for(let i=1; i<=5; i++) d.seq.push(parseInt(document.getElementById(`${l}-seq-r${i}`).value) || 0);
                 }
             }
             return d;
         };
-        
+        const act4Template = {m:0, v1:0, v2:0, v3:0, lbl:"", seq:[0,0,0,0,0,0,0,0,0,0], t1:"", t2:""};
         let gN = get('n'), gS = curB>0 ? get('s') : null;
-        if(curB === 0) { if(curT==='btn') cfg.bank0.btn[curI] = gN; if(curT==='pot') cfg.bank0.pot[curI] = gN; if(curT==='encRot') cfg.bank0.encRot = gN; if(curT==='encSw') cfg.bank0.encSw = gN; } 
-        else { if(curT==='btn') { cfg.bank1.btn[0][curI]=gN; cfg.bank1.btn[1][curI]=gS; } if(curT==='pot') { cfg.bank1.pot[0][curI]=gN; cfg.bank1.pot[1][curI]=gS; } if(curT==='encRot') { cfg.bank1.encRot[0]=gN; cfg.bank1.encRot[1]=gS; } if(curT==='encSw') { cfg.bank1.encSw[0]=gN; cfg.bank1.encSw[1]=gS; } }
-        closeModal(); autoSave(); updateAllLabels(); showToast("TERSIPMAN SEMENTARA!");
+        if(curB === 0) { if(curT==='btn') cfg.profilB.btn[curI] = gN; if(curT==='pot') cfg.profilB.pot[curI] = gN; if(curT==='enc') cfg.profilB.enc = gN; if(curT==='encSw') cfg.profilB.encSw = gN; } 
+        else { if(curT==='btn') { cfg.profilA.btn[0][curI]=gN; cfg.profilA.btn[1][curI]=gS; } if(curT==='pot') { cfg.profilA.pot[0][curI]=gN; cfg.profilA.pot[1][curI]=gS; } if(curT==='enc') { cfg.profilA.enc[0]=gN; cfg.profilA.enc[1]=gS; } if(curT==='encSw') { cfg.profilA.encSw[0]=gN; cfg.profilA.encSw[1]=gS; } }
+        
+        // Polesan RC2: Eliminasi toast delay penundaan modal, langsung tutup instan
+        closeModal(); 
+        autoSave(); 
+        updateAllLabels(); 
     }
 
     function closeModal() { document.getElementById('modal').style.display='none'; closeKeyPicker(); }
     
     function autoSave() { 
-        let pm = parseInt(document.getElementById('ui-panic-mode').value); if(!cfg.panic) cfg.panic = {m:0, v1:1, v2:0, v3:127}; cfg.panic.m = pm;
-        if (pm == 4) { cfg.panic.v1 = parseInt(document.getElementById('ui-panic-ch').value)||1; cfg.panic.v2 = parseInt(document.getElementById('ui-panic-cc').value)||0; cfg.panic.v3 = parseInt(document.getElementById('ui-panic-val').value)||127; }
-        else if (pm == 5) { cfg.panic.v1 = parseInt(document.getElementById('ui-panic-mod').value)||0; cfg.panic.v2 = parseInt(document.getElementById('ui-panic-keyval').value)||0; }
+        cfg.panicSource = parseInt(document.getElementById('ui-panic-source').value);
+        let pVal = parseInt(document.getElementById('ui-panic-mode').value); cfg.panicMode = isNaN(pVal) ? 119 : pVal; cfg.panicChan = 1; 
 
         let bObj = getBankObj(curB);
-        bObj.anim = parseInt(document.getElementById('ui-anim').value); 
-        bObj.col = hexToRgb(document.getElementById('ui-color').value);
-        bObj.col2 = hexToRgb(document.getElementById('ui-color2').value);
+        bObj.animBot = parseInt(document.getElementById('ui-anim').value); 
+        bObj.colTop = hexToRgb(document.getElementById('ui-color-top').value);
+        bObj.colBaseBot = hexToRgb(document.getElementById('ui-color-base').value);
+        bObj.colTargetBot = hexToRgb(document.getElementById('ui-color-target').value);
         bObj.colActive = hexToRgb(document.getElementById('ui-color-active').value); 
-        bObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value);
-        if (curB > 0) bObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value);
-        localStorage.setItem('baysKONTROL', JSON.stringify(cfg)); markUnsaved();
-    }
-    
-    function sanitizeConfig(c) {
-        if (!c || !c.bank0) return c; let nc = JSON.parse(JSON.stringify(c)); nc.magic = ['B','K','1']; if (!nc.panic) nc.panic = {m:0, v1:1, v2:0, v3:127};
-        if (!nc.bank0.col2) { nc.bank0.col2 = [255,0,255]; nc.bank0.speed = 5; nc.bank1.col2 = [0,255,255]; nc.bank1.speed = 5; }
-        if (!nc.bank0.colB6) nc.bank0.colB6 = [0,255,255];
-
-        if (nc.bank1 && nc.bank1.btn1_5) {
-            let b1 = { btn: [[], []], pot: nc.bank1.pot, encRot: [], encSw: [{m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}, {m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}], bright: nc.bank1.bright, anim: nc.bank1.anim, speed: 5, col: nc.bank1.col, col2:[0,255,255], colActive: nc.bank1.colActive, colShift: nc.bank1.colShift, colB6: nc.bank1.colB6 };
-            if(nc.bank1.enc) { b1.encRot = nc.bank1.enc; } 
-            for(let l=0; l<2; l++) { for(let i=0; i<5; i++) b1.btn[l].push(nc.bank1.btn1_5[l][i]); b1.btn[l].push({m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""}); for(let i=0; i<4; i++) { let old = nc.bank1.btn7_10[l][i]; b1.btn[l].push({m: old.m, v1: old.v1, v2: old.v2, v3: old.v3, t1:"", t2:"", lbl: old.lbl}); } }
-            nc.bank1 = b1;
-        }
-
-        if (nc.bank0.enc) { nc.bank0.encRot = nc.bank0.enc; delete nc.bank0.enc; nc.bank0.encSw = {m:0, v1:0, v2:0, v3:0, lbl:""}; }
-        if (nc.bank1.enc) { nc.bank1.encRot = nc.bank1.enc; delete nc.bank1.enc; nc.bank1.encSw = [{m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}, {m:0,v1:0,v2:0,v3:0,t1:"",t2:"",lbl:""}]; }
-
-        const upgradeEnc = (enc) => { if (enc && enc.m === 7 && (enc.v1 & 0x80) === 0) { enc.v1 = enc.v1 | 0x80; } };
-        upgradeEnc(nc.bank0.encRot); if(nc.bank1.encRot) { upgradeEnc(nc.bank1.encRot[0]); upgradeEnc(nc.bank1.encRot[1]); }
-        return nc;
+        if (curB > 0) { bObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value); bObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value); }
+        localStorage.setItem('baysX1RC2ThemeConfig', JSON.stringify(cfg)); markUnsaved();
     }
 
-    function loadAutoSave() { const s = localStorage.getItem('baysKONTROL'); if(s) { try { let loaded = JSON.parse(s); cfg = sanitizeConfig(loaded); } catch(e) {} } switchBank(1); } 
+    function loadAutoSave() { const s = localStorage.getItem('baysX1RC2ThemeConfig'); if(s) { try { let loaded = JSON.parse(s); if(loaded.profilB) cfg = loaded; } catch(e) {} } switchBank(1); } 
     function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
     function rgbToHex(arr) { return "#" + arr.map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_rc1.json'; a.click(); showToast("EXPORT BERHASIL!"); }
+    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_x1_rc2.json'; a.click(); showToast("EXPORT BERHASIL!"); }
     function importData() { document.getElementById('f-import').click(); }
-    function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { cfg = sanitizeConfig(JSON.parse(e.target.result)); switchBank(1); markUnsaved(); showToast("IMPORT & MIGRASI SUKSES!"); }; fr.readAsText(i.files[0]); i.value=''; }
+    function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { cfg = JSON.parse(e.target.result); switchBank(1); markUnsaved(); showToast("IMPORT SUKSES!"); }; fr.readAsText(i.files[0]); i.value=''; }
 
     async function connectUSB() {
         try { port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 }); document.getElementById('serial-status').innerText = "CONNECTED"; document.getElementById('serial-status').style.color = "var(--box-bg)"; document.getElementById('serial-status').style.background = "var(--text-main)"; const decoder = new TextDecoderStream(); port.readable.pipeTo(decoder.writable); serialReader = decoder.readable.getReader(); showToast("DEVICE TERHUBUNG!"); return true; } catch(e) { return false; }
@@ -713,30 +823,46 @@
         if(!port) { let connected = await connectUSB(); if(!connected) return; }
         const writer = port.writable.getWriter(); const encoder = new TextEncoder(); const btn = document.getElementById('btn-push'); const autoExport = document.getElementById('cb-autoexport').checked; 
         try {
-            btn.innerText = "COMPILING..."; let pool = new Uint8Array(150), pOff = 0; let b = new Uint8Array(718), off = 0; b[off++] = 66; b[off++] = 75; b[off++] = 49; 
+            btn.innerText = "COMPILING..."; let b = new Uint8Array(1024); 
+            b[0] = 66; b[1] = 75; b[2] = 50; b[3] = cfg.panicSource || 0; b[4] = cfg.autoResetB || 0; b[5] = cfg.autoResetA || 0;
+            let pVal = parseInt(document.getElementById('ui-panic-mode').value); b[6] = isNaN(pVal) ? 119 : pVal; b[7] = 1; 
+
+            // Penerapan Opsi A: Slicing label ke maksimal 4 karakter kaku sebelum diletakkan ke EEPROM biner
+            const write_4 = (offset, o) => { if(!o) return; b[offset] = o.m; b[offset+1] = o.v1; b[offset+2] = o.v2; b[offset+3] = o.v3; let lArr = encoder.encode((o.lbl||"").slice(0, 4)); for(let i=0; i<4; i++) b[offset + 4 + i] = i < lArr.length ? lArr[i] : 0; };
+
+            for(let i=0; i<10; i++) write_4(16 + i * 8, cfg.profilB.btn[i]);
+            for(let i=0; i<4; i++) write_4(96 + i * 8, cfg.profilB.pot[i]);
+            write_4(128, cfg.profilB.enc);
             
-            b[off++] = cfg.panic.m; b[off++] = cfg.panic.v1; b[off++] = cfg.panic.v2; b[off++] = cfg.panic.v3;
+            let addrB = 136; b[addrB] = cfg.profilB.brightTop; b[addrB+1] = cfg.profilB.brightBot; b[addrB+2] = cfg.profilB.animTop; b[addrB+3] = cfg.profilB.animBot; b[addrB+4] = cfg.profilB.speedTop; b[addrB+5] = cfg.profilB.speedBot;
+            cfg.profilB.colTop.forEach((c, idx) => b[addrB+6+idx] = c); cfg.profilB.colActive.forEach((c, idx) => b[addrB+9+idx] = c); cfg.profilB.colBaseBot.forEach((c, idx) => b[addrB+12+idx] = c); cfg.profilB.colTargetBot.forEach((c, idx) => b[addrB+15+idx] = c);
 
-            for(let l=0; l<2; l++) for(let i=0; i<10; i++) {
-                let d = cfg.bank1.btn[l][i];
-                if(d.m==4) { let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); let total = s1.length + (d.v2==2 ? s2.length : 0); if(pOff + total <= 150) { d.v3 = pOff; pool.set(s1, pOff); pOff += s1.length; if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } } else throw "MACRO PENUH!"; }
+            let base = 154;
+            for (let l = 0; l < 2; l++) {
+                for (let i = 0; i < 10; i++) write_4(base + (l * 80) + (i * 8), cfg.profilA.btn[l][i]);
+                for (let i = 0; i < 4; i++) write_4(base + 160 + (l * 32) + (i * 8), cfg.profilA.pot[l][i]);
+                write_4(base + 224 + (l * 8), cfg.profilA.enc[l]);
             }
-            for(let l=0; l<2; l++) {
-                let d = cfg.bank1.encSw[l];
-                if(d.m==4) { let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); let total = s1.length + (d.v2==2 ? s2.length : 0); if(pOff + total <= 150) { d.v3 = pOff; pool.set(s1, pOff); pOff += s1.length; if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } } else throw "MACRO PENUH!"; }
-            }
-            const processEncSeq = (enc) => { if(enc.m == 7 && enc.seq) { if(pOff + 10 <= 150) { enc.v3 = pOff; for(let k=0; k<10; k++) pool[pOff++] = enc.seq[k]; } else throw "MACRO PENUH!"; } };
-            processEncSeq(cfg.bank0.encRot); processEncSeq(cfg.bank1.encRot[0]); processEncSeq(cfg.bank1.encRot[1]); 
 
-            const pack_6 = (o) => { b[off++]=o.m; b[off++]=o.v1; b[off++]=o.v2; b[off++]=o.v3; let lArr = encoder.encode(o.lbl||""); for(let i=0; i<6; i++) b[off++] = i < lArr.length ? lArr[i] : 0; };
-            const pack_10 = (o) => { b[off++]=o.m; b[off++]=o.v1; b[off++]=o.v2; b[off++]=o.v3; let lArr = encoder.encode(o.lbl||""); for(let i=0; i<10; i++) b[off++] = i < lArr.length ? lArr[i] : 0; };
+            let addrA = 394; b[addrA] = cfg.profilA.brightTop; b[addrA+1] = cfg.profilA.brightBot; b[addrA+2] = cfg.profilA.animTop; b[addrA+3] = cfg.profilA.animBot; b[addrA+4] = cfg.profilA.speedTop; b[addrA+5] = cfg.profilA.speedBot;
+            cfg.profilA.colTop.forEach((c, idx) => b[addrA+6+idx] = c); cfg.profilA.colActive.forEach((c, idx) => b[addrA+9+idx] = c); cfg.profilA.colShift.forEach((c, idx) => b[addrA+12+idx] = c); cfg.profilA.colBaseBot.forEach((c, idx) => b[addrA+15+idx] = c); cfg.profilA.colTargetBot.forEach((c, idx) => b[addrA+18+idx] = c); cfg.profilA.colB6.forEach((c, idx) => b[addrA+21+idx] = c);
 
-            cfg.bank0.btn.forEach(pack_6); cfg.bank0.pot.forEach(pack_6); pack_6(cfg.bank0.encRot); pack_6(cfg.bank0.encSw);
-            b[off++] = cfg.bank0.bright; b[off++] = cfg.bank0.anim; b[off++] = cfg.bank0.speed; cfg.bank0.col.forEach(c=>b[off++]=c); cfg.bank0.col2.forEach(c=>b[off++]=c); cfg.bank0.colActive.forEach(c=>b[off++]=c); cfg.bank0.colShift.forEach(c=>b[off++]=c);
+            write_4(418, cfg.profilB.encSw); write_4(426, cfg.profilA.encSw[0]); write_4(434, cfg.profilA.encSw[1]);
 
-            for(let l=0; l<2; l++) cfg.bank1.btn[l].forEach(pack_10); for(let l=0; l<2; l++) cfg.bank1.pot[l].forEach(pack_6); for(let l=0; l<2; l++) pack_6(cfg.bank1.encRot[l]); for(let l=0; l<2; l++) pack_10(cfg.bank1.encSw[l]);
-            b[off++] = cfg.bank1.bright; b[off++] = cfg.bank1.anim; b[off++] = cfg.bank1.speed; cfg.bank1.col.forEach(c=>b[off++]=c); cfg.bank1.col2.forEach(c=>b[off++]=c); cfg.bank1.colActive.forEach(c=>b[off++]=c); cfg.bank1.colShift.forEach(c=>b[off++]=c); cfg.bank1.colB6.forEach(c=>b[off++]=c); 
-            pool.forEach(p => b[off++] = p);
+            // Alokasi Text pool terkompilasi diperluas aman menjadi 582 Byte (BK2 Alignment)
+            let pool = new Uint8Array(582); let pOff = 0;
+            const addTextToPool = (txt) => { let s = encoder.encode((txt || "") + "\0"); if (pOff + s.length > 582) throw "MACRO PENUH!"; let offset = pOff; pool.set(s, pOff); pOff += s.length; return offset; };
+            const addSeqToPool = (seqArray) => { if (pOff + 10 > 582) throw "SEQ PENUH!"; let offset = pOff; for (let i = 0; i < 10; i++) pool[offset + i] = seqArray[i] || 0; pOff += 10; return offset; };
+
+            for (let i = 0; i < 10; i++) { let d = cfg.profilB.btn[i]; if (d.m == 4) { d.v3 = addTextToPool(d.t1); if (d.v2 == 2) addTextToPool(d.t2); } }
+            for (let l = 0; l < 2; l++) { for (let i = 0; i < 10; i++) { let d = cfg.profilA.btn[l][i]; if (d.m == 4) { d.v3 = addTextToPool(d.t1); if (d.v2 == 2) addTextToPool(d.t2); } } }
+            let encs = [cfg.profilB.enc, cfg.profilA.enc[0], cfg.profilA.enc[1]];
+            encs.forEach(enc => { if (enc && (enc.m == 6 || enc.m == 7)) { enc.v2 = addSeqToPool(enc.seq); } });
+
+            for (let i = 0; i < 582; i++) b[442 + i] = pool[i];
+
+            for (let i = 0; i < 10; i++) write_4(16 + i * 8, cfg.profilB.btn[i]);
+            for (let l = 0; l < 2; l++) { for (let i = 0; i < 10; i++) write_4(base + (l * 80) + (i * 8), cfg.profilA.btn[l][i]); write_4(base + 224 + (l * 8), cfg.profilA.enc[l]); } write_4(128, cfg.profilB.enc);
 
             const hex = Array.from(b, x => x.toString(16).padStart(2,'0').toUpperCase()).join('');
             await writer.write(encoder.encode("<PAUSE>\n")); if(!(await waitFor("<NEXT>"))) throw "No Response";
@@ -755,41 +881,35 @@
             await writer.write(encoder.encode("<SYNC>\n")); let start = Date.now(), syncHex = "";
             while(Date.now() - start < 4000) { const {value} = await serialReader.read(); if(value) syncHex += value; if(syncHex.includes("\n")) break; }
             syncHex = syncHex.trim(); 
-            if(syncHex.length >= 1436) { parseHexToConfig(syncHex); switchBank(curB); localStorage.setItem('baysKONTROL', JSON.stringify(cfg)); markSaved(); showToast("SINKRONISASI BERHASIL!"); } else { throw "Versi Firmware Tidak Dikenal!"; }
+            if(syncHex.length >= 2048) { parseHexToConfig(syncHex); switchBank(curB); localStorage.setItem('baysX1RC2ThemeConfig', JSON.stringify(cfg)); markSaved(); showToast("SINKRONISASI BERHASIL!"); } else { throw "Versi Firmware Tidak Cocok!"; }
         } catch(e) { showToast("ERROR: " + e); } document.querySelector('.btn-sync').innerText = "SYNC"; writer.releaseLock();
     }
 
     function parseHexToConfig(hex) {
-        let off = 0; const getB = () => parseInt(hex.substr(off++*2, 2), 16); 
-        let b0 = getB(), b1 = getB(), b2 = getB(); let magic = String.fromCharCode(b0) + String.fromCharCode(b1) + String.fromCharCode(b2);
+        const getB = (addr) => parseInt(hex.substr(addr * 2, 2), 16); 
+        const read_4 = (addr) => { let m=getB(addr), v1=getB(addr+1), v2=getB(addr+2), v3=getB(addr+3), lbl=""; for(let i=0; i<4; i++){ let c=getB(addr+4+i); if(c!=0) lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, lbl, seq:[0,0,0,0,0,0,0,0,0,0], t1:"", t2:""}; };
+        
+        cfg.panicSource = getB(3); cfg.autoResetB = getB(4); cfg.autoResetA = getB(5); cfg.panicMode = getB(6); cfg.panicChan = getB(7);
+        for(let i=0; i<10; i++) cfg.profilB.btn[i] = read_4(16 + i * 8); for(let i=0; i<4; i++) cfg.profilB.pot[i] = read_4(96 + i * 8); cfg.profilB.enc = read_4(128);
+        
+        let addrB = 136; cfg.profilB.brightTop=getB(addrB); cfg.profilB.brightBot=getB(addrB+1); cfg.profilB.animTop=getB(addrB+2); cfg.profilB.animBot=getB(addrB+3); cfg.profilB.speedTop=getB(addrB+4); cfg.profilB.speedBot=getB(addrB+5);
+        cfg.profilB.colTop=[getB(addrB+6),getB(addrB+7),getB(addrB+8)]; cfg.profilB.colActive=[getB(addrB+9),getB(addrB+10),getB(addrB+11)]; cfg.profilB.colBaseBot=[getB(addrB+12),getB(addrB+13),getB(addrB+14)]; cfg.profilB.colTargetBot=[getB(addrB+15),getB(addrB+16),getB(addrB+17)];
 
-        if (magic === 'BK1') {
-            cfg.panic = { m: getB(), v1: getB(), v2: getB(), v3: getB() };
+        let base = 154;
+        for(let l=0; l<2; l++) { for(let i=0; i<10; i++) cfg.profilA.btn[l][i] = read_4(base + (l * 80) + (i * 8)); for(let i=0; i<4; i++) cfg.profilA.pot[l][i] = read_4(base + 160 + (l * 32) + (i * 8)); cfg.profilA.enc[l] = read_4(base + 224 + (l * 8)); }
 
-            const read_6 = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl=""; for(let i=0;i<6;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, lbl}; };
-            const read_10 = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl=""; for(let i=0;i<10;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, t1:"", t2:"", lbl}; };
-            
-            for(let i=0; i<10; i++) cfg.bank0.btn[i] = read_6(); for(let i=0; i<4; i++) cfg.bank0.pot[i] = read_6(); cfg.bank0.encRot = read_6(); cfg.bank0.encSw = read_6();
-            cfg.bank0.bright=getB(); cfg.bank0.anim=getB(); cfg.bank0.speed=getB(); cfg.bank0.col=[getB(),getB(),getB()]; cfg.bank0.col2=[getB(),getB(),getB()]; cfg.bank0.colActive=[getB(),getB(),getB()]; cfg.bank0.colShift=[getB(),getB(),getB()];
+        let addrA = 394; cfg.profilA.brightTop=getB(addrA); cfg.profilA.brightBot=getB(addrA+1); cfg.profilA.animTop=getB(addrA+2); cfg.profilA.animBot=getB(addrA+3); cfg.profilA.speedTop=getB(addrA+4); cfg.profilA.speedBot=getB(addrA+5);
+        cfg.profilA.colTop=[getB(addrA+6),getB(addrA+7),getB(addrA+8)]; cfg.profilA.colActive=[getB(addrA+9),getB(addrA+10),getB(addrA+11)]; cfg.profilA.colShift=[getB(addrA+12),getB(addrA+13),getB(addrA+14)]; cfg.profilA.colBaseBot=[getB(addrA+15),getB(addrA+16),getB(addrA+17)]; cfg.profilA.colTargetBot=[getB(addrA+18),getB(addrA+19),getB(addrA+20)]; cfg.profilA.colB6=[getB(addrA+21),getB(addrA+22),getB(addrA+23)];
 
-            for(let l=0; l<2; l++) for(let i=0; i<10; i++) cfg.bank1.btn[l][i] = read_10();
-            for(let l=0; l<2; l++) for(let i=0; i<4; i++) cfg.bank1.pot[l][i] = read_6(); for(let l=0; l<2; l++) cfg.bank1.encRot[l] = read_6(); for(let l=0; l<2; l++) cfg.bank1.encSw[l] = read_10();
-            cfg.bank1.bright=getB(); cfg.bank1.anim=getB(); cfg.bank1.speed=getB(); cfg.bank1.col=[getB(),getB(),getB()]; cfg.bank1.col2=[getB(),getB(),getB()]; cfg.bank1.colActive=[getB(),getB(),getB()]; cfg.bank1.colShift=[getB(),getB(),getB()]; cfg.bank1.colB6=[getB(),getB(),getB()];
+        cfg.profilB.encSw = read_4(418); cfg.profilA.encSw[0] = read_4(426); cfg.profilA.encSw[1] = read_4(434);
 
-            let poolArr = []; for(let i=0; i<150; i++) poolArr.push(getB());
-            
-            for(let l=0; l<2; l++) for(let i=0; i<10; i++) { let act = cfg.bank1.btn[l][i]; if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 150 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 150 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } } }
-            for(let l=0; l<2; l++) { let act = cfg.bank1.encSw[l]; if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 150 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 150 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } } }
+        let poolArr = []; for(let i=0; i<582; i++) poolArr.push(getB(442 + i));
+        
+        for(let i=0; i<10; i++) { let act = cfg.profilB.btn[i]; if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 582 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 582 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } } }
+        for(let l=0; l<2; l++) { for(let i=0; i<10; i++) { let act = cfg.profilA.btn[l][i]; if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 582 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 582 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } } } }
 
-            const readEncSeq = (enc) => { if(enc.m === 7) { enc.seq = []; let idx = enc.v3; for(let k=0; k<10; k++) { enc.seq.push(idx + k < 150 ? poolArr[idx + k] : 0); } } };
-            readEncSeq(cfg.bank0.encRot); readEncSeq(cfg.bank1.encRot[0]); readEncSeq(cfg.bank1.encRot[1]); 
-            
-            let pM = document.getElementById('ui-panic-mode');
-            if(pM) {
-                pM.value = cfg.panic.m; document.getElementById('ui-panic-ch').value = cfg.panic.v1 || 1; document.getElementById('ui-panic-cc').value = cfg.panic.v2 || 0; document.getElementById('ui-panic-val').value = cfg.panic.v3 || 127;
-                document.getElementById('ui-panic-mod').value = cfg.panic.v1 || 0; document.getElementById('ui-panic-keyval').value = cfg.panic.v2 || 0; document.getElementById('ui-panic-btn').innerText = getKeyDisplayLabel(cfg.panic.v2 || 0); togglePanicUI();
-            }
-        }
+        let encs = [cfg.profilB.enc, cfg.profilA.enc[0], cfg.profilA.enc[1]];
+        encs.forEach(enc => { if(enc && (enc.m == 6 || enc.m == 7)) { enc.seq = []; let idx = enc.v2; for(let k=0; k<10; k++) enc.seq.push(poolArr[idx+k] || 0); } });
     }
 
     async function waitFor(exp) { let start = Date.now(), buf = ""; while(Date.now() - start < 3000) { const {value} = await serialReader.read(); if(value) buf += value; if(buf.includes(exp)) return true; await new Promise(r=>setTimeout(r,10)); } return false; }
@@ -801,51 +921,101 @@
         return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
 
-    // MESIN LIVE PREVIEW VIRTUAL
+    // MESIN LIVE PREVIEW VIRTUAL LED (Lurus 1:1, Animasi Sesuai Profil Aktif)
     function startPreviewEngine() {
         requestAnimationFrame(startPreviewEngine);
-        let bObj = getBankObj(curB); let anim = bObj.anim || 0; let spd = (bObj.speed || 5) / 5.0; let ms = performance.now();
-        let c1 = bObj.col || [0,255,255]; let c2 = bObj.col2 || [255,0,255];
+        let bObj = getBankObj(curB); let anim = bObj.animBot || 0; let spd = (bObj.speedBot || 50) * 2 / 100.0; let ms = performance.now();
+        let c1 = bObj.colBaseBot || [0,255,255]; let c2 = bObj.colTargetBot || [255,0,255];
         
-        for(let i=0; i<10; i++) {
-            let el = document.getElementById(`led-b${i}`); if(!el) continue; let r=0, g=0, b=0;
-            
-            if (curB === 1 && i === 5) { 
-                let cB6 = bObj.colB6 || [0,255,255]; r = cB6[0]; g = cB6[1]; b = cB6[2];
-            } else {
-                if (anim == 0) { 
-                    let blend = (9-i) / 9.0; 
-                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
-                }
-                else if (anim == 1) { 
-                    let blend = Math.sin((ms*0.002*spd) + (i*0.5)) * 0.5 + 0.5; 
-                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
-                }
-                else if (anim == 2) { 
-                    let act = Math.floor(ms / (1500/spd)) % 10; 
-                    if(i==act){ r=c1[0]; g=c1[1]; b=c1[2]; } else { r=c2[0]*0.1; g=c2[1]*0.1; b=c2[2]*0.1; } 
-                }
-                else if (anim == 3) { 
-                    let blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; 
-                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
-                }
-                else if (anim == 4) { 
-                    let blend = Math.random(); let fac = (40 + Math.random()*60)/100.0; 
-                    r = (c1[0]*blend + c2[0]*(1.0-blend)) * fac; 
-                    g = (c1[1]*blend + c2[1]*(1.0-blend)) * fac; 
-                    b = (c1[2]*blend + c2[2]*(1.0-blend)) * fac; 
-                }
-                else if (anim == 5) { 
-                    let hue = ((ms * 10 * spd + (i * 3000)) % 65535) / 65535; let rgb = HSVtoRGB(hue, 1, 1); 
-                    r=rgb[0]; g=rgb[1]; b=rgb[2]; 
-                }
-                else if (anim == 6) { 
-                    let blend = Math.sin((ms * 0.001 * spd) + i * 0.3) * 0.5 + 0.5; 
-                    r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); 
+        let brightTop = (bObj.brightTop || 100) / 100.0; let cTop = bObj.colTop || [0,255,255];
+        let rTop = cTop[0]*brightTop, gTop = cTop[1]*brightTop, bTop = cTop[2]*brightTop;
+        
+        // Setup Generator Flame (Mode 4) murni integer
+        if (!window.mockupFlameBlends) { window.mockupFlameBlends = Array(10).fill(0.5); window.mockupFlameTargets = Array(10).fill(0.5); window.lastFlameUpdate = 0; }
+        if (ms - window.lastFlameUpdate > (280 - (bObj.speedBot||50) * 2)) { for (let f = 0; f < 10; f++) window.mockupFlameTargets[f] = 0.1 + Math.random() * 0.9; window.lastFlameUpdate = ms; }
+        for (let f = 0; f < 10; f++) window.mockupFlameBlends[f] += (window.mockupFlameTargets[f] - window.mockupFlameBlends[f]) * 0.12;
+
+        // Setup Generator Raindrop (Mode 6)
+        if (!window.mockupDrops) { window.mockupDrops = Array(10).fill(0); window.lastDropTime = 0; }
+        if (ms - window.lastDropTime > (300 / (spd===0?1:spd))) { for (let d = 0; d < 10; d++) window.mockupDrops[d] = Math.max(0, window.mockupDrops[d] - 0.05); if (Math.random() > 0.8) window.mockupDrops[Math.floor(Math.random() * 10)] = 1.0; window.lastDropTime = ms; }
+
+        let r_arr = Array(10).fill(0), g_arr = Array(10).fill(0), b_arr = Array(10).fill(0);
+        let brightBot = (bObj.brightBot || 100) / 100.0;
+
+        // Kalkulasi warna animasi dasar
+        const getAnimColor = (idx) => {
+            let r=0, g=0, b=0, blend=0.5;
+            if (anim == 0) { blend = (9-idx) / 9.0; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 1) { blend = Math.sin((ms*0.002*spd) + (idx*0.5)) * 0.4 + 0.6; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 2) { let act = Math.floor(ms / (150/spd)) % 10; if(idx==act){ r=c1[0]; g=c1[1]; b=c1[2]; } else { r=c2[0]*0.1; g=c2[1]*0.1; b=c2[2]*0.1; } }
+            else if (anim == 3) { blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 4) { blend = window.mockupFlameBlends[idx]; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            else if (anim == 5) { let hue = ((ms * 0.1 * spd + (idx * 30)) % 360) / 360; let rgb = HSVtoRGB(hue, 1, 1); r=rgb[0]; g=rgb[1]; b=rgb[2]; }
+            else if (anim == 6) { blend = window.mockupDrops[idx]; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            return [Math.min(255, Math.max(0, Math.floor(r * brightBot))), Math.min(255, Math.max(0, Math.floor(g * brightBot))), Math.min(255, Math.max(0, Math.floor(b * brightBot)))];
+        };
+
+        if (curB === 0) {
+            // PROFIL B: Semua LED berdansa menjalankan animasi, kecuali L5 (Indeks 4) yang berdenyut cepat
+            for (let i = 0; i < 10; i++) {
+                if (i === 4) continue; // Biarkan L5 (index 4) untuk indikator encoder
+                let col = getAnimColor(i);
+                r_arr[i] = col[0]; g_arr[i] = col[1]; b_arr[i] = col[2];
+            }
+        } else {
+            // PROFIL A: 
+            // - L1-L4 (LED 0-3): Menyala warna static colTop jika normal, atau colShift jika shiftMode simulasi aktif
+            for (let i = 0; i < 4; i++) {
+                if (simShiftActive) {
+                    let cSh = bObj.colShift || [255, 128, 0];
+                    r_arr[i] = (cSh[0] * brightBot); g_arr[i] = (cSh[1] * brightBot); b_arr[i] = (cSh[2] * brightBot);
+                } else {
+                    r_arr[i] = rTop; g_arr[i] = gTop; b_arr[i] = bTop;
                 }
             }
-            r = Math.min(255, Math.max(0, Math.floor(r))); g = Math.min(255, Math.max(0, Math.floor(g))); b = Math.min(255, Math.max(0, Math.floor(b)));
-            el.style.backgroundColor = `rgb(${r},${g},${b})`; el.style.boxShadow = `0 0 12px rgb(${r},${g},${b})`;
+            // - L6 (LED 5): Menampilkan colB6 jika normal, atau colShift jika shiftMode simulasi aktif
+            if (simShiftActive) {
+                let cSh = bObj.colShift || [255, 128, 0];
+                r_arr[5] = (cSh[0] * brightBot); g_arr[5] = (cSh[1] * brightBot); b_arr[5] = (cSh[2] * brightBot);
+            } else {
+                let cB6 = bObj.colB6 || [0, 255, 255];
+                r_arr[5] = (cB6[0] * brightBot); g_arr[5] = (cB6[1] * brightBot); b_arr[5] = (cB6[2] * brightBot);
+            }
+            // - L7-L10 (LED 6-9): Animasi dinamis normal, atau colShift serentak jika shiftMode simulasi aktif
+            for (let i = 6; i < 10; i++) {
+                if (simShiftActive) {
+                    let cSh = bObj.colShift || [255, 128, 0];
+                    r_arr[i] = (cSh[0] * brightBot); g_arr[i] = (cSh[1] * brightBot); b_arr[i] = (cSh[2] * brightBot);
+                } else {
+                    let col = getAnimColor(i - 6);
+                    r_arr[i] = col[0]; g_arr[i] = col[1]; b_arr[i] = col[2];
+                }
+            }
+        }
+
+        // --- Simulasi Denyut L5 (LED 4) Standby Profil ---
+        let cyclePos = ms % 3000;
+        let bBlink = false;
+        if (curB === 1) { // Profil A: 1x kedipan lembut
+            if (cyclePos >= 0 && cyclePos < 200) bBlink = true;
+        } else { // Profil B: 2x kedipan cepat
+            if ((cyclePos >= 0 && cyclePos < 150) || (cyclePos >= 300 && cyclePos < 450)) bBlink = true;
+        }
+        if (bBlink) {
+            r_arr[4] = (bObj.colTop[0] * brightBot);
+            g_arr[4] = (bObj.colTop[1] * brightBot);
+            b_arr[4] = (bObj.colTop[2] * brightBot);
+        } else {
+            r_arr[4] = 20; g_arr[4] = 20; b_arr[4] = 20;
+        }
+
+        // Tembakkan semburan warna ke elemen mockup HTML
+        for(let i=0; i<10; i++) {
+            let el = document.getElementById(`led-b${i}`);
+            if (el) {
+                el.style.backgroundColor = `rgb(${r_arr[i]}, ${g_arr[i]}, ${b_arr[i]})`;
+                el.style.boxShadow = `0 0 10px rgb(${r_arr[i]}, ${g_arr[i]}, ${b_arr[i]})`;
+            }
         }
     }
 </script>
