@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>baysKONTROL X1 Configurator RC3</title>
+    <title>baysKONTROL X1 Configurator</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
         @font-face { font-family: 'Klasikap'; src: local('Klasikap'), url('klasikap.ttf') format('truetype'); }
@@ -111,7 +111,7 @@
         }
         .enc-sw-label:hover { color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.8); transform: scale(1.05); }
 
-        .btn-id { position: absolute; top: -8px; right: -8px; background: var(--text-main); color: var(--bg-color); padding: 2px 6px; border-radius: 6px; font-size: 0.7 1rem; font-weight: bold; z-index: 10; border: 2px solid var(--border-color);} 
+        .btn-id { position: absolute; top: -8px; right: -8px; background: var(--text-main); color: var(--bg-color); padding: 2px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; z-index: 10; border: 2px solid var(--border-color);} 
         .btn-lbl-n { font-size: 0.75rem; font-weight: 800; color: #fff; margin-bottom: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
         .btn-lbl-div { width: 70%; height: 2px; background: rgba(255,255,255,0.4); margin: 2px 0; z-index: 15;}
         .btn-lbl-s { font-size: 0.75rem; font-weight: 800; color: var(--label-s-color); margin-top: 2px; text-align: center; line-height: 1; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 15; text-shadow: 1px 1px 2px #000;}
@@ -127,7 +127,7 @@
         
         .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 6px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 3px 3px 0px var(--shadow-color); box-sizing: border-box;}
         
-        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .cg-item { display: flex; flex-direction: column; }
         input[type="color"] { width: 100%; height: 35px; border: 3px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 0; background: none;}
         
@@ -198,7 +198,8 @@
 
 <div id="config-screen">
     <div class="config-workspace">
-        <div class="canvas-header"><span class="hdr-bays">bays</span><span class="hdr-kontrol">KONTROL</span><span class="badge-lite">X1 RC3</span></div>
+        <!-- HEADER DIPERBARUI: Hanya "baysKONTROL" dan Badge "X1" -->
+        <div class="canvas-header"><span class="hdr-bays">bays</span><span class="hdr-kontrol">KONTROL</span><span class="badge-lite">X1</span></div>
         
         <div class="main-canvas">
             <div class="canvas-left-pane">
@@ -214,7 +215,7 @@
                     <div class="knob-unit pot-unit" id="hw-P1" onclick="openEditor('pot', 0)"><div class="pot-id">P1</div><div class="btn-lbl-n" id="lbl-p0-n">CC</div><div class="btn-lbl-div" id="div-p0"></div><div class="btn-lbl-s" id="lbl-p0-s">CC</div></div>
                     <div class="knob-unit pot-unit" id="hw-P3" onclick="openEditor('pot', 2)"><div class="pot-id">P3</div><div class="btn-lbl-n" id="lbl-p2-n">CC</div><div class="btn-lbl-div" id="div-p2"></div><div class="btn-lbl-s" id="lbl-p2-s">CC</div></div>
                     
-                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="handleSimulatedClick()">
+                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditor('enc', 0)">
                         <div class="enc-sw-label" id="lbl-enc-sw" onclick="handleSimulatedClick(); event.stopPropagation();" style="cursor: pointer;">
                             [click]
                         </div>
@@ -246,12 +247,30 @@
                 <div class="led-box">
                     <h4 style="margin-top:0; margin-bottom:10px; border-bottom:2px solid var(--border-color); padding-bottom:5px; text-transform:uppercase;">LED L1 - L4 (Potensio)</h4>
                     <div class="ctrl-row" style="display:flex; gap:10px;">
-                        <div style="flex:2;">
+                        <div style="flex:1;">
                             <label>Brightness Atas <span id="bright-top-val" class="badge-percent">100%</span></label>
                             <div class="slider-wrapper"><input type="range" id="ui-bright-top" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightTop', this.value)"></div>
                         </div>
                         <div style="flex:1;">
-                            <label>Color</label>
+                            <label>Speed Animasi <span id="speed-top-val" class="badge-percent">50%</span></label>
+                            <div class="slider-wrapper"><input type="range" id="ui-speed-top" min="1" max="100" step="1" value="50" oninput="updateLEDParam('speedTop', this.value)"></div>
+                        </div>
+                    </div>
+                    <div class="ctrl-row" style="display:flex; gap:10px; align-items: flex-end;">
+                        <div style="flex:2;">
+                            <label>Animasi Atas</label>
+                            <select id="ui-anim-top" class="neo-select" onchange="autoSave();">
+                                <option value="0">Statis (Solid Base Color)</option>
+                                <option value="1">Wave (Color Cycle)</option>
+                                <option value="2">Sweep (Satu LED Jalan)</option>
+                                <option value="3">Breath (Efek Bernapas)</option>
+                                <option value="4">Flame (Easing Flame)</option>
+                                <option value="5">Rainbow (RGB Pelangi)</option>
+                                <option value="6">Raindrop (Acak Air Hujan)</option>
+                            </select>
+                        </div>
+                        <div style="flex:1;">
+                            <label>Base Color</label>
                             <input type="color" id="ui-color-top" onchange="autoSave()">
                         </div>
                     </div>
@@ -276,18 +295,26 @@
                             <option value="1">Wave (Color Cycle)</option>
                             <option value="2">Sweep (Satu LED Jalan)</option>
                             <option value="3">Breath (Efek Bernapas)</option>
-                            <option value="4">Flame (Easing Flame Easing)</option>
+                            <option value="4">Flame (Easing Flame)</option>
                             <option value="5">Rainbow (RGB Pelangi)</option>
                             <option value="6">Raindrop (Acak Air Hujan)</option>
                         </select>
                     </div>
                     
-                    <div class="color-grid" id="color-grid-container" style="grid-template-columns: repeat(5, 1fr);">
+                    <div class="color-grid" id="color-grid-container">
                         <div class="cg-item"><label style="font-size:0.65rem; font-weight:bold;">BASE</label><input type="color" id="ui-color-base" onchange="autoSave()"></div>
                         <div class="cg-item"><label style="font-size:0.65rem; font-weight:bold;">TARGET</label><input type="color" id="ui-color-target" onchange="autoSave()"></div>
                         <div class="cg-item"><label style="font-size:0.65rem; font-weight:bold;">PUSH</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
                         <div class="cg-item" id="wrap-sh-on"><label style="font-size:0.65rem; font-weight:bold;">SHIFT</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
-                        <div class="cg-item" id="wrap-sh-btn"><label style="font-size:0.65rem; font-weight:bold;">SYS IND</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
+                        <!-- Color Picker SYS IND / colB6 telah resmi dihilangkan -->
+                    </div>
+
+                    <!-- POLESAN BARU: Checkbox Follow Animasi Bawah untuk Shift Layer -->
+                    <div class="ctrl-row hidden" id="wrap-sh-follow" style="margin-top: 15px;">
+                        <label class="cb-container">
+                            <input type="checkbox" id="ui-shift-follow" class="cb-neo" onchange="autoSave()"> 
+                            Shift Follow Animasi Bawah
+                        </label>
                     </div>
                 </div>
             </div>
@@ -478,7 +505,7 @@
 <input type="file" id="f-import" hidden onchange="handleImport(this)">
 
 <script>
-    // --- CETAK BIRU BINER 8-BYTE GLOBALS (Bebas Temporal Dead Zone) ---
+    // --- CETAK BIRU BINER 8-BYTE GLOBALS ---
     const act4Template = {m:0, v1:0, v2:0, v3:0, lbl:"", seq:[0,0,0,0,0,0,0,0,0,0], t1:"", t2:""};
     const makeAct4 = () => JSON.parse(JSON.stringify(act4Template));
 
@@ -508,7 +535,8 @@
             animTop: 0, animBot: 1, 
             speedTop: 50, speedBot: 50, 
             colTop: [255,0,255], colActive: [255,255,255], colShift: [255,128,0], 
-            colBaseBot: [255,0,255], colTargetBot: [0,255,255], colB6: [0,255,255]
+            colBaseBot: [255,0,255], colTargetBot: [0,255,255], colB6: [0,255,255],
+            shiftFollow: false // Membawa flag shift follow di Profil A
         }
     };
     
@@ -615,26 +643,34 @@
         let bankObj = getBankObj(b);
 
         document.getElementById('ui-bright-top').value = bankObj.brightTop || 100; document.getElementById('bright-top-val').innerText = (bankObj.brightTop || 100) + '%';
-        document.getElementById('ui-bright-bot').value = bankObj.brightBot || 100; document.getElementById('bright-bot-val').innerText = (bankObj.brightBot || 100) + '%';
+        document.getElementById('ui-speed-top').value = bankObj.speedTop || 50; document.getElementById('speed-top-val').innerText = (bankObj.speedTop || 50) + '%';
+        document.getElementById('ui-anim-top').value = bankObj.animTop || 0; 
         
-        document.getElementById('ui-anim').value = bankObj.animBot || 0; 
+        document.getElementById('ui-bright-bot').value = bankObj.brightBot || 100; document.getElementById('bright-bot-val').innerText = (bankObj.brightBot || 100) + '%';
         document.getElementById('ui-speed-bot').value = bankObj.speedBot || 50; document.getElementById('speed-bot-val').innerText = (bankObj.speedBot || 50) + '%';
+        document.getElementById('ui-anim').value = bankObj.animBot || 0; 
         
         document.getElementById('ui-color-top').value = rgbToHex(bankObj.colTop || [0, 255, 255]);
         document.getElementById('ui-color-base').value = rgbToHex(bankObj.colBaseBot || [0, 255, 255]);
         document.getElementById('ui-color-target').value = rgbToHex(bankObj.colTargetBot || [255, 0, 255]);
         document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive || [255, 255, 255]); 
         
-        const wrapShOn = document.getElementById('wrap-sh-on'); const wrapShBtn = document.getElementById('wrap-sh-btn');
+        const wrapShOn = document.getElementById('wrap-sh-on'); 
+        const wrapShFollow = document.getElementById('wrap-sh-follow');
+        const gridCont = document.getElementById('color-grid-container');
         
         simShiftActive = false; 
 
         if (b === 0) { 
-            wrapShOn.classList.add('hidden'); wrapShBtn.classList.add('hidden'); 
+            wrapShOn.classList.add('hidden'); 
+            wrapShFollow.classList.add('hidden');
+            gridCont.style.gridTemplateColumns = "repeat(3, 1fr)"; // BASE, TARGET, PUSH
         } else { 
-            wrapShOn.classList.remove('hidden'); wrapShBtn.classList.remove('hidden'); 
+            wrapShOn.classList.remove('hidden'); 
+            wrapShFollow.classList.remove('hidden');
+            gridCont.style.gridTemplateColumns = "repeat(4, 1fr)"; // BASE, TARGET, PUSH, SHIFT
             document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift || [255, 128, 0]);
-            document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6 || [0, 255, 255]); 
+            document.getElementById('ui-shift-follow').checked = cfg.profilA.shiftFollow || false;
         }
         
         updateAllLabels();
@@ -695,13 +731,13 @@
     function updateLEDParam(param, v) {
         let bankObj = getBankObj(curB);
         if (param === 'brightTop') { document.getElementById('bright-top-val').innerText = v + '%'; bankObj.brightTop = parseInt(v); } 
+        else if (param === 'speedTop') { document.getElementById('speed-top-val').innerText = v + '%'; bankObj.speedTop = parseInt(v); }
         else if (param === 'brightBot') { document.getElementById('bright-bot-val').innerText = v + '%'; bankObj.brightBot = parseInt(v); } 
         else if (param === 'speedBot') { document.getElementById('speed-bot-val').innerText = v + '%'; bankObj.speedBot = parseInt(v); }
         autoSave();
     }
 
     function openEditor(type, idx) {
-        // PERBAIKAN SENSITIF: Jika B6 visual diklik, belokkan tipenya secara internal menjadi 'encSw'
         if (type === 'btn' && idx === 5) {
             type = 'encSw';
         }
@@ -823,12 +859,18 @@
         cfg.panicChan = 1; 
 
         let bObj = getBankObj(curB);
+        bObj.animTop = parseInt(document.getElementById('ui-anim-top').value); 
+        bObj.speedTop = parseInt(document.getElementById('ui-speed-top').value); 
+        
         bObj.animBot = parseInt(document.getElementById('ui-anim').value); 
         bObj.colTop = hexToRgb(document.getElementById('ui-color-top').value);
         bObj.colBaseBot = hexToRgb(document.getElementById('ui-color-base').value);
         bObj.colTargetBot = hexToRgb(document.getElementById('ui-color-target').value);
         bObj.colActive = hexToRgb(document.getElementById('ui-color-active').value); 
-        if (curB > 0) { bObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value); bObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value); }
+        if (curB > 0) { 
+            bObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value); 
+            bObj.shiftFollow = document.getElementById('ui-shift-follow').checked;
+        }
         localStorage.setItem('baysX1RC2ThemeConfig', JSON.stringify(cfg)); markUnsaved();
     }
 
@@ -849,7 +891,7 @@
     function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
     function rgbToHex(arr) { return "#" + arr.map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_x1_rc3.json'; a.click(); showToast("EXPORT BERHASIL!"); }
+    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bayskontrol_x1.json'; a.click(); showToast("EXPORT BERHASIL!"); }
     function importData() { document.getElementById('f-import').click(); }
     function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { cfg = JSON.parse(e.target.result); syncB6AndEncSw(); switchBank(1); markUnsaved(); showToast("IMPORT SUKSES!"); }; fr.readAsText(i.files[0]); i.value=''; }
 
@@ -877,8 +919,17 @@
             for(let i=0; i<4; i++) write_4(96 + i * 8, cfg.profilB.pot[i]);
             write_4(128, cfg.profilB.enc);
             
-            let addrB = 136; b[addrB] = cfg.profilB.brightTop; b[addrB+1] = cfg.profilB.brightBot; b[addrB+2] = cfg.profilB.animTop; b[addrB+3] = cfg.profilB.animBot; b[addrB+4] = cfg.profilB.speedTop; b[addrB+5] = cfg.profilB.speedBot;
-            cfg.profilB.colTop.forEach((c, idx) => b[addrB+6+idx] = c); cfg.profilB.colActive.forEach((c, idx) => b[addrB+9+idx] = c); cfg.profilB.colBaseBot.forEach((c, idx) => b[addrB+12+idx] = c); cfg.profilB.colTargetBot.forEach((c, idx) => b[addrB+15+idx] = c);
+            let addrB = 136; 
+            b[addrB] = cfg.profilB.brightTop; 
+            b[addrB+1] = cfg.profilB.brightBot; 
+            b[addrB+2] = cfg.profilB.animTop || 0; 
+            b[addrB+3] = cfg.profilB.animBot; 
+            b[addrB+4] = cfg.profilB.speedTop || 50; 
+            b[addrB+5] = cfg.profilB.speedBot;
+            cfg.profilB.colTop.forEach((c, idx) => b[addrB+6+idx] = c); 
+            cfg.profilB.colActive.forEach((c, idx) => b[addrB+9+idx] = c); 
+            cfg.profilB.colBaseBot.forEach((c, idx) => b[addrB+12+idx] = c); 
+            cfg.profilB.colTargetBot.forEach((c, idx) => b[addrB+15+idx] = c);
 
             let base = 154;
             for (let l = 0; l < 2; l++) {
@@ -893,8 +944,23 @@
                 write_4(base + 224 + (l * 8), cfg.profilA.enc[l]);
             }
 
-            let addrA = 394; b[addrA] = cfg.profilA.brightTop; b[addrA+1] = cfg.profilA.brightBot; b[addrA+2] = cfg.profilA.animTop; b[addrA+3] = cfg.profilA.animBot; b[addrA+4] = cfg.profilA.speedTop; b[addrA+5] = cfg.profilA.speedBot;
-            cfg.profilA.colTop.forEach((c, idx) => b[addrA+6+idx] = c); cfg.profilA.colActive.forEach((c, idx) => b[addrA+9+idx] = c); cfg.profilA.colShift.forEach((c, idx) => b[addrA+12+idx] = c); cfg.profilA.colBaseBot.forEach((c, idx) => b[addrA+15+idx] = c); cfg.profilA.colTargetBot.forEach((c, idx) => b[addrA+18+idx] = c); cfg.profilA.colB6.forEach((c, idx) => b[addrA+21+idx] = c);
+            let addrA = 394; 
+            b[addrA] = cfg.profilA.brightTop; 
+            b[addrA+1] = cfg.profilA.brightBot; 
+            b[addrA+2] = cfg.profilA.animTop || 0; 
+            b[addrA+3] = cfg.profilA.animBot; 
+            b[addrA+4] = cfg.profilA.speedTop || 50; 
+            b[addrA+5] = cfg.profilA.speedBot;
+            cfg.profilA.colTop.forEach((c, idx) => b[addrA+6+idx] = c); 
+            cfg.profilA.colActive.forEach((c, idx) => b[addrA+9+idx] = c); 
+            cfg.profilA.colShift.forEach((c, idx) => b[addrA+12+idx] = c); 
+            cfg.profilA.colBaseBot.forEach((c, idx) => b[addrA+15+idx] = c); 
+            cfg.profilA.colTargetBot.forEach((c, idx) => b[addrA+18+idx] = c); 
+            
+            // Checkbox "Shift Follow" dialokasikan di addrA+21 (Offset 415)
+            b[addrA+21] = cfg.profilA.shiftFollow ? 1 : 0;
+            b[addrA+22] = 0; 
+            b[addrA+23] = 0;
 
             write_4(418, cfg.profilB.encSw); write_4(426, cfg.profilA.encSw[0]); write_4(434, cfg.profilA.encSw[1]);
 
@@ -975,7 +1041,11 @@
         }
 
         let addrA = 394; cfg.profilA.brightTop=getB(addrA); cfg.profilA.brightBot=getB(addrA+1); cfg.profilA.animTop=getB(addrA+2); cfg.profilA.animBot=getB(addrA+3); cfg.profilA.speedTop=getB(addrA+4); cfg.profilA.speedBot=getB(addrA+5);
-        cfg.profilA.colTop=[getB(addrA+6),getB(addrA+7),getB(addrA+8)]; cfg.profilA.colActive=[getB(addrA+9),getB(addrA+10),getB(addrA+11)]; cfg.profilA.colShift=[getB(addrA+12),getB(addrA+13),getB(addrA+14)]; cfg.profilA.colBaseBot=[getB(addrA+15),getB(addrA+16),getB(addrA+17)]; cfg.profilA.colTargetBot=[getB(addrA+18),getB(addrA+19),getB(addrA+20)]; cfg.profilA.colB6=[getB(addrA+21),getB(addrA+22),getB(addrA+23)];
+        cfg.profilA.colTop=[getB(addrA+6),getB(addrA+7),getB(addrA+8)]; cfg.profilA.colActive=[getB(addrA+9),getB(addrA+10),getB(addrA+11)]; cfg.profilA.colShift=[getB(addrA+12),getB(addrA+13),getB(addrA+14)]; cfg.profilA.colBaseBot=[getB(addrA+15),getB(addrA+16),getB(addrA+17)]; cfg.profilA.colTargetBot=[getB(addrA+18),getB(addrA+19),getB(addrA+20)]; 
+        
+        // Membaca flag shift follow dari addrA+21 (Offset 415)
+        cfg.profilA.shiftFollow = (getB(addrA+21) === 1);
+        cfg.profilA.colB6 = [getB(addrA+21), getB(addrA+22), getB(addrA+23)];
 
         let poolArr = []; for(let i=0; i<582; i++) poolArr.push(getB(442 + i));
         
@@ -1004,12 +1074,21 @@
 
     function startPreviewEngine() {
         requestAnimationFrame(startPreviewEngine);
-        let bObj = getBankObj(curB); let anim = bObj.animBot || 0; let spd = (bObj.speedBot || 50) * 2 / 100.0; let ms = performance.now();
-        let c1 = bObj.colBaseBot || [0,255,255]; let c2 = bObj.colTargetBot || [255,0,255];
+        let bObj = getBankObj(curB); 
+        let anim = bObj.animBot || 0; 
+        let spd = (bObj.speedBot || 50) * 2 / 100.0; 
+        let ms = performance.now();
         
-        let brightTop = (bObj.brightTop || 100) / 100.0; let cTop = bObj.colTop || [0,255,255];
-        let rTop = cTop[0]*brightTop, gTop = cTop[1]*brightTop, bTop = cTop[2]*brightTop;
+        let c1 = bObj.colBaseBot || [0,255,255]; 
+        let c2 = bObj.colTargetBot || [255,0,255];
+        
+        let brightTop = (bObj.brightTop || 100) / 100.0; 
+        let brightBot = (bObj.brightBot || 100) / 100.0;
 
+        let isShiftActive = (curB === 1 && simShiftActive);
+        let isShiftFollow = (cfg.profilA.shiftFollow === true);
+
+        // --- 1. GENERATOR ANIMASI BAWAH (MENDUKUNG SHIFT OVERRIDE 40% KONTRAS) ---
         if (!window.mockupFlameBlends) { 
             window.mockupFlameBlends = Array(10).fill(0.5); 
             window.mockupFlameTargets = Array(10).fill(0.5); 
@@ -1031,54 +1110,165 @@
             window.lastDropTime = ms; 
         }
 
-        let r_arr = Array(10).fill(0), g_arr = Array(10).fill(0), b_arr = Array(10).fill(0);
-        let brightBot = (bObj.brightBot || 100) / 100.0;
-
         const getAnimColor = (idx) => {
             let r=0, g=0, b=0, blend=0.5;
-            if (anim == 0) { blend = (9-idx) / 9.0; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
-            else if (anim == 1) { blend = Math.sin((ms*0.002*spd) + (idx*0.5)) * 0.4 + 0.6; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
-            else if (anim == 2) { let act = Math.floor(ms / (150/spd)) % 10; if(idx==act){ r=c1[0]; g=c1[1]; b=c1[2]; } else { r=c2[0]*0.1; g=c2[1]*0.1; b=c2[2]*0.1; } }
-            else if (anim == 3) { blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
-            else if (anim == 4) { blend = window.mockupFlameBlends[idx]; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
-            else if (anim == 5) { let hue = ((ms * 0.1 * spd + (idx * 30)) % 360) / 360; let rgb = HSVtoRGB(hue, 1, 1); r=rgb[0]; g=rgb[1]; b=rgb[2]; }
-            else if (anim == 6) { blend = window.mockupDrops[idx]; r = c1[0]*blend + c2[0]*(1.0-blend); g = c1[1]*blend + c2[1]*(1.0-blend); b = c1[2]*blend + c2[2]*(1.0-blend); }
+            
+            // Logika Mitigasi JS 40% Kontras: Shift Follow Animasi
+            let baseColor = (isShiftActive && isShiftFollow) ? (bObj.colShift || [255,128,0]) : c1;
+            let targetColor = c2;
+            
+            if (isShiftActive && isShiftFollow) {
+                // Saat follow aktif, target (lembah) dikunci di 40% kecerahan warna colShift
+                targetColor = [
+                    Math.floor(baseColor[0] * 0.4),
+                    Math.floor(baseColor[1] * 0.4),
+                    Math.floor(baseColor[2] * 0.4)
+                ];
+            }
+
+            if (anim == 0) { 
+                blend = (9-idx) / 9.0; 
+                r = baseColor[0]*blend + targetColor[0]*(1.0-blend); 
+                g = baseColor[1]*blend + targetColor[1]*(1.0-blend); 
+                b = baseColor[2]*blend + targetColor[2]*(1.0-blend); 
+            }
+            else if (anim == 1) { 
+                blend = Math.sin((ms*0.002*spd) + (idx*0.5)) * 0.4 + 0.6; 
+                r = baseColor[0]*blend + targetColor[0]*(1.0-blend); 
+                g = baseColor[1]*blend + targetColor[1]*(1.0-blend); 
+                b = baseColor[2]*blend + targetColor[2]*(1.0-blend); 
+            }
+            else if (anim == 2) { 
+                let act = Math.floor(ms / (150/spd)) % 10; 
+                if(idx==act){ r=baseColor[0]; g=baseColor[1]; b=baseColor[2]; } 
+                else { r=targetColor[0]*0.1; g=targetColor[1]*0.1; b=targetColor[2]*0.1; } 
+            }
+            else if (anim == 3) { 
+                blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; 
+                r = baseColor[0]*blend + targetColor[0]*(1.0-blend); 
+                g = baseColor[1]*blend + targetColor[1]*(1.0-blend); 
+                b = baseColor[2]*blend + targetColor[2]*(1.0-blend); 
+            }
+            else if (anim == 4) { 
+                blend = window.mockupFlameBlends[idx]; 
+                r = baseColor[0]*blend + targetColor[0]*(1.0-blend); 
+                g = baseColor[1]*blend + targetColor[1]*(1.0-blend); 
+                b = baseColor[2]*blend + targetColor[2]*(1.0-blend); 
+            }
+            else if (anim == 5) { 
+                if (isShiftActive && isShiftFollow) {
+                    // Fallback ke Breath jika Rainbow + Shift active (menari dalam rumpun colShift)
+                    blend = Math.sin(ms * 0.0015 * spd) * 0.5 + 0.5; 
+                    r = baseColor[0]*blend + targetColor[0]*(1.0-blend);
+                    g = baseColor[1]*blend + targetColor[1]*(1.0-blend);
+                    b = baseColor[2]*blend + targetColor[2]*(1.0-blend);
+                } else {
+                    let hue = ((ms * 0.1 * spd + (idx * 30)) % 360) / 360; 
+                    let rgb = HSVtoRGB(hue, 1, 1); 
+                    r=rgb[0]; g=rgb[1]; b=rgb[2]; 
+                }
+            }
+            else if (anim == 6) { 
+                blend = window.mockupDrops[idx]; 
+                r = baseColor[0]*blend + targetColor[0]*(1.0-blend); 
+                g = baseColor[1]*blend + targetColor[1]*(1.0-blend); 
+                b = baseColor[2]*blend + targetColor[2]*(1.0-blend); 
+            }
             return [Math.min(255, Math.max(0, Math.floor(r * brightBot))), Math.min(255, Math.max(0, Math.floor(g * brightBot))), Math.min(255, Math.max(0, Math.floor(b * brightBot)))];
         };
 
-        if (curB === 0) {
-            for (let i = 0; i < 10; i++) {
-                if (i === 5) {
-                    r_arr[i] = 0; g_arr[i] = 0; b_arr[i] = 0;
-                } else {
-                    let col = getAnimColor(i);
-                    r_arr[i] = col[0]; g_arr[i] = col[1]; b_arr[i] = col[2];
-                }
+        // --- 2. GENERATOR ANIMASI ATAS (POTENSIO) ---
+        let animT = bObj.animTop || 0;
+        let spdT = (bObj.speedTop || 50) * 2 / 100.0;
+        let cTopBase = bObj.colTop || [0,255,255]; 
+
+        if (!window.mockupFlameBlendsT) { 
+            window.mockupFlameBlendsT = Array(4).fill(0.5); 
+            window.mockupFlameTargetsT = Array(4).fill(0.5); 
+            window.lastFlameUpdateT = 0; 
+        }
+        if (ms - window.lastFlameUpdateT > (280 - (bObj.speedTop||50) * 2)) { 
+            for (let f = 0; f < 4; f++) window.mockupFlameTargetsT[f] = 0.1 + Math.random() * 0.9; 
+            window.lastFlameUpdateT = ms; 
+        }
+        for (let f = 0; f < 4; f++) window.mockupFlameBlendsT[f] += (window.mockupFlameTargetsT[f] - window.mockupFlameBlendsT[f]) * 0.12;
+
+        if (!window.mockupDropsT) { 
+            window.mockupDropsT = Array(4).fill(0); 
+            window.lastDropTimeT = 0; 
+        }
+        if (ms - window.lastDropTimeT > (300 / (spdT===0?1:spdT))) { 
+            for (let d = 0; d < 4; d++) window.mockupDropsT[d] = Math.max(0, window.mockupDropsT[d] - 0.05); 
+            if (Math.random() > 0.8) window.mockupDropsT[Math.floor(Math.random() * 4)] = 1.0; 
+            window.lastDropTimeT = ms; 
+        }
+
+        const getAnimColorTop = (idx) => {
+            let r=0, g=0, b=0, blend=1.0;
+            if (animT == 0) { blend = 1.0; r = cTopBase[0]; g = cTopBase[1]; b = cTopBase[2]; }
+            else if (animT == 1) { blend = Math.sin((ms*0.002*spdT) + (idx*1.0)) * 0.4 + 0.6; }
+            else if (animT == 2) { let act = Math.floor(ms / (150/spdT)) % 4; blend = (idx==act) ? 1.0 : 0.1; }
+            else if (animT == 3) { blend = Math.sin(ms * 0.0015 * spdT) * 0.5 + 0.5; }
+            else if (animT == 4) { blend = window.mockupFlameBlendsT[idx]; }
+            else if (animT == 5) { 
+                let hue = ((ms * 0.1 * spdT + (idx * 90)) % 360) / 360; 
+                let rgb = HSVtoRGB(hue, 1, 1); 
+                return [Math.floor(rgb[0]*brightTop), Math.floor(rgb[1]*brightTop), Math.floor(rgb[2]*brightTop)]; 
             }
-        } else {
-            for (let i = 0; i < 4; i++) {
-                if (simShiftActive) {
-                    let cSh = bObj.colShift || [255, 128, 0];
-                    r_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[0] * brightBot))); 
-                    g_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[1] * brightBot))); 
-                    b_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[2] * brightBot)));
-                } else {
-                    r_arr[i] = rTop; g_arr[i] = gTop; b_arr[i] = bTop;
-                }
+            else if (animT == 6) { blend = window.mockupDropsT[idx]; }
+            
+            if (animT !== 5) {
+                r = cTopBase[0] * blend; g = cTopBase[1] * blend; b = cTopBase[2] * blend;
             }
-            for (let i = 4; i < 10; i++) {
-                if (simShiftActive) {
-                    let cSh = bObj.colShift || [255, 128, 0];
-                    r_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[0] * brightBot))); 
-                    g_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[1] * brightBot))); 
-                    b_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[2] * brightBot)));
+            return [Math.min(255, Math.max(0, Math.floor(r * brightTop))), Math.min(255, Math.max(0, Math.floor(g * brightTop))), Math.min(255, Math.max(0, Math.floor(b * brightTop)))];
+        };
+
+        let r_arr = Array(10).fill(0), g_arr = Array(10).fill(0), b_arr = Array(10).fill(0);
+
+        // Pre-populate warna animasi bawah untuk 10 LED indeks penuh 0-9
+        let r_anim_full = Array(10).fill(0), g_anim_full = Array(10).fill(0), b_anim_full = Array(10).fill(0);
+        for(let i=0; i<10; i++) {
+            let col = getAnimColor(i);
+            r_anim_full[i] = col[0]; g_anim_full[i] = col[1]; b_anim_full[i] = col[2];
+        }
+
+        // --- 3. RENDERING KE RIG MOCKUP ---
+        // LED L1-L4 (Index 0-3): Potensio
+        for (let i = 0; i < 4; i++) {
+            if (isShiftActive) {
+                if (isShiftFollow) {
+                    // Ikut mengalir seirama sekuens bawah dengan warna colShift (Opsi 2 40% di-render di getAnimColor)
+                    r_arr[i] = r_anim_full[i]; g_arr[i] = g_anim_full[i]; b_arr[i] = b_anim_full[i];
                 } else {
-                    let col = getAnimColor(i);
-                    r_arr[i] = col[0]; g_arr[i] = col[1]; b_arr[i] = col[2];
+                    // Mode Statis Shift: solid colShift murni
+                    let cSh = bObj.colShift || [255, 128, 0];
+                    r_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[0] * brightTop))); 
+                    g_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[1] * brightTop))); 
+                    b_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[2] * brightTop)));
                 }
+            } else {
+                let col = getAnimColorTop(i);
+                r_arr[i] = col[0]; g_arr[i] = col[1]; b_arr[i] = col[2];
             }
         }
 
+        // LED L5-L10 (Index 4-9): Bawah (B6 di index 5 menyatu seirama)
+        for (let i = 4; i < 10; i++) {
+            if (isShiftActive) {
+                if (isShiftFollow) {
+                    r_arr[i] = r_anim_full[i]; g_arr[i] = g_anim_full[i]; b_arr[i] = b_anim_full[i];
+                } else {
+                    let cSh = bObj.colShift || [255, 128, 0];
+                    r_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[0] * brightBot))); 
+                    g_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[1] * brightBot))); 
+                    b_arr[i] = Math.min(255, Math.max(0, Math.floor(cSh[2] * brightBot)));
+                }
+            } else {
+                r_arr[i] = r_anim_full[i]; g_arr[i] = g_anim_full[i]; b_arr[i] = b_anim_full[i];
+            }
+        }
+
+        // Indikator Kedip Profil pada B10 (Index 9)
         let cyclePos = ms % 3000;
         let bBlink = false;
         if (curB === 1) { 
