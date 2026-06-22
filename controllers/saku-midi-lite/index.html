@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>saku-MIDI lite Configurator v3.0.0</title>
+    <title>saku-MIDI Lite Configurator RC1</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
         @font-face {
@@ -17,7 +17,7 @@
             --border-color: #222222; --shadow-color: #111111; --rig-bg: #cccccc; --input-bg: #ffffff;
             --grid-line: rgba(0,0,0,0.05); --checker-1: #222222; --checker-2: #f8f8f8;
             --font-main: 'Comic Neue', cursive; --font-logo: 'Klasikap', sans-serif; 
-            --accent-main: #333333; --accent-dark: #111111; --dyn-prof-color: #222222; 
+            --accent-main: #333333; --accent-dark: #111111;
         }
 
         [data-theme="dark"] {
@@ -35,40 +35,278 @@
         .config-workspace { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; transform: scale(0.82); transform-origin: center; }
         
         .canvas-header { font-family: var(--font-logo); font-size: 4.5rem; color: var(--text-main); text-shadow: 4px 4px 0px var(--box-bg), 8px 8px 0px var(--shadow-color); margin-bottom: 25px; display: flex; align-items: baseline; gap: 15px;}
-        .hdr-saku { text-transform: lowercase; } .hdr-midi { text-transform: uppercase; } .hdr-lite { font-size: 0.5em; text-transform: lowercase; letter-spacing: 2px;}
-        .badge-lite { font-family: var(--font-main); background: var(--text-main); color: var(--box-bg); font-size: 1.2rem; padding: 4px 15px; border: 4px solid var(--border-color); border-radius: 4px; transform: translateY(-8px) rotate(-5deg); letter-spacing: 2px; }
+        .hdr-saku { text-transform: lowercase; } .hdr-midi { text-transform: uppercase; }
+        .badge-lite { font-family: var(--font-main); background: var(--text-main); color: var(--box-bg); font-size: 1.2rem; padding: 4px 15px; border: 4px solid var(--border-color); border-radius: 4px; transform: translateY(-8px) rotate(-5deg); letter-spacing: 2px; text-shadow: none !important; }
 
         .main-canvas { background: var(--box-bg); border: 6px solid var(--border-color); box-shadow: 15px 15px 0px var(--shadow-color); border-radius: 20px; padding: 30px; width: 1050px; display: flex; position: relative; transition: 0.3s;}
         .canvas-left-pane { flex: 0 0 50%; display: flex; flex-direction: column; align-items: center; padding-right: 30px; border-right: 4px dashed var(--border-color);}
         .canvas-right-pane { flex: 1; display: flex; flex-direction: column; padding-left: 30px;}
 
-        .rig-container { border: 6px solid var(--border-color); border-radius: 20px; padding: 35px 40px; background: var(--rig-bg); display: grid; grid-template-columns: repeat(3, 85px); gap: 10px 30px; box-shadow: 8px 8px 0px var(--shadow-color); width: max-content; margin: 0 auto; transition: 0.3s; }
+        /* =========================================================================
+         * --- LEGO INDUSTRIAL THEME FOR RIG CONTAINER (RC1) ---
+         * =========================================================================
+         */
+        .rig-container { 
+            position: relative;
+            border: 8px solid #282828; 
+            border-bottom: 12px solid #1c1c1c;
+            border-radius: 24px; 
+            padding: 35px 50px 25px 50px; 
+            background-color: #1a1a1a; 
+            
+            /* Efek pembagian pelat asimetris (Diagonal Split) seperti foto asli */
+            background-image: linear-gradient(135deg, #eaeaea 36%, #1a1a1a 36.5%);
+            background-size: 100% 210px; 
+            background-repeat: no-repeat;
+            
+            display: grid; 
+            grid-template-columns: repeat(3, 85px); 
+            gap: 12px 30px; 
+            box-shadow: 12px 12px 0px var(--shadow-color); 
+            width: max-content; 
+            margin: 0 auto; 
+            transition: 0.3s; 
+            overflow: visible; 
+        }
         
-        .enc-area { grid-column: 1 / span 3; display: flex; flex-direction: column; align-items: center; margin-bottom: 5px; gap: 5px;}
-        .pot-area { display: flex; justify-content: center; align-items: center; }
+        /* Gantungan / Handle Hitam di bagian atas */
+        .rig-handle {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 75px;
+            height: 20px;
+            border: 8px solid #282828;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            background: transparent;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-        .knob-unit { width: 85px; height: 85px; background: #333; border: 5px solid var(--dyn-prof-color); border-radius: 50%; cursor: pointer; position: relative; box-shadow: 4px 4px 0px var(--shadow-color); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.1s; z-index: 1;}
-        .knob-unit:active, .knob-unit.selected { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--shadow-color); border-color: var(--dyn-prof-color); }
-        .knob-unit::after { content: ''; position: absolute; top: 6px; left: 50%; width: 5px; height: 18px; background: rgba(255,255,255,0.3); transform: translateX(-50%); border-radius: 3px; z-index: 0;}
-        
-        .pot-unit { width: 70px; height: 70px; background: #555; border: 5px solid var(--dyn-prof-color); }
-        .pot-unit::after { height: 15px; top: 6px; width: 4px; background: rgba(255,255,255,0.5);}
+        /* Ornamen Samping Hazard Strip Kiri-Kanan */
+        .rig-hazard {
+            position: absolute;
+            width: 14px;
+            height: 180px;
+            bottom: 45px;
+            border-radius: 4px;
+            border: 2px solid #111;
+            pointer-events: none;
+        }
+        .rig-hazard-left {
+            left: 18px;
+            background: repeating-linear-gradient(45deg, #111, #111 6px, #ffffff 6px, #ffffff 12px);
+        }
+        .rig-hazard-right {
+            right: 18px;
+            background: repeating-linear-gradient(-45deg, #111, #111 6px, #ffffff 6px, #ffffff 12px);
+        }
 
-        .btn-unit { width: 85px; height: 85px; background: var(--input-bg); border: 5px solid var(--dyn-prof-color); border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 4px 4px 0px var(--shadow-color); transition: 0.1s; position: relative;}
-        .btn-unit:active, .btn-unit.selected { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--shadow-color); border-color: var(--dyn-prof-color); }
-        
-        .btn-b4-static { background: var(--accent-main); border-color: var(--border-color); cursor: not-allowed; box-shadow: 2px 2px 0px var(--shadow-color); }
-        .btn-b4-static .btn-lbl-n { color: var(--box-bg); font-size: 1.1rem; }
+        /* Area Spacing Knob bertingkat */
+        .enc-area { 
+            grid-column: 1 / span 3; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin-bottom: -5px; 
+            gap: 4px;
+            z-index: 2;
+        }
+        .pot-area { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 2;
+        }
 
-        .btn-id { position: absolute; top: 4px; right: 6px; font-size: 0.6rem; color: var(--text-muted); font-weight: bold; } 
-        .btn-lbl-n { font-size: 0.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px; text-align: center; line-height: 1; max-width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 2; position: relative;}
-        .btn-lbl-div { width: 80%; height: 2px; background: var(--border-color); opacity: 0.3; margin: 2px 0; z-index: 2; position: relative;}
-        .btn-lbl-s { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); margin-top: 2px; text-align: center; line-height: 1; max-width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 2; position: relative;}
+        /* RC1 OPTIMASI: Display Capsule Digital "OLED" Style yang Terpusat Sempurna (Center) */
+        #lbl-b6-combined {
+            background: rgba(0, 0, 0, 0.9) !important; 
+            color: #00ffcc !important; /* Hijau/Cyan Toska Digital Neon */
+            border: 2px solid #333333 !important;
+            border-radius: 10px;
+            padding: 3px 12px;
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            box-shadow: inset 0px 0px 4px rgba(0, 255, 180, 0.3), 0px 2px 4px rgba(0,0,0,0.5);
+            display: inline-block;
+            margin: 0 auto 6px auto !important; /* Terpusat secara mutlak di dalam flexbox */
+            text-align: center;
+            z-index: 3;
+            text-shadow: none !important;
+            white-space: nowrap; /* Cegah pemotongan kata ke bawah */
+        }
+
+        /* Desain Knob Putih Premium (Encoder Gede) */
+        .knob-unit { 
+            width: 85px; 
+            height: 85px; 
+            background: #ffffff; 
+            border: 5px solid #dcdcdc; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            position: relative; 
+            box-shadow: 0px 6px 12px rgba(0,0,0,0.35), inset -2px -2px 5px rgba(0,0,0,0.1), inset 2px 2px 5px rgba(255,255,255,1); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.1s; 
+            z-index: 3;
+        }
+        .knob-unit:active, .knob-unit.selected { transform: translate(2px, 2px); box-shadow: 0px 2px 4px rgba(0,0,0,0.2); }
+        .knob-unit::after { 
+            content: ''; 
+            position: absolute; 
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%; height: 70%;
+            border-radius: 50%;
+            background: #fcfcfc;
+            box-shadow: inset 1px 1px 3px rgba(255,255,255,1), inset -1px -1px 3px rgba(0,0,0,0.15);
+            z-index: 1;
+        }
         
-        .knob-unit .btn-lbl-n { color: #f0f0f0; margin-top: 18px; font-size: 0.75rem; max-width: 85%; }
-        .knob-unit .btn-lbl-div { background: rgba(255,255,255,0.4); opacity: 1; width: 60%; margin: 3px 0; }
-        .knob-unit .btn-lbl-s { color: #aaaaaa; font-size: 0.75rem; max-width: 85%; }
-        .pot-unit .btn-lbl-n { margin-top: 16px; font-size: 0.75rem; color: #f0f0f0; max-width: 85%; }
+        /* RC1 OPTIMASI: Desain Knob Potensiometer Kecil & Anti Tumpuk */
+        .pot-unit { 
+            width: 70px; 
+            height: 70px; 
+            background: #ffffff; 
+            border: 4px solid #dcdcdc; 
+            box-shadow: 0px 5px 10px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.1), inset 2px 2px 4px rgba(255,255,255,1); 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px; /* Spasi rapat antar baris label */
+        }
+        .pot-unit::after { 
+            width: 50%; /* Dikecilkan dari 65% agar teks memiliki ruang lapang */
+            height: 50%;
+            opacity: 0.45; /* Dibuat lebih transparan agar kontras teks di atasnya maksimal */
+        }
+
+        /* RC1 OPTIMASI: Pengaturan Z-Index Teks Knob Putih agar Berada di Atas Stud Bulat */
+        .knob-unit .btn-lbl-n, .knob-unit .btn-lbl-div, .knob-unit .btn-lbl-s {
+            position: relative;
+            z-index: 2; /* Menembus stud ::after */
+        }
+
+        /* RC1 OPTIMASI: Sentralisasi Mutlak Label Encoder (Hapus Margin Top) */
+        .knob-unit .btn-lbl-n { color: #1a1a1a !important; margin-top: 0px !important; font-size: 0.75rem; max-width: 85%; }
+        .knob-unit .btn-lbl-div { background: #888888 !important; opacity: 1; width: 60%; margin: 3px 0; }
+        .knob-unit .btn-lbl-s { color: #555555 !important; font-size: 0.75rem; max-width: 85%; }
+
+        /* RC1 OPTIMASI: Penyesuaian Font Potensio agar Pas, Presisi & Anti Overlap */
+        .pot-unit .btn-lbl-n { 
+            margin-top: 0px !important; 
+            font-size: 0.65rem !important; 
+            line-height: 1.1; 
+            color: #1a1a1a !important; 
+            max-width: 90%; 
+        }
+        .pot-unit .btn-lbl-div { 
+            background: #888888 !important; 
+            opacity: 1; 
+            width: 50% !important; 
+            height: 1px !important; 
+            margin: 2px 0 !important; 
+        }
+        .pot-unit .btn-lbl-s { 
+            margin-top: 0px !important; 
+            font-size: 0.65rem !important; 
+            line-height: 1.1; 
+            color: #555555 !important; 
+            max-width: 90%; 
+        }
+
+        /* =========================================================================
+         * --- LEGO STUDS STYLE KEYCAPS (B1-B6) ---
+         * =========================================================================
+         */
+        .btn-unit { 
+            width: 85px; 
+            height: 85px; 
+            background: #fdfdfd; 
+            border: 4px solid #e2e2e2; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: inset -4px -4px 0px rgba(0,0,0,0.12), inset 4px 4px 0px rgba(255,255,255,1), 4px 4px 0px var(--shadow-color); 
+            transition: 0.1s; 
+            position: relative;
+            z-index: 2;
+        }
+        .btn-unit:active, .btn-unit.selected { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--shadow-color); }
+        
+        /* Lego Stud Bulat di tengah keycap */
+        .btn-unit::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.06);
+            background: inherit;
+            filter: brightness(0.96);
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.7), inset -2px -2px 4px rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.15);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* RC1: Kunci warna text Keycap agar Selalu Gelap & Terbaca Sempurna (Anti Tenggelam) */
+        .btn-unit .btn-lbl-n { color: #111111 !important; z-index: 3; position: relative; }
+        .btn-unit .btn-lbl-s { color: #555555 !important; z-index: 3; position: relative; }
+        .btn-unit .btn-lbl-div { background: #222222 !important; z-index: 3; position: relative; height: 2px !important; width: 80% !important; }
+
+        /* RC1 OPTIMASI: Kunci warna id tombol agar tetap terbaca pada warna dasar */
+        .btn-unit .btn-id {
+            color: #777777 !important;
+            z-index: 4;
+            text-shadow: none !important;
+        }
+
+        /* B4 MASTER SHIFT - Khusus Jingga/Oranye Lego Berdasarkan Foto */
+        .btn-b4-static { 
+            background: #ff6a00 !important; 
+            border: 4px solid #d35400 !important; 
+            cursor: not-allowed; 
+            box-shadow: inset -4px -4px 0px rgba(0,0,0,0.15), inset 4px 4px 0px rgba(255,255,255,0.4), 4px 4px 0px var(--shadow-color) !important; 
+        }
+        .btn-b4-static .btn-lbl-n { color: #ffffff !important; font-size: 1.1rem; z-index: 3; position: relative; }
+        .btn-b4-static::after {
+            filter: brightness(0.95);
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.5), inset -2px -2px 4px rgba(0,0,0,0.2), 0 3px 6px rgba(0,0,0,0.2);
+        }
+        .btn-b4-static .btn-id {
+            color: rgba(255, 255, 255, 0.85) !important;
+            z-index: 4;
+        }
+
+        /* Desain Garis LED Panjang (LED Strip Bar di bawah B4-B6) */
+        .mockup-led-bar {
+            grid-column: 1 / span 3;
+            height: 8px;
+            border: 2px solid #222;
+            border-radius: 4px;
+            margin-top: 10px;
+            transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+            z-index: 4;
+        }
+
+        .btn-id { position: absolute; top: 4px; right: 6px; font-size: 0.6rem; color: var(--text-muted); font-weight: bold; z-index: 4;} 
+
+        /* ========================================================================= */
 
         .tab-area { display: flex; gap: 15px; margin-bottom: 25px; }
         .btn-tab { padding: 10px 30px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; font-size: 1.3rem; cursor: pointer; border-radius: 10px; box-shadow: 4px 4px 0px var(--shadow-color); transition: 0.2s;}
@@ -141,21 +379,27 @@
 <div id="config-screen">
     <div class="config-workspace">
         <div class="canvas-header">
-            <span class="hdr-saku">saku-</span><span class="hdr-midi">MIDI</span><span class="hdr-lite">lite</span>
-            <div class="badge-lite">V3.0.0</div>
+            <span class="hdr-saku">saku-</span><span class="hdr-midi">MIDI</span>
+            <div class="badge-lite">lite</div>
         </div>
         
         <div class="main-canvas">
             <div class="canvas-left-pane">
                 <div class="tab-area">
-                    <button id="p0" class="btn-tab active" onclick="switchBank(0)">0</button>
-                    <button id="p1" class="btn-tab" onclick="switchBank(1)">1</button>
+                    <button id="p0" class="btn-tab active" onclick="switchBank(0)">A</button>
+                    <button id="p1" class="btn-tab" onclick="switchBank(1)">B</button>
                     <button id="pG" class="btn-tab" style="background:var(--accent-main); color:#fff" onclick="switchBank('G')">GLOBAL</button>
                 </div>
                 
                 <div class="rig-container" id="rig-panel">
+                    <!-- Ornamen Casing Fisik Realistis (RC1) -->
+                    <div class="rig-handle"></div>
+                    <div class="rig-hazard rig-hazard-left"></div>
+                    <div class="rig-hazard rig-hazard-right"></div>
+
                     <div class="enc-area">
-                        <div id="lbl-b6-combined" style="font-size: 0.85rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; letter-spacing: 1px;">OFF | OFF</div>
+                        <!-- RC1: Teks display capsule OLED ini sekarang dijamin 100% kontras dan responsif -->
+                        <div id="lbl-b6-combined">OFF | OFF</div>
                         <div class="knob-unit" id="hw-ENC" onclick="openEditor('enc', 0)">
                             <div class="btn-lbl-n" id="lbl-enc-n">Off</div>
                             <div class="btn-lbl-div"></div>
@@ -171,10 +415,14 @@
                     <div class="btn-unit" onclick="openEditor('btn', 1)"><div class="btn-id">B2</div><div class="btn-lbl-n" id="lbl-b1-n">Off</div><div class="btn-lbl-div"></div><div class="btn-lbl-s" id="lbl-b1-s">Off</div></div>
                     <div class="btn-unit" onclick="openEditor('btn', 2)"><div class="btn-id">B3</div><div class="btn-lbl-n" id="lbl-b2-n">Off</div><div class="btn-lbl-div"></div><div class="btn-lbl-s" id="lbl-b2-s">Off</div></div>
                     
+                    <!-- B4 static shift button (Orange) -->
                     <div class="btn-unit btn-b4-static"><div class="btn-id">B4</div><div class="btn-lbl-n">[SHIFT]</div></div>
                     
                     <div class="btn-unit" onclick="openEditor('btn', 4)"><div class="btn-id">B5</div><div class="btn-lbl-n" id="lbl-b4-n">Off</div><div class="btn-lbl-div"></div><div class="btn-lbl-s" id="lbl-b4-s">Off</div></div>
                     <div class="btn-unit" onclick="openEditor('btn', 5)"><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
+
+                    <!-- RC1: Komponen Garis LED Panjang di bawah B4-B6 -->
+                    <div id="mockup-led-strip" class="mockup-led-bar"></div>
                 </div>
 
                 <div class="panic-box hidden" id="global-panel" style="width: 100%; box-sizing: border-box;">
@@ -212,7 +460,7 @@
             <div class="canvas-right-pane">
                 <div class="led-box" id="led-panel">
                     <div class="ctrl-row">
-                        <label>Brightness (<span id="curP">0</span>) <span id="bright-val" class="badge-percent">100%</span></label>
+                        <label>Brightness (Profil <span id="curP">A</span>) <span id="bright-val" class="badge-percent">100%</span></label>
                         <div class="slider-wrapper"><input type="range" id="ui-bright" min="0" max="100" step="10" value="100" oninput="updateBright(this.value)"></div>
                     </div>
                     <div class="ctrl-row">
@@ -283,7 +531,7 @@
                 <div id="n-ui-seq-key" class="hidden" style="margin-top:15px; padding-top:10px; border-top: 2px dashed var(--border-color);">
                     <label style="font-weight:bold; font-size:1.1rem">SEQ KEYBOARD (Mode 7)</label>
                     <div style="display:flex; gap:15px; margin-top:8px;">
-                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;"><div style="text-align:center; font-size:0.85rem; font-weight:bold; color:var(--text-muted);">PUTAR KIRI (-)</div><button type="button" id="n-sk-l1-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l1')">L1</button><input type="hidden" id="n-sk-l1"><button type="button" id="n-sk-l2-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l2')">L2</button><input type="hidden" id="n-sk-l2"><button type="button" id="n-sk-l3-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l3')">L3</button><input type="hidden" id="n-sk-l3"><button type="button" id="n-sk-l4-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l4')">L4</button><input type="hidden" id="n-sk-l4"><button type="button" id="n-sk-l5-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l5')">L5</button><input type="hidden" id="n-sk-l5"></div>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:6px;"><div style="text-align:center; font-size:0.85rem; font-weight:bold; color:var(--text-muted);">PUTAR KIRI (-)</div><button type="button" id="n-sk-l1-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l1')">L1</button><input type="hidden" id="n-sk-l1"><button type="button" id="n-sk-l2-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l2')">L2</button><input type="hidden" id="n-sk-r2"><button type="button" id="n-sk-l3-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l3')">L3</button><input type="hidden" id="n-sk-l3"><button type="button" id="n-sk-l4-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l4')">L4</button><input type="hidden" id="n-sk-l4"><button type="button" id="n-sk-l5-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-l5')">L5</button><input type="hidden" id="n-sk-l5"></div>
                         <div style="flex:1; display:flex; flex-direction:column; gap:6px;"><div style="text-align:center; font-size:0.85rem; font-weight:bold; color:var(--text-muted);">PUTAR KANAN (+)</div><button type="button" id="n-sk-r1-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-r1')">R1</button><input type="hidden" id="n-sk-r1"><button type="button" id="n-sk-r2-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-r2')">R2</button><input type="hidden" id="n-sk-r2"><button type="button" id="n-sk-r3-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-r3')">R3</button><input type="hidden" id="n-sk-r3"><button type="button" id="n-sk-r4-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-r4')">R4</button><input type="hidden" id="n-sk-r4"><button type="button" id="n-sk-r5-btn" class="custom-key-btn" onclick="openKeyPicker('n-sk-r5')">R5</button><input type="hidden" id="n-sk-r5"></div>
                     </div>
                 </div>
@@ -367,12 +615,21 @@
     const labelKeyMap = { 0:"NONE", 176:"ENT", 177:"ESC", 178:"BKS", 179:"TAB", 32:"SPC", 218:"UP", 217:"DWN", 216:"LFT", 215:"RGT", 234:"N0" };
     const labelModMap = { 0:"", 1:"CT", 2:"SH", 4:"AL", 8:"WIN" };
 
+    let ledAnimFrameId = null; // RC1: Variabel penampung id frame untuk loop animasi LED strip
+
     function toggleTheme() { const doc = document.documentElement; const cur = doc.getAttribute('data-theme'); const next = cur === 'dark' ? 'light' : 'dark'; doc.setAttribute('data-theme', next); localStorage.setItem('sakuTheme', next); }
     function showToast(msg) { const o = document.getElementById('toastOverlay'); document.getElementById('toastMessage').innerText = msg; o.classList.add('active'); setTimeout(()=>o.classList.remove('active'), 2500); }
     function markUnsaved() { const b = document.getElementById('btn-push'); b.classList.add('unsaved'); b.innerText = "⚠️ UNSAVED CHANGES!"; }
     function markSaved() { const b = document.getElementById('btn-push'); b.classList.remove('unsaved'); b.innerText = "⚡ PUSH TO DEVICE"; }
 
-    window.onload = () => { document.documentElement.setAttribute('data-theme', localStorage.getItem('sakuTheme') || 'light'); buildOptions(); buildKeyPicker(); loadAutoSave(); };
+    // RC1: Inisialisasi startLEDAnimationLoop pada saat window diload
+    window.onload = () => { 
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('sakuTheme') || 'light'); 
+        buildOptions(); 
+        buildKeyPicker(); 
+        loadAutoSave(); 
+        startLEDAnimationLoop(); 
+    };
 
     function getKeyDisplayLabel(val) {
         if(val == 0) return 'NONE'; if(val == 234) return 'NUM 0';
@@ -421,6 +678,81 @@
         closeKeyPicker(); if(currentKeyTarget === 'p-key') autoSave();
     }
 
+    // RC1 OPTIMASI: Loop simulasi animasi LED real-time murni performa tinggi (requestAnimationFrame)
+    function renderMockupLED(timestamp) {
+        const ledBar = document.getElementById('mockup-led-strip');
+        if(!ledBar) return;
+
+        const anim = parseInt(document.getElementById('ui-anim').value) || 0;
+        const speedVal = parseInt(document.getElementById('ui-speed').value) || 50;
+        const hexColor = document.getElementById('ui-color').value;
+        const brightPercent = parseInt(document.getElementById('ui-bright').value) / 100;
+
+        // Hitung waktu referensi untuk kelancaran fase
+        const t = timestamp || performance.now();
+        // Pemetaan slider speed (0-100) menjadi frekuensi pergerakan animasi yang nyaman di mata
+        const speedFactor = 0.0002 + (speedVal / 100) * 0.004;
+        const phase = t * speedFactor;
+
+        // Reset background gradien bawaan CSS
+        ledBar.style.background = "";
+        ledBar.style.opacity = brightPercent;
+
+        if (anim === 0) {
+            // Animasi 0: Statis (Solid Color)
+            ledBar.style.backgroundColor = hexColor;
+            ledBar.style.boxShadow = `0px 0px 12px 3px ${hexColor}`;
+        } 
+        else if (anim === 1) {
+            // Animasi 1: Wave (Gradien yang mengalir perlahan sesuai kecepatan)
+            const wavePhase = (t * (0.0005 + (speedVal / 100) * 0.0035));
+            ledBar.style.background = `linear-gradient(90deg, ${hexColor}, rgba(0,0,0,0.3) 50%, ${hexColor})`;
+            ledBar.style.backgroundSize = "200% 100%";
+            ledBar.style.backgroundPosition = `${(wavePhase * 40) % 200}% 0px`;
+            ledBar.style.boxShadow = `0px 0px 12px 3px ${hexColor}`;
+        } 
+        else if (anim === 2) {
+            // Animasi 2: Sweep / Breath (Pulsing redup-terang lembut)
+            const pulse = 0.2 + 0.8 * (0.5 + 0.5 * Math.sin(phase * 2));
+            ledBar.style.backgroundColor = hexColor;
+            ledBar.style.opacity = brightPercent * pulse;
+            ledBar.style.boxShadow = `0px 0px ${12 * pulse}px ${3 * pulse}px ${hexColor}`;
+        } 
+        else if (anim === 3) {
+            // Animasi 3: Rainbow Breath (Perputaran warna diselingi pulsing)
+            const hue = (phase * 15) % 360;
+            const rgbColor = `hsl(${hue}, 100%, 50%)`;
+            const pulse = 0.2 + 0.8 * (0.5 + 0.5 * Math.sin(phase * 2));
+            ledBar.style.backgroundColor = rgbColor;
+            ledBar.style.opacity = brightPercent * pulse;
+            ledBar.style.boxShadow = `0px 0px ${12 * pulse}px ${3 * pulse}px ${rgbColor}`;
+        } 
+        else if (anim === 4) {
+            // Animasi 4: HSV Smooth (Aliran spektrum pelangi mengalir mulus)
+            const hue = (phase * 15) % 360;
+            const rgbColor = `hsl(${hue}, 100%, 50%)`;
+            ledBar.style.background = `linear-gradient(90deg, 
+                hsl(${(hue)%360}, 100%, 50%), 
+                hsl(${(hue+120)%360}, 100%, 50%), 
+                hsl(${(hue+240)%360}, 100%, 50%), 
+                hsl(${(hue)%360}, 100%, 50%)
+            )`;
+            ledBar.style.backgroundSize = "200% 100%";
+            ledBar.style.backgroundPosition = `${(phase * 12) % 200}% 0px`;
+            ledBar.style.boxShadow = `0px 0px 12px 3px ${rgbColor}`;
+        }
+    }
+
+    // RC1 OPTIMASI: Memulai frame loop simulasi LED
+    function startLEDAnimationLoop() {
+        if (ledAnimFrameId) cancelAnimationFrame(ledAnimFrameId);
+        function loop(timestamp) {
+            renderMockupLED(timestamp);
+            ledAnimFrameId = requestAnimationFrame(loop);
+        }
+        ledAnimFrameId = requestAnimationFrame(loop);
+    }
+
     function switchBank(b) {
         if(b === 'G') {
             document.getElementById('rig-panel').classList.add('hidden'); document.getElementById('global-panel').classList.remove('hidden'); document.getElementById('led-panel').classList.add('hidden');
@@ -433,12 +765,16 @@
         }
         document.getElementById('rig-panel').classList.remove('hidden'); document.getElementById('global-panel').classList.add('hidden'); document.getElementById('led-panel').classList.remove('hidden');
         curB = b; ['p0','p1','pG'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
-        document.getElementById('curP').innerText = b; let bankObj = cfg.bank[b]; 
+        
+        document.getElementById('curP').innerText = b === 0 ? 'A' : 'B'; 
+        
+        let bankObj = cfg.bank[b]; 
         document.getElementById('ui-bright').value = bankObj.bright; document.getElementById('bright-val').innerText = bankObj.bright + '%';
         document.getElementById('ui-speed').value = bankObj.speed !== undefined ? bankObj.speed : 50; document.getElementById('speed-val').innerText = (bankObj.speed !== undefined ? bankObj.speed : 50) + '%';
         document.getElementById('ui-anim').value = bankObj.anim;
         document.getElementById('ui-color').value = rgbToHex(bankObj.col); document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive); document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift);
-        document.documentElement.style.setProperty('--dyn-prof-color', rgbToHex(bankObj.col)); updateAllLabels();
+        
+        updateAllLabels();
     }
 
     function uiGlobalLogic() {
@@ -480,9 +816,9 @@
         else if (type === 'enc') { dName = "ENCODER ROTARY"; } 
         else { dName = `${type.toUpperCase()} ${idx+1}`; }
         
-        document.getElementById('m-title').innerText = `${dName} (BANK ${curB})`;
+        let pName = (curB === 0) ? "PROFIL A" : "PROFIL B";
+        document.getElementById('m-title').innerText = `${dName} (${pName})`;
         
-        // Logika Tab Rotary vs Switch
         let isEncGrp = (type === 'enc') || (type === 'btn' && idx === 6);
         document.getElementById('enc-sub-tabs').classList.toggle('hidden', !isEncGrp);
         if(isEncGrp) {
@@ -543,17 +879,18 @@
         }
     }
 
+    // RC1 OPTIMASI: Menghapus toast "TERSIPMAN SEMENTARA" demi kenyamanan konfigurasi
     function saveConfig(preventClose = false) {
         const get = (l) => {
             const m = parseInt(document.getElementById(`${l}-m`).value); let d = {...defaultAct, seq: [0,0,0,0,0,0,0,0,0,0]}; d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
             if(m==1 && curT==='btn') { d.v1=parseInt(document.getElementById(`${l}-mod1`).value)||0; d.v2=parseInt(document.getElementById(`${l}-mod2`).value)||0; d.v3=parseInt(document.getElementById(`${l}-key`).value)||0; }
-            if(m==2 || m==4) { d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; if(curT==='enc' && m==2) d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; }
+            if(m==2 || m==4) { d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; if(curT==='enc' && m==2) d.v3=parseInt(document.getElementById(`${l}-cc2`).value || 0); }
             if(curT==='enc' && (m==1 || m==4)) { d.v3=parseInt(document.getElementById(`${l}-mult`).value)||1; }
             if(m==3) { d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
             if(m==4 && curT==='btn') { d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
             if(m==5 && curT==='enc') { d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; }
-            if(m==6 && curT==='enc') { d.v1=parseInt(document.getElementById(`${l}-enc-mod`).value)||0; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; }
-            if(curT==='enc' && (m==7 || m==8)) {
+            if(m==6 && curT==='enc') { d.v1=parseInt(document.getElementById(`${l}-enc-mod`).value)||0; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value || 0); }
+            if(curT==='enc' && (d.m==7 || d.m==8)) {
                 if(m==7) { for(let i=1; i<=5; i++) { d.seq[5-i] = parseInt(document.getElementById(`${l}-sk-l${i}`).value)||0; d.seq[4+i] = parseInt(document.getElementById(`${l}-sk-r${i}`).value)||0; } } 
                 else { d.v1 = parseInt(document.getElementById(`${l}-scc-chan`).value)||1; for(let i=1; i<=5; i++) { d.seq[5-i] = parseInt(document.getElementById(`${l}-scc-l${i}`).value)||0; d.seq[4+i] = parseInt(document.getElementById(`${l}-scc-r${i}`).value)||0; } }
             }
@@ -564,7 +901,7 @@
         if(curT==='pot') { cfg.bank[curB].pot[0][curI]=get('n'); cfg.bank[curB].pot[1][curI]=get('s'); }
         
         autoSave(); updateAllLabels(); 
-        if(preventClose !== true) { closeModal(); showToast("TERSIPMAN SEMENTARA!"); }
+        if(preventClose !== true) { closeModal(); } // Bersih tanpa showToast
     }
 
     function closeModal() { document.getElementById('modal').style.display='none'; closeKeyPicker(); }
@@ -576,8 +913,9 @@
         
         cfg.bank[curB].anim = parseInt(document.getElementById('ui-anim').value); 
         cfg.bank[curB].col = hexToRgb(document.getElementById('ui-color').value); cfg.bank[curB].colActive = hexToRgb(document.getElementById('ui-color-active').value); cfg.bank[curB].colShift = hexToRgb(document.getElementById('ui-color-shift').value);
-        document.documentElement.style.setProperty('--dyn-prof-color', document.getElementById('ui-color').value);
+        
         localStorage.setItem('sakuLiteV3', JSON.stringify(cfg)); markUnsaved();
+        renderMockupLED(); 
     }
     
     function loadAutoSave() { 
@@ -665,7 +1003,7 @@
 
     function parseHexToConfig(hex) {
         let off = 0; const getB = () => parseInt(hex.substr(off++*2, 2), 16);
-        getB(); getB(); getB(); // Skip Magic V3A
+        getB(); getB(); getB(); 
         cfg.panic.mode = getB(); cfg.panic.btn = getB(); cfg.panic.val1 = getB(); cfg.panic.val2 = getB();
         const readAction = () => { let m=getB(), v1=getB(), v2=getB(), v3=getB(), lbl="", seq=[0,0,0,0,0,0,0,0,0,0]; for(let i=0;i<10;i++){ let c=getB(); if(c!=0)lbl+=String.fromCharCode(c); } return {m, v1, v2, v3, t1:"", t2:"", lbl, seq}; };
         for(let b=0; b<2; b++) {
@@ -680,7 +1018,7 @@
             if(i===3) continue; let act = cfg.bank[b].btn[l][i];
             if(act.m === 4) { let idx = act.v3, str1 = ""; while(idx < 150 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); act.t1 = str1; idx++; if(act.v2 === 2) { let str2 = ""; while(idx < 150 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); act.t2 = str2; } }
         }
-        for(let b=0; b<2; b++) for(let l=0; l<2; l++) { let act = cfg.bank[b].enc[l]; if(act.m === 7 || act.m === 8) { act.seq = []; let idx = act.v3; for(let s=0; s<10; s++) act.seq.push(poolArr[idx + s] || 0); } }
+        for(let b=0; b<2; b++) for(let l=0; l<2; l++) { let act = cfg.bank[l].enc[l]; if(act.m === 7 || act.m === 8) { act.seq = []; let idx = act.v3; for(let s=0; s<10; s++) act.seq.push(poolArr[idx + s] || 0); } }
     }
 
     async function waitFor(exp) { let start = Date.now(), buf = ""; while(Date.now() - start < 3000) { const {value} = await serialReader.read(); if(value) buf += value; if(buf.includes(exp)) return true; await new Promise(r=>setTimeout(r,10)); } return false; }
