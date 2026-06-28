@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>saku-MIDI MKII Configurator RC2</title>
+    <title>saku-MIDI MKII Configurator RC3</title>
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
     <style>
         @font-face { font-family: 'Klasikap'; src: local('Klasikap'), url('klasikap.ttf') format('truetype'); }
@@ -44,7 +44,7 @@
 
         .main-canvas { background: var(--box-bg); border: 6px solid var(--border-color); box-shadow: 12px 12px 0px var(--shadow-color); border-radius: 20px; padding: 20px; width: 1250px; display: flex; gap: 20px;}
         .canvas-left-pane { flex: 0 0 58%; display: flex; flex-direction: column; align-items: center; padding-right: 20px; border-right: 4px dashed var(--border-color);}
-        .canvas-right-pane { flex: 1; display: flex; flex-direction: column; gap: 12px; height: 430px; box-sizing: border-box; justify-content: space-between; }
+        .canvas-right-pane { flex: 1; display: flex; flex-direction: column; gap: 10px; height: 430px; box-sizing: border-box; justify-content: flex-start; }
 
         .rig-container { 
             width: 700px; height: 430px; background: var(--rig-bg); border: 6px solid #111; 
@@ -149,14 +149,47 @@
         .btn-tab { padding: 6px 20px; border: 4px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: var(--font-main); font-weight: bold; font-size: 1rem; cursor: pointer; border-radius: 10px; box-shadow: 4px 4px 0px var(--shadow-color); transition: 0.2s;}
         .btn-tab.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 0 0 var(--shadow-color); transform: translate(4px,4px); border-color: var(--text-main);}
 
-        .led-box { border: 4px solid var(--border-color); padding: 10px 15px; background: var(--box-bg); border-radius: 15px; box-shadow: 5px 5px 0px var(--shadow-color); margin-bottom: 0px; display: flex; flex-direction: column; gap: 8px;}
+        /* SUB-TAB LED CONFIGURATION STYLE */
+        .led-tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 4px;
+            border-bottom: 3px solid var(--border-color);
+            padding-bottom: 6px;
+            width: 100%;
+        }
+        .led-sub-tab {
+            flex: 1;
+            padding: 6px 4px;
+            border: 3px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-weight: bold;
+            font-size: 0.72rem;
+            cursor: pointer;
+            border-radius: 6px;
+            box-shadow: 2px 2px 0px var(--shadow-color);
+            transition: 0.1s;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .led-sub-tab.active {
+            background: var(--text-main);
+            color: var(--bg-color);
+            box-shadow: 0 0 0 var(--shadow-color);
+            transform: translate(2px, 2px);
+        }
+
+        .led-box { border: 4px solid var(--border-color); padding: 10px 15px; background: var(--box-bg); border-radius: 15px; box-shadow: 5px 5px 0px var(--shadow-color); display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; }
         .led-box h4 { margin: 0 0 2px 0; text-transform: uppercase; font-size: 0.85rem; border-bottom: 2px dashed var(--border-color); padding-bottom: 2px; }
         
-        /* Baris Gabungan Compact One-Page Layout */
         .compact-row { display: flex; gap: 10px; align-items: center; width: 100%; justify-content: space-between; }
         .compact-col { display: flex; flex-direction: column; gap: 3px; flex: 1; }
         .compact-col label { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; }
-        
+        .compact-info { font-size: 0.75rem; line-height: 1.3; color: var(--text-muted); font-style: italic; background: rgba(0,0,0,0.03); padding: 6px; border-radius: 6px; border-left: 3px solid var(--border-color); }
+        [data-theme="dark"] .compact-info { background: rgba(255,255,255,0.03); }
+
         .neo-select, .neo-input { width: 100%; border: 3px solid var(--border-color); border-radius: 8px; padding: 4px 6px; font-family: var(--font-main); font-weight: bold; background: var(--input-bg); color: var(--text-main); box-shadow: 2px 2px 0px var(--shadow-color); box-sizing: border-box; font-size: 0.8rem;}
         
         .color-grid-compact { display: flex; gap: 8px; width: 100%; justify-content: space-between; }
@@ -190,6 +223,8 @@
         .cb-neo { appearance: none; width: 16px; height: 18px; border: 3px solid var(--border-color); border-radius: 4px; background: var(--input-bg); position: relative; box-shadow: 2px 2px 0 var(--shadow-color); flex-shrink: 0;}
         .cb-neo:checked { background: var(--text-main); }
         .cb-neo:checked::after { content: '✔'; position: absolute; color: var(--bg-color); font-weight: bold; top: -3px; left: 1px; font-size: 0.8rem;}
+
+        .cb-neo:disabled { cursor: not-allowed; opacity: 0.5; }
 
         .mod-checks { display: flex; gap: 10px; justify-content: space-between; background: var(--rig-bg); padding: 10px; border-radius: 8px; border: 2px solid var(--border-color); margin-bottom: 10px; color: #fff;}
         .mod-checks label { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; color: #fff; }
@@ -233,7 +268,7 @@
 
 <div id="config-screen">
     <div class="config-workspace">
-        <div class="canvas-header"><span class="hdr-bays">saku-MIDI</span><span class="badge-lite">RC2</span></div>
+        <div class="canvas-header"><span class="hdr-bays">saku-MIDI</span><span class="badge-lite">RC3</span></div>
         
         <div class="main-canvas">
             <div class="canvas-left-pane">
@@ -247,73 +282,125 @@
                     <div class="screw s-bl"></div><div class="screw s-br"></div>
                     <div class="divider"></div>
                     
-                    <div class="led-strip" id="led-p0"></div>
-                    <div class="led-strip" id="led-p1"></div>
-                    <div class="led-strip" id="led-p2"></div>
-                    <div class="led-strip" id="led-p3"></div>
-                    <div class="led-strip" id="led-p4"></div>
+                    <!-- LED Baris Atas (Dedicated Global Encoder Zone LA1-LA5) - Pasif Dinamis -->
+                    <div class="led-strip" id="led-p0" title="LA1: Indikator Enkoder"></div>
+                    <div class="led-strip" id="led-p1" title="LA2: Indikator Enkoder"></div>
+                    <div class="led-strip" id="led-p2" title="LA3: Indikator Enkoder"></div>
+                    <div class="led-strip" id="led-p3" title="LA4: Indikator Enkoder"></div>
+                    <div class="led-strip" id="led-p4" title="LA5: Indikator Enkoder"></div>
 
-                    <div class="enc-sw-label" id="lbl-enc-sw" onclick="openEditor('encSw', 0)">[ NORM ]</div>
+                    <div class="enc-sw-label" id="lbl-enc-sw" onclick="openEditorModal('encSw', 0)">[ NORM ]</div>
 
-                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditor('enc', 0)"><div class="enc-id">ENC</div><div class="btn-lbl-n" id="lbl-enc-n" style="color:#111; text-shadow:none;">Off</div><div class="btn-lbl-div" id="div-enc" style="background:#555;"></div><div class="btn-lbl-s" id="lbl-enc-s" style="color:#444; text-shadow:none;">Off</div></div>
-                    <div class="btn-unit" id="hw-B11" onclick="openEditor('btn', 10)"><div class="led-strip" id="led-b10"></div><div class="btn-id">B11</div><div class="btn-lbl-n" id="lbl-b10-n">Off</div><div class="btn-lbl-div" id="div-b10"></div><div class="btn-lbl-s" id="lbl-b10-s">Off</div></div>
-                    <div class="btn-unit" id="hw-B12" onclick="openEditor('btn', 11)"><div class="led-strip" id="led-b11"></div><div class="btn-id">B12</div><div class="btn-lbl-n" id="lbl-b11-n">Off</div><div class="btn-lbl-div" id="div-b11"></div><div class="btn-lbl-s" id="lbl-b11-s">Off</div></div>
+                    <div class="knob-unit enc-unit" id="hw-ENC" onclick="openEditorModal('enc', 0)"><div class="enc-id">ENC</div><div class="btn-lbl-n" id="lbl-enc-n" style="color:#111; text-shadow:none;">Off</div><div class="btn-lbl-div" id="div-enc" style="background:#555;"></div><div class="btn-lbl-s" id="lbl-enc-s" style="color:#444; text-shadow:none;">Off</div></div>
+                    <div class="btn-unit" id="hw-B11" onclick="openEditorModal('btn', 10)"><div class="led-strip" id="led-b10" title="L11: Detak Profil"></div><div class="btn-id">B11</div><div class="btn-lbl-n" id="lbl-b10-n">Off</div><div class="btn-lbl-div" id="div-b10"></div><div class="btn-lbl-s" id="lbl-b10-s">Off</div></div>
+                    <div class="btn-unit" id="hw-B12" onclick="openEditorModal('btn', 11)"><div class="led-strip" id="led-b11" title="L12: Shift Indicator"></div><div class="btn-id">B12</div><div class="btn-lbl-n" id="lbl-b11-n">Off</div><div class="btn-lbl-div" id="div-b11"></div><div class="btn-lbl-s" id="lbl-b11-s">Off</div></div>
 
-                    <div class="knob-unit pot-unit" id="hw-P1" onclick="openEditor('pot', 0)"><div class="pot-id">P1</div><div class="btn-lbl-n" id="lbl-p0-n">CC</div><div class="btn-lbl-div" id="div-p0"></div><div class="btn-lbl-s" id="lbl-p0-s">CC</div></div>
-                    <div class="knob-unit pot-unit" id="hw-P2" onclick="openEditor('pot', 1)"><div class="pot-id">P2</div><div class="btn-lbl-n" id="lbl-p1-n">CC</div><div class="btn-lbl-div" id="div-p1"></div><div class="btn-lbl-s" id="lbl-p1-s">CC</div></div>
-                    <div class="knob-unit pot-unit" id="hw-P3" onclick="openEditor('pot', 2)"><div class="pot-id">P3</div><div class="btn-lbl-n" id="lbl-p2-n">CC</div><div class="btn-lbl-div" id="div-p2"></div><div class="btn-lbl-s" id="lbl-p2-s">CC</div></div>
-                    <div class="knob-unit pot-unit" id="hw-P4" onclick="openEditor('pot', 3)"><div class="pot-id">P4</div><div class="btn-lbl-n" id="lbl-p3-n">CC</div><div class="btn-lbl-div" id="div-p3"></div><div class="btn-lbl-s" id="lbl-p3-s">CC</div></div>
-                    <div class="knob-unit pot-unit" id="hw-P5" onclick="openEditor('pot', 4)"><div class="pot-id">P5</div><div class="btn-lbl-n" id="lbl-p4-n">CC</div><div class="btn-lbl-div" id="div-p4"></div><div class="btn-lbl-s" id="lbl-p4-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P1" onclick="openEditorModal('pot', 0)"><div class="pot-id">P1</div><div class="btn-lbl-n" id="lbl-p0-n">CC</div><div class="btn-lbl-div" id="div-p0"></div><div class="btn-lbl-s" id="lbl-p0-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P2" onclick="openEditorModal('pot', 1)"><div class="pot-id">P2</div><div class="btn-lbl-n" id="lbl-p1-n">CC</div><div class="btn-lbl-div" id="div-p1"></div><div class="btn-lbl-s" id="lbl-p1-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P3" onclick="openEditorModal('pot', 2)"><div class="pot-id">P3</div><div class="btn-lbl-n" id="lbl-p2-n">CC</div><div class="btn-lbl-div" id="div-p2"></div><div class="btn-lbl-s" id="lbl-p2-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P4" onclick="openEditorModal('pot', 3)"><div class="pot-id">P4</div><div class="btn-lbl-n" id="lbl-p3-n">CC</div><div class="btn-lbl-div" id="div-p3"></div><div class="btn-lbl-s" id="lbl-p3-s">CC</div></div>
+                    <div class="knob-unit pot-unit" id="hw-P5" onclick="openEditorModal('pot', 4)"><div class="pot-id">P5</div><div class="btn-lbl-n" id="lbl-p4-n">CC</div><div class="btn-lbl-div" id="div-p4"></div><div class="btn-lbl-s" id="lbl-p4-s">CC</div></div>
                     
                     <div class="btn-row row-1">
-                        <div class="btn-unit" onclick="openEditor('btn', 0)"><div class="led-strip" id="led-b0"></div><div class="btn-id">B1</div><div class="btn-lbl-n" id="lbl-b0-n">Off</div><div class="btn-lbl-div" id="div-b0"></div><div class="btn-lbl-s" id="lbl-b0-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 1)"><div class="led-strip" id="led-b1"></div><div class="btn-id">B2</div><div class="btn-lbl-n" id="lbl-b1-n">Off</div><div class="btn-lbl-div" id="div-b1"></div><div class="btn-lbl-s" id="lbl-b1-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 2)"><div class="led-strip" id="led-b2"></div><div class="btn-id">B3</div><div class="btn-lbl-n" id="lbl-b2-n">Off</div><div class="btn-lbl-div" id="div-b2"></div><div class="btn-lbl-s" id="lbl-b2-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 3)"><div class="led-strip" id="led-b3"></div><div class="btn-id">B4</div><div class="btn-lbl-n" id="lbl-b3-n">Off</div><div class="btn-lbl-div" id="div-b3"></div><div class="btn-lbl-s" id="lbl-b3-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 4)"><div class="led-strip" id="led-b4"></div><div class="btn-id">B5</div><div class="btn-lbl-n" id="lbl-b4-n">Off</div><div class="btn-lbl-div" id="div-b4"></div><div class="btn-lbl-s" id="lbl-b4-s">Off</div></div>
+                        <!-- LED Baris Tengah (L1-L5): Dedicated Absolute Pot Indicator -->
+                        <div class="btn-unit" onclick="openEditorModal('btn', 0)"><div class="led-strip" id="led-b0" title="L1: Indikator Potensio"></div><div class="btn-id">B1</div><div class="btn-lbl-n" id="lbl-b0-n">Off</div><div class="btn-lbl-div" id="div-b0"></div><div class="btn-lbl-s" id="lbl-b0-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 1)"><div class="led-strip" id="led-b1" title="L2: Indikator Potensio"></div><div class="btn-id">B2</div><div class="btn-lbl-n" id="lbl-b1-n">Off</div><div class="btn-lbl-div" id="div-b1"></div><div class="btn-lbl-s" id="lbl-b1-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 2)"><div class="led-strip" id="led-b2" title="L3: Indikator Potensio"></div><div class="btn-id">B3</div><div class="btn-lbl-n" id="lbl-b2-n">Off</div><div class="btn-lbl-div" id="div-b2"></div><div class="btn-lbl-s" id="lbl-b2-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 3)"><div class="led-strip" id="led-b3" title="L4: Indikator Potensio"></div><div class="btn-id">B4</div><div class="btn-lbl-n" id="lbl-b3-n">Off</div><div class="btn-lbl-div" id="div-b3"></div><div class="btn-lbl-s" id="lbl-b3-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 4)"><div class="led-strip" id="led-b4" title="L5: Indikator Potensio"></div><div class="btn-id">B5</div><div class="btn-lbl-n" id="lbl-b4-n">Off</div><div class="btn-lbl-div" id="div-b4"></div><div class="btn-lbl-s" id="lbl-b4-s">Off</div></div>
                     </div>
                     
                     <div class="btn-row row-2">
-                        <div class="btn-unit" onclick="openEditor('btn', 5)"><div class="led-strip" id="led-b5"></div><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div" id="div-b5"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 6)"><div class="led-strip" id="led-b6"></div><div class="btn-id">B7</div><div class="btn-lbl-n" id="lbl-b6-n">Off</div><div class="btn-lbl-div" id="div-b6"></div><div class="btn-lbl-s" id="lbl-b6-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 7)"><div class="led-strip" id="led-b7"></div><div class="btn-id">B8</div><div class="btn-lbl-n" id="lbl-b7-n">Off</div><div class="btn-lbl-div" id="div-b7"></div><div class="btn-lbl-s" id="lbl-b7-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 8)"><div class="led-strip" id="led-b8"></div><div class="btn-id">B9</div><div class="btn-lbl-n" id="lbl-b8-n">Off</div><div class="btn-lbl-div" id="div-b8"></div><div class="btn-lbl-s" id="lbl-b8-s">Off</div></div>
-                        <div class="btn-unit" onclick="openEditor('btn', 9)"><div class="led-strip" id="led-b9"></div><div class="btn-id">B10</div><div class="btn-lbl-n" id="lbl-b9-n">Off</div><div class="btn-lbl-div" id="div-b9"></div><div class="btn-lbl-s" id="lbl-b9-s">Off</div></div>
+                        <!-- LED Baris Bawah (L6-L10): Bottom Pure Idle Animation Zone -->
+                        <div class="btn-unit" onclick="openEditorModal('btn', 5)"><div class="led-strip" id="led-b5" title="L6: Animasi Bawah"></div><div class="btn-id">B6</div><div class="btn-lbl-n" id="lbl-b5-n">Off</div><div class="btn-lbl-div" id="div-b5"></div><div class="btn-lbl-s" id="lbl-b5-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 6)"><div class="led-strip" id="led-b6" title="L7: Animasi Bawah"></div><div class="btn-id">B7</div><div class="btn-lbl-n" id="lbl-b6-n">Off</div><div class="btn-lbl-div" id="div-b6"></div><div class="btn-lbl-s" id="lbl-b6-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 7)"><div class="led-strip" id="led-b7" title="L8: Animasi Bawah"></div><div class="btn-id">B8</div><div class="btn-lbl-n" id="lbl-b7-n">Off</div><div class="btn-lbl-div" id="div-b7"></div><div class="btn-lbl-s" id="lbl-b7-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 8)"><div class="led-strip" id="led-b8" title="L9: Animasi Bawah"></div><div class="btn-id">B9</div><div class="btn-lbl-n" id="lbl-b8-n">Off</div><div class="btn-lbl-div" id="div-b8"></div><div class="btn-lbl-s" id="lbl-b8-s">Off</div></div>
+                        <div class="btn-unit" onclick="openEditorModal('btn', 9)"><div class="led-strip" id="led-b9" title="L10: Animasi Bawah"></div><div class="btn-id">B10</div><div class="btn-lbl-n" id="lbl-b9-n">Off</div><div class="btn-lbl-div" id="div-b9"></div><div class="btn-lbl-s" id="lbl-b9-s">Off</div></div>
                     </div>
                 </div>
             </div>
 
+            <!-- COMPACT ONE-PAGE PANEL KANAN -->
             <div class="canvas-right-pane">
-                <div class="led-box">
-                    <h4>Layer Atas (P1 - P5)</h4>
+                <div class="led-tab-bar">
+                    <button class="led-sub-tab active" onclick="switchSubTab('encoder', this)">Encoder</button>
+                    <button class="led-sub-tab" onclick="switchSubTab('potensio', this)">Potensio</button>
+                    <button class="led-sub-tab" onclick="switchSubTab('animasi', this)">Animasi</button>
+                    <button class="led-sub-tab" onclick="switchSubTab('samping', this)">Samping</button>
+                    <button class="led-sub-tab" onclick="switchSubTab('panic', this)">Panic</button>
+                </div>
+
+                <div id="tab-content-encoder" class="led-tab-content led-box">
+                    <h4>Blok 1: Indikator Global & Encoder (LA1 - LA5)</h4>
                     <div class="compact-row">
                         <div class="compact-col" style="flex: 2;">
-                            <label>Brightness Atas <span id="bright-top-val" class="badge-percent">100%</span></label>
+                            <label>Kecerahan Atas <span id="bright-top-val" class="badge-percent">100%</span></label>
                             <div class="slider-wrapper"><input type="range" id="ui-bright-top" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightTop', this.value)"></div>
                         </div>
                         <div class="compact-col" style="flex: 1;">
-                            <label>Color</label>
+                            <label>Warna Enkoder</label>
                             <input type="color" id="ui-color-top" onchange="autoSave()">
                         </div>
                     </div>
-                </div>
-
-                <div class="led-box" style="flex: 1; justify-content: space-between;">
-                    <h4>Layer Bawah (B1 - B12)</h4>
+                    
                     <div class="compact-row">
                         <div class="compact-col">
-                            <label>Brightness <span id="bright-bot-val" class="badge-percent">100%</span></label>
+                            <label>Pilihan Animasi Atas (LA1 - LA5)</label>
+                            <select id="ui-anim-top" class="neo-select" onchange="autoSave()">
+                                <option value="0">Statis (Gradasi Base - Target)</option>
+                                <option value="1">Wave (Color)</option>
+                                <option value="2">Sweep (Color)</option>
+                                <option value="3">Breath (Color)</option>
+                                <option value="4">Flame (Color)</option>
+                                <option value="5">Rainbow (RGB)</option>
+                                <option value="6">Raindrop (Random)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="compact-row" style="margin-top: 4px;">
+                        <label class="cb-container">
+                            <input type="checkbox" id="ui-idle-top-en" class="cb-neo" onchange="autoSave()">
+                            LA1 - LA5 Ikut Menari Saat Idle
+                        </label>
+                    </div>
+                </div>
+
+                <div id="tab-content-potensio" class="led-tab-content led-box hidden">
+                    <h4>Blok 2: Potentiometer Zone (L1 - L5)</h4>
+                    <div class="compact-info">
+                        L1-L5 murni menunjukkan visualisasi fader P1-P5. Putar fader fisik untuk melihat perubahan warna real-time!
+                    </div>
+                    <div class="color-grid-compact" style="margin-top: 4px;">
+                        <div class="color-item-compact"><label>Active (Tekan)</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Standby Dasar</label><input type="color" id="ui-color-base-mid" onchange="autoSave()"></div>
+                        <div class="color-item-compact id-shift" id="col-shift-wrap"><label>Shift Layer</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
+                    </div>
+                    <div class="compact-row" style="margin-top: 4px;">
+                        <label class="cb-container">
+                            <input type="checkbox" id="ui-idle-mid-en" class="cb-neo" onchange="autoSave()">
+                            L1 - L5 Ikut Menari Saat Idle & Nilai Pot 0-2
+                        </label>
+                    </div>
+                </div>
+
+                <div id="tab-content-animasi" class="led-tab-content led-box hidden">
+                    <h4>Blok 3: Pure Idle Animation (L6 - L10)</h4>
+                    <div class="compact-row">
+                        <div class="compact-col">
+                            <label>Kecerahan Bawah <span id="bright-bot-val" class="badge-percent">100%</span></label>
                             <div class="slider-wrapper"><input type="range" id="ui-bright-bot" min="0" max="100" step="10" value="100" oninput="updateLEDParam('brightBot', this.value)"></div>
                         </div>
                         <div class="compact-col">
-                            <label>Speed <span id="speed-bot-val" class="badge-percent">50%</span></label>
+                            <label>Kecepatan <span id="speed-bot-val" class="badge-percent">50%</span></label>
                             <div class="slider-wrapper"><input type="range" id="ui-speed-bot" min="1" max="100" step="1" value="50" oninput="updateLEDParam('speedBot', this.value)"></div>
                         </div>
                     </div>
                     
                     <div class="compact-row">
                         <div class="compact-col">
-                            <label>Animasi Bawah</label>
+                            <label>Pilihan Animasi Bawah</label>
                             <select id="ui-anim" class="neo-select" onchange="autoSave()">
                                 <option value="0">Statis (Gradasi Base - Target)</option>
                                 <option value="1">Wave (Color)</option>
@@ -327,15 +414,28 @@
                     </div>
 
                     <div class="color-grid-compact">
-                        <div class="color-item-compact"><label>Base</label><input type="color" id="ui-color-base" onchange="autoSave()"></div>
-                        <div class="color-item-compact"><label>Target</label><input type="color" id="ui-color-target" onchange="autoSave()"></div>
-                        <div class="color-item-compact"><label>Active</label><input type="color" id="ui-color-active" onchange="autoSave()"></div>
-                        <div class="color-item-compact id-shift" id="col-shift-wrap"><label>Shift</label><input type="color" id="ui-color-shift" onchange="autoSave()"></div>
-                        <div class="color-item-compact id-b6" id="col-b6-wrap"><label>B12 Ind</label><input type="color" id="ui-color-b6" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Base Color</label><input type="color" id="ui-color-base" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Target Color</label><input type="color" id="ui-color-target" onchange="autoSave()"></div>
                     </div>
                 </div>
 
-                <div class="led-box">
+                <div id="tab-content-samping" class="led-tab-content led-box hidden">
+                    <h4>Blok 4: System & Samping Zone (L11 - L12)</h4>
+                    <div class="color-grid-compact">
+                        <div class="color-item-compact"><label>Detak B11</label><input type="color" id="ui-color-b11" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Standby B11</label><input type="color" id="ui-color-base-b11" onchange="autoSave()"></div>
+                        <div class="color-item-compact"><label>Standby B12</label><input type="color" id="ui-color-b12" onchange="autoSave()"></div>
+                        <div class="color-item-compact id-shift" id="col-b6-wrap" style="display:none;"><label>B12 Ind (Old)</label><input type="color" id="ui-color-b6"></div>
+                    </div>
+                    <div class="compact-row" style="margin-top: 4px;">
+                        <label class="cb-container">
+                            <input type="checkbox" id="ui-idle-side-en" class="cb-neo" onchange="autoSave()">
+                            L11 - L12 Ikut Menari Saat Idle
+                        </label>
+                    </div>
+                </div>
+
+                <div id="tab-content-panic" class="led-tab-content led-box hidden">
                     <h4>Smart Panic Settings</h4>
                     <div class="compact-row">
                         <div class="compact-col">
@@ -385,7 +485,10 @@
 
 <div id="modal" class="modal">
     <div class="modal-content">
-        <div class="modal-header"><span id="m-title">EDITOR</span><span onclick="closeModal()" style="cursor:pointer">[X]</span></div>
+        <div class="modal-header">
+            <span id="m-title">EDITOR</span>
+            <span onclick="closeEditorModal()" style="cursor:pointer; background: #ff4757; color: #fff; padding: 4px 12px; border-radius: 6px; font-weight: bold;">X</span>
+        </div>
         <div class="modal-body">
             <div class="layer-unit">
                 <div class="layer-lbl">NORMAL LAYER</div>
@@ -403,10 +506,7 @@
                 </div>
                 <div id="n-ui-short" class="hidden">
                     <div class="mod-checks">
-                        <label><input type="checkbox" id="n-mod-ctrl"> CTRL</label>
-                        <label><input type="checkbox" id="n-mod-shift"> SHIFT</label>
-                        <label><input type="checkbox" id="n-mod-alt"> ALT</label>
-                        <label><input type="checkbox" id="n-mod-win"> WIN</label>
+                        <label><input type="checkbox" id="n-mod-ctrl"> CTRL</label><label><input type="checkbox" id="n-mod-shift"> SHIFT</label><label><input type="checkbox" id="n-mod-alt"> ALT</label><label><input type="checkbox" id="n-mod-win"> WIN</label>
                     </div>
                     <div class="row-edit">
                         <button type="button" id="n-key-btn" class="custom-key-btn" onclick="openKeyPicker('n-key')">- PILIH KEY -</button>
@@ -421,10 +521,7 @@
                 </div>
                 <div id="n-ui-enc-short" class="hidden">
                     <div class="mod-checks">
-                        <label><input type="checkbox" id="n-enc-mod-ctrl"> CTRL</label>
-                        <label><input type="checkbox" id="n-enc-mod-shift"> SHIFT</label>
-                        <label><input type="checkbox" id="n-enc-mod-alt"> ALT</label>
-                        <label><input type="checkbox" id="n-enc-mod-win"> WIN</label>
+                        <label><input type="checkbox" id="n-enc-mod-ctrl"> CTRL</label><label><input type="checkbox" id="n-enc-mod-shift"> SHIFT</label><label><input type="checkbox" id="n-enc-mod-alt"> ALT</label><label><input type="checkbox" id="n-enc-mod-win"> WIN</label>
                     </div>
                     <div class="row-edit">
                         <button type="button" id="n-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('n-enc-l')">KIRI</button><input type="hidden" id="n-enc-l" value="0">
@@ -475,10 +572,7 @@
                 </div>
                 <div id="s-ui-short" class="hidden">
                     <div class="mod-checks">
-                        <label><input type="checkbox" id="s-mod-ctrl"> CTRL</label>
-                        <label><input type="checkbox" id="s-mod-shift"> SHIFT</label>
-                        <label><input type="checkbox" id="s-mod-alt"> ALT</label>
-                        <label><input type="checkbox" id="s-mod-win"> WIN</label>
+                        <label><input type="checkbox" id="s-mod-ctrl"> CTRL</label><label><input type="checkbox" id="s-mod-shift"> SHIFT</label><label><input type="checkbox" id="s-mod-alt"> ALT</label><label><input type="checkbox" id="s-mod-win"> WIN</label>
                     </div>
                     <div class="row-edit">
                         <button type="button" id="s-key-btn" class="custom-key-btn" onclick="openKeyPicker('s-key')">- PILIH KEY -</button>
@@ -493,10 +587,7 @@
                 </div>
                 <div id="s-ui-enc-short" class="hidden">
                     <div class="mod-checks">
-                        <label><input type="checkbox" id="s-enc-mod-ctrl"> CTRL</label>
-                        <label><input type="checkbox" id="s-enc-mod-shift"> SHIFT</label>
-                        <label><input type="checkbox" id="s-enc-mod-alt"> ALT</label>
-                        <label><input type="checkbox" id="s-enc-mod-win"> WIN</label>
+                        <label><input type="checkbox" id="s-enc-mod-ctrl"> CTRL</label><label><input type="checkbox" id="s-enc-mod-shift"> SHIFT</label><label><input type="checkbox" id="s-enc-mod-alt"> ALT</label><label><input type="checkbox" id="s-enc-mod-win"> WIN</label>
                     </div>
                     <div class="row-edit">
                         <button type="button" id="s-enc-l-btn" class="custom-key-btn" onclick="openKeyPicker('s-enc-l')">KIRI</button><input type="hidden" id="s-enc-l" value="0">
@@ -530,14 +621,14 @@
                     <div id="s-mac-sub" class="hidden"><div class="row-edit"><input type="text" id="s-mac-txt2" class="neo-input" placeholder="Lanjutan..."></div></div>
                 </div>
             </div>
-            <button class="btn-action btn-main" style="margin-top:5px; background: #2ed573; color: #111; border-color: #2ed573;" onclick="saveConfig()">SIMPAN PERUBAHAN</button>
+            <button class="btn-action btn-main" style="margin-top:5px; background: #2ed573; color: #111; border-color: #2ed573;" onclick="saveEditorConfig()">SIMPAN PERUBAHAN</button>
         </div>
     </div>
 </div>
 
 <div id="keyPickerModal" class="modal" style="z-index: 150;">
     <div class="modal-content" style="width: 800px; padding: 20px;">
-        <div class="modal-header" style="margin-bottom: 15px; font-size: 1.2rem;"><span>PILIH KEYBOARD KEY</span><span onclick="closeKeyPicker()" style="cursor:pointer">[X]</span></div>
+        <div class="modal-header" style="margin-bottom: 15px; font-size: 1.2rem;"><span>PILIH KEYBOARD KEY</span><span onclick="closeKeyPicker()" style="cursor:pointer; background: #ff4757; color: #fff; padding: 4px 12px; border-radius: 6px; font-weight: bold;">X</span></div>
         <div id="keyPickerContainer"></div>
     </div>
 </div>
@@ -546,127 +637,125 @@
 <input type="file" id="f-import" hidden onchange="handleImport(this)">
 
 <script>
-    const makeAct4 = () => ({m:0, v1:0, v2:0, v3:0, lbl:"", seq:[0,0,0,0,0,0,0,0,0,0]}); 
-    const makeAct10 = () => ({m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:""});
+    const LOGIC_TO_PHYS = [1, 2, 3, 4, 5, 10, 9, 8, 7, 6, 0, 11, 16, 15, 14, 13, 12];
+    const LED_MAP_BTN = [1, 2, 3, 4, 5, 10, 9, 8, 7, 6, 0, 11];
+    const LED_MAP_POT = [16, 15, 14, 13, 12];
 
-    // Blueprint saku-MIDI RC2 (Dual Profile A & B)
+    const makeAct4 = () => ({m:0, v1:0, v2:0, v3:0, lbl:"", seq:[0,0,0,0,0,0,0,0,0,0]}); 
+    const makeAct10 = () => ({m:0, v1:0, v2:0, v3:0, t1:"", t2:"", lbl:"", seq:[0,0,0,0,0,0,0,0,0,0]});
+
     let cfg = {
-        panicSource: 0, // Offset 3
-        panicMode: 119, // Offset 6 (v1.3 - Default custom Panic CC 119)
-        panicChan: 1, // Offset 7 (v1.3 - Hardcoded to 1)
-        autoResetB: 0, // Offset 4
-        autoResetA: 0, // Offset 5
-        profilB: { // Eks Bank 0
-            btn: Array.from({length:12}, makeAct4), // B1-B12 fully configurable
+        panicSource: 0, panicMode: 119, panicChan: 1, autoResetB: 0, autoResetA: 0, 
+        profilB: { 
+            btn: Array.from({length:12}, makeAct4), 
             pot: Array.from({length:5}, (_,i) => { let a=makeAct4(); a.m=2; a.v1=1; a.v2=71+i; return a; }), 
-            enc: makeAct4(), 
-            encSw: makeAct4(), // Tambahan memori khusus Encoder Switch
-            brightTop: 100, brightBot: 100, 
-            animTop: 0, animBot: 1, 
-            speedTop: 50, speedBot: 50, 
-            colTop: [0,255,255], colActive: [255,255,255], 
-            colBaseBot: [0,255,255], colTargetBot: [255,0,255]
+            enc: makeAct4(), encSw: makeAct4(), brightTop: 100, brightBot: 100, animTop: 0, animBot: 1, speedTop: 50, speedBot: 50, 
+            colTop: [0,255,255], colActive: [255,255,255], colBaseBot: [0,255,255], colTargetBot: [255,0,255],
+            idleTopEnabled: 1, idleMidEnabled: 1, idleSideEnabled: 1, colB11: [0,255,255], colB12: [255,128,0], colBaseMid: [0,255,255], colBaseB11: [0,0,0]
         },
-        profilA: { // Eks Bank 1
+        profilA: { 
             btn1_2: Array.from({length:2}, () => Array.from({length:2}, makeAct4)), 
             btn3_5: Array.from({length:2}, () => Array.from({length:3}, makeAct10)), 
             btn6_11: Array.from({length:2}, () => Array.from({length:6}, makeAct4)), 
             pot: Array.from({length:2}, () => Array.from({length:5}, (_,i) => { let a=makeAct4(); a.m=2; a.v1=1; a.v2=71+i; return a; })), 
-            enc: Array.from({length:2}, makeAct4), 
-            encSw: [makeAct4(), makeAct4()], // Tambahan memori khusus Encoder Switch
-            brightTop: 100, brightBot: 100, 
-            animTop: 0, animBot: 1, 
-            speedTop: 50, speedBot: 50, 
-            colTop: [255,0,255], colActive: [255,255,255], colShift: [255,128,0], 
-            colBaseBot: [255,0,255], colTargetBot: [0,255,255], colB6: [0,255,255]
+            enc: Array.from({length:2}, makeAct4), encSw: [makeAct4(), makeAct4()], brightTop: 100, brightBot: 100, animTop: 0, animBot: 1, speedTop: 50, speedBot: 50, 
+            colTop: [255,0,255], colActive: [255,255,255], colShift: [255,128,0], colBaseBot: [255,0,255], colTargetBot: [0,255,255], colB6: [0,255,255],
+            idleTopEnabled: 1, idleMidEnabled: 1, idleSideEnabled: 1, colB11: [0,255,255], colB12: [255,128,0], colBaseMid: [0,255,255], colBaseB11: [0,0,0]
         }
     };
     
     let curB = 0, curT = '', curI = 0, port, serialReader, currentKeyTarget = ''; 
+    let simulatedPotSteps = [0, 0, 0, 0, 0]; 
 
-    // HSV to RGB Conversion Helper
     function hsvToRgb(h, s, v) {
-        let r, g, b;
-        let i = Math.floor(h * 6);
-        let f = h * 6 - i;
-        let p = v * (1 - s);
-        let q = v * (1 - f * s);
-        let t = v * (1 - (1 - f) * s);
+        let r, g, b, i = Math.floor(h * 6), f = h * 6 - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
         switch (i % 6) {
-            case 0: r = v; g = t; b = p; break;
-            case 1: r = q; g = v; b = p; break;
-            case 2: r = p; g = v; b = t; break;
-            case 3: r = p; g = q; b = v; break;
-            case 4: r = t; g = p; b = v; break;
-            case 5: r = v; g = p; b = q; break;
+            case 0: r = v; g = t; b = p; break; case 1: r = q; g = v; b = p; break; case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break; case 4: r = t; g = p; b = v; break; case 5: r = v; g = p; b = q; break;
         }
         return [r * 255, g * 255, b * 255];
     }
 
-    // v1.3 - Fungsi sinkronisasi otomatis checkbox Auto-Reset agar tidak saling menimpa
     function syncAutoResetCheckboxes(sourcePrefix) {
         const checked = document.getElementById(`${sourcePrefix}-auto-reset`).checked;
         const targetPrefix = sourcePrefix === 'n' ? 's' : 'n';
         const targetEl = document.getElementById(`${targetPrefix}-auto-reset`);
-        if (targetEl) {
-            targetEl.checked = checked;
-        }
+        if (targetEl) targetEl.checked = checked;
     }
 
-    function toggleTheme() { const doc = document.documentElement; const cur = doc.getAttribute('data-theme'); const next = cur === 'dark' ? 'light' : 'dark'; doc.setAttribute('data-theme', next); localStorage.setItem('baysMK2Theme', next); }
-    function showToast(msg) { const o = document.getElementById('toastOverlay'); document.getElementById('toastMessage').innerText = msg; o.classList.add('active'); setTimeout(()=>o.classList.remove('active'), 2500); }
-    function markUnsaved() { const b = document.getElementById('btn-push'); b.classList.add('unsaved'); b.innerText = "⚠️ UNSAVED CHANGES!"; }
-    function markSaved() { const b = document.getElementById('btn-push'); b.classList.remove('unsaved'); b.innerText = "⚡ PUSH TO DEVICE"; }
+    function toggleTheme() {
+        const doc = document.documentElement;
+        const next = doc.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        doc.setAttribute('data-theme', next);
+        localStorage.setItem('baysMK2Theme', next);
+    }
+
+    function showToast(msg) {
+        const o = document.getElementById('toastOverlay');
+        document.getElementById('toastMessage').innerText = msg;
+        o.classList.add('active');
+        setTimeout(() => o.classList.remove('active'), 2500);
+    }
+
+    function markUnsaved() {
+        const b = document.getElementById('btn-push');
+        b.classList.add('unsaved');
+        b.innerText = "⚠️ UNSAVED CHANGES!";
+    }
+
+    function markSaved() {
+        const b = document.getElementById('btn-push');
+        b.classList.remove('unsaved');
+        b.innerText = "⚡ PUSH TO DEVICE";
+    }
+
+    function switchSubTab(tabName, btnEl) {
+        document.querySelectorAll('.led-tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.led-sub-tab').forEach(el => el.classList.remove('active'));
+        let target = document.getElementById(`tab-content-${tabName}`);
+        if(target) target.classList.remove('hidden');
+        if(btnEl) btnEl.classList.add('active');
+    }
 
     window.onload = () => { 
         const savedTheme = localStorage.getItem('baysMK2Theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         buildOptions(); buildKeyPicker(); loadAutoSave(); 
-        
-        // Start Real-Time Web Animation Generator
         requestAnimationFrame(renderMockupLoop);
     };
 
     function getKeyDisplayLabel(val) {
         if(val == 0) return 'NONE'; if(val == 234) return 'NUM 0'; if(val >= 225 && val <= 233) return 'NUM ' + (val-224); if(val >= 194 && val <= 205) return 'F' + (val-193); if(val >= 97 && val <= 122) return String.fromCharCode(val-32).toUpperCase(); if(val >= 65 && val <= 90) return String.fromCharCode(val).toUpperCase();
         const navMap = {176:'ENT',177:'ESC',178:'BKS',179:'TAB',32:'SPC',218:'UP',217:'DWN',216:'LFT',215:'RGT'};
-        if(navMap[val]) return navMap[val]; return String.fromCharCode(val);
+        return navMap[val] || String.fromCharCode(val);
     }
 
     function buildOptions() {
         ['n','s'].forEach(l => { 
             let ch = ''; for(let i=1; i<=16; i++) ch += `<option value="${i}">CH ${i}</option>`; 
-            if(document.getElementById(`${l}-chan`)) document.getElementById(`${l}-chan`).innerHTML = ch; 
-            if(document.getElementById(`${l}-seq-chan`)) document.getElementById(`${l}-seq-chan`).innerHTML = ch;
+            let ec = document.getElementById(`${l}-chan`); if(ec) ec.innerHTML = ch; 
+            let esc = document.getElementById(`${l}-seq-chan`); if(esc) esc.innerHTML = ch;
 
             let htmlLK = '', htmlLM = '', htmlRK = '', htmlRM = '';
             for(let i=0; i<5; i++) {
                 htmlLK += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">L${i+1}</span><button type="button" id="${l}-seq-k-${i}-btn" class="custom-key-btn" style="padding:4px; font-size:0.7rem;" onclick="openKeyPicker('${l}-seq-k-${i}')">NONE</button><input type="hidden" id="${l}-seq-k-${i}" value="0"></div>`;
                 htmlLM += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">L${i+1}</span><input type="number" id="${l}-seq-m-${i}" class="neo-input" style="padding:4px; font-size:0.75rem;" placeholder="CC Num" min="0" max="127"></div>`;
-                htmlRK += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">R${i+1}</span><button type="button" id="${l}-seq-k-${i+5}-btn" class="custom-key-btn" style="padding:4px; font-size:0.7rem;" onclick="openKeyPicker('${l}-seq-k-${i+5}')">NONE</button><input type="hidden" id="${l}-seq-k-${i+5}" value="0"></div>`;
+                htmlRK += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">R${i+1}</span><button type="button" id="${l}-seq-k-${i+5}-btn" class="custom-key-btn" style="padding:4px; font-size:0.75rem;" onclick="openKeyPicker('${l}-seq-k-${i+5}')">NONE</button><input type="hidden" id="${l}-seq-k-${i+5}" value="0"></div>`;
                 htmlRM += `<div class="row-edit" style="margin-top:4px;"><span style="color:#aaa; font-size:0.7rem; width:15px; display:inline-block;">R${i+1}</span><input type="number" id="${l}-seq-m-${i+5}" class="neo-input" style="padding:4px; font-size:0.75rem;" placeholder="CC Num" min="0" max="127"></div>`;
             }
-            if(document.getElementById(`${l}-seq-l-k`)) document.getElementById(`${l}-seq-l-k`).innerHTML = htmlLK;
-            if(document.getElementById(`${l}-seq-l-m`)) document.getElementById(`${l}-seq-l-m`).innerHTML = htmlLM;
-            if(document.getElementById(`${l}-seq-r-k`)) document.getElementById(`${l}-seq-r-k`).innerHTML = htmlRK;
-            if(document.getElementById(`${l}-seq-r-m`)) document.getElementById(`${l}-seq-r-m`).innerHTML = htmlRM;
+            let elk = document.getElementById(`${l}-seq-l-k`); if(elk) elk.innerHTML = htmlLK;
+            let elm = document.getElementById(`${l}-seq-l-m`); if(elm) elm.innerHTML = htmlLM;
+            let erk = document.getElementById(`${l}-seq-r-k`); if(erk) erk.innerHTML = htmlRK;
+            let erm = document.getElementById(`${l}-seq-r-m`); if(erm) erm.innerHTML = htmlRM;
         });
 
         const panicSourceSelect = document.getElementById('ui-panic-source');
-        panicSourceSelect.innerHTML = `
+        if(panicSourceSelect) panicSourceSelect.innerHTML = `
             <option value="0">DISABLED / OFF</option>
-            <option value="1">B1</option>
-            <option value="2">B2</option>
-            <option value="3">B3</option>
-            <option value="4">B4</option>
-            <option value="5">B5</option>
-            <option value="6">B6</option>
-            <option value="7">B7</option>
-            <option value="8">B8</option>
-            <option value="9">B9</option>
-            <option value="10">B10</option>
-            <option value="11">B11</option>
-            <option value="12">B12</option>
+            <option value="1">B1</option><option value="2">B2</option><option value="3">B3</option>
+            <option value="4">B4</option><option value="5">B5</option><option value="6">B6</option>
+            <option value="7">B7</option><option value="8">B8</option><option value="9">B9</option>
+            <option value="10">B10</option><option value="11">B11</option><option value="12">B12</option>
             <option value="13">Encoder Switch</option>
         `;
     }
@@ -679,166 +768,344 @@
         let fkeys = []; for(let i=1;i<=12;i++) fkeys.push({v:193+i, l:`F${i}`}); addGroup('F1 - F12', fkeys);
         let alpha = []; for(let i=65;i<=90;i++) alpha.push({v:i+32, l:String.fromCharCode(i)}); addGroup('ALFABET', alpha);
         let sym = []; '~"()<>!@#$%^&*_+:?-=/?.,'.split('').forEach(s => sym.push({v:s.charCodeAt(0), l:s})); addGroup('SIMBOL', sym);
-        document.getElementById('keyPickerContainer').innerHTML = kpHTML;
+        let el = document.getElementById('keyPickerContainer'); if(el) el.innerHTML = kpHTML;
     }
 
-    function openKeyPicker(targetId) { currentKeyTarget = targetId; document.getElementById('keyPickerModal').style.display = 'flex'; }
-    function closeKeyPicker() { document.getElementById('keyPickerModal').style.display = 'none'; }
-    function selectKey(val) { document.getElementById(`${currentKeyTarget}`).value = val; document.getElementById(`${currentKeyTarget}-btn`).innerText = getKeyDisplayLabel(val); closeKeyPicker(); }
+    function openKeyPicker(targetId) { currentKeyTarget = targetId; let md = document.getElementById('keyPickerModal'); if(md) md.style.display = 'flex'; }
+    function closeKeyPicker() { let md = document.getElementById('keyPickerModal'); if(md) md.style.display = 'none'; }
+    function selectKey(val) { 
+        let tg = document.getElementById(currentKeyTarget); if(tg) tg.value = val; 
+        let tgb = document.getElementById(`${currentKeyTarget}-btn`); if(tgb) tgb.innerText = getKeyDisplayLabel(val); 
+        closeKeyPicker(); 
+    }
     
     function getBankObj(b) { 
         return b === 0 ? cfg.profilB : cfg.profilA; 
     }
 
     function switchBank(b) {
-        curB = b; ['p0','p1'].forEach((id, i) => document.getElementById(id).classList.toggle('active', i===b));
+        curB = b; 
+        let btn0 = document.getElementById('p0'); if(btn0) btn0.classList.toggle('active', 0===b);
+        let btn1 = document.getElementById('p1'); if(btn1) btn1.classList.toggle('active', 1===b);
         let bankObj = getBankObj(b);
 
-        // Update Slider UI
-        document.getElementById('ui-bright-top').value = bankObj.brightTop || 100;
-        document.getElementById('bright-top-val').innerText = (bankObj.brightTop || 100) + '%';
-        document.getElementById('ui-bright-bot').value = bankObj.brightBot || 100;
-        document.getElementById('bright-bot-val').innerText = (bankObj.brightBot || 100) + '%';
-        document.getElementById('ui-anim').value = bankObj.animBot || 0;
-        document.getElementById('ui-speed-bot').value = bankObj.speedBot || 50;
-        document.getElementById('speed-bot-val').innerText = (bankObj.speedBot || 50) + '%';
+        let ubTop = document.getElementById('ui-bright-top'); if(ubTop) ubTop.value = bankObj.brightTop || 100;
+        let vTop = document.getElementById('bright-top-val'); if(vTop) vTop.innerText = (bankObj.brightTop || 100) + '%';
+        let ubBot = document.getElementById('ui-bright-bot'); if(ubBot) ubBot.value = bankObj.brightBot || 100;
+        let vBot = document.getElementById('bright-bot-val'); if(vBot) vBot.innerText = (bankObj.brightBot || 100) + '%';
+        let uAnimTop = document.getElementById('ui-anim-top'); if(uAnimTop) uAnimTop.value = bankObj.animTop || 0;
+        let uAnim = document.getElementById('ui-anim'); if(uAnim) uAnim.value = bankObj.animBot || 0;
+        let uSpd = document.getElementById('ui-speed-bot'); if(uSpd) uSpd.value = bankObj.speedBot || 50;
+        let vSpd = document.getElementById('speed-bot-val'); if(vSpd) vSpd.innerText = (bankObj.speedBot || 50) + '%';
 
-        // Update Color UI
-        document.getElementById('ui-color-top').value = rgbToHex(bankObj.colTop || [0, 255, 255]);
-        document.getElementById('ui-color-base').value = rgbToHex(bankObj.colBaseBot || [0, 255, 255]);
-        document.getElementById('ui-color-target').value = rgbToHex(bankObj.colTargetBot || [255, 0, 255]);
-        document.getElementById('ui-color-active').value = rgbToHex(bankObj.colActive || [255, 255, 255]);
+        let cTop = document.getElementById('ui-color-top'); if(cTop) cTop.value = rgbToHex(bankObj.colTop || [0, 255, 255]);
+        let cBase = document.getElementById('ui-color-base'); if(cBase) cBase.value = rgbToHex(bankObj.colBaseBot || [0, 255, 255]);
+        let cTgt = document.getElementById('ui-color-target'); if(cTgt) cTgt.value = rgbToHex(bankObj.colTargetBot || [255, 0, 255]);
+        let cAct = document.getElementById('ui-color-active'); if(cAct) cAct.value = rgbToHex(bankObj.colActive || [255, 255, 255]);
 
-        // Toggle UI Global
-        document.getElementById('ui-panic-source').value = cfg.panicSource || 0;
-        // v1.3 - Menjamin nilai 0 tidak tertimpa falsy check
-        document.getElementById('ui-panic-mode').value = (cfg.panicMode !== undefined && cfg.panicMode !== null) ? cfg.panicMode : 119;
-        document.getElementById('ui-panic-chan').value = cfg.panicChan || 1;
+        let iTop = document.getElementById('ui-idle-top-en'); if(iTop) iTop.checked = (bankObj.idleTopEnabled === 1 || bankObj.idleTopEnabled === true);
+        let iMid = document.getElementById('ui-idle-mid-en'); if(iMid) iMid.checked = (bankObj.idleMidEnabled === 1 || bankObj.idleMidEnabled === true);
+        let iSide = document.getElementById('ui-idle-side-en'); if(iSide) iSide.checked = (bankObj.idleSideEnabled === 1 || bankObj.idleSideEnabled === true);
+        
+        let cB11 = document.getElementById('ui-color-b11'); if(cB11) cB11.value = rgbToHex(bankObj.colB11 || [0, 255, 255]);
+        let cB12 = document.getElementById('ui-color-b12'); if(cB12) cB12.value = rgbToHex(bankObj.colB12 || [255, 128, 0]);
+
+        let cBaseMid = document.getElementById('ui-color-base-mid'); if(cBaseMid) cBaseMid.value = rgbToHex(bankObj.colBaseMid || [0, 255, 255]);
+        let cBaseB11 = document.getElementById('ui-color-base-b11'); if(cBaseB11) cBaseB11.value = rgbToHex(bankObj.colBaseB11 || [0, 0, 0]);
+
+        let pSrc = document.getElementById('ui-panic-source'); if(pSrc) pSrc.value = cfg.panicSource || 0;
+        let pMod = document.getElementById('ui-panic-mode'); if(pMod) pMod.value = (cfg.panicMode !== undefined && cfg.panicMode !== null) ? cfg.panicMode : 119;
+        let pChn = document.getElementById('ui-panic-chan'); if(pChn) pChn.value = cfg.panicChan || 1;
 
         const colShiftWrap = document.getElementById('col-shift-wrap');
-        const colB6Wrap = document.getElementById('col-b6-wrap');
         const b12Btn = document.getElementById('hw-B12');
 
-        if (b === 0) { // Profil B (Single)
-            colShiftWrap.style.display = 'none';
-            colB6Wrap.style.display = 'none';
-            b12Btn.classList.remove('btn-b12-locked');
-        } else { // Profil A (Dual)
-            colShiftWrap.style.display = 'flex';
-            colB6Wrap.style.display = 'flex';
-            document.getElementById('ui-color-shift').value = rgbToHex(bankObj.colShift || [255, 128, 0]);
-            document.getElementById('ui-color-b6').value = rgbToHex(bankObj.colB6 || [0, 255, 255]);
-            b12Btn.classList.add('btn-b12-locked');
+        if (b === 0) { 
+            if(colShiftWrap) colShiftWrap.style.display = 'none';
+            if(b12Btn) b12Btn.classList.remove('btn-b12-locked');
+        } else { 
+            if(colShiftWrap) colShiftWrap.style.display = 'flex';
+            let cShf = document.getElementById('ui-color-shift'); if(cShf) cShf.value = rgbToHex(bankObj.colShift || [255, 128, 0]);
+            if(b12Btn) b12Btn.classList.add('btn-b12-locked');
         }
         updateAllLabels();
     }
 
-    // REAL-TIME LED GENERATOR ENGINE FOR WEBUI
+    function sinTable_JS(p) {
+        const table = [
+            128, 140, 152, 165, 176, 187, 198, 208, 217, 225, 232, 238, 243, 247, 250, 252,
+            253, 252, 250, 247, 243, 238, 232, 225, 217, 208, 198, 187, 176, 165, 152, 140,
+            128, 115, 103, 90,  79,  68,  57,  47,  38,  30,  23,  17,  12,  8,   5,   3,
+            2,   3,   5,   8,   12,  17,  23,  30,  38,  47,  57,  68,  79,  90,  103, 115
+        ];
+        return table[p & 63];
+    }
+
+    const safeArr = (arr, def) => Array.isArray(arr) ? arr : def;
+    
+    // Pot mirror tracking untuk B12
+    let maxPotTime = 0;
+    let activePot = -1;
+
+    // REAL-TIME LED GENERATOR ENGINE FOR WEBUI (v3.2 FINAL)
     function renderMockupLoop() {
-        let ms = Date.now();
-        let bankObj = getBankObj(curB);
+        try {
+            let ms = Date.now();
+            let bankObj = getBankObj(curB);
 
-        // 1. LAYER ATAS: Statis colTop x brightnessTop
-        let brightTop = (bankObj.brightTop || 100) / 100;
-        let cTop = bankObj.colTop || [0, 255, 255];
-        let rTop = cTop[0] * brightTop, gTop = cTop[1] * brightTop, bTop = cTop[2] * brightTop;
+            let brightTop = (bankObj.brightTop || 100) / 100;
+            let brightBot = (bankObj.brightBot || 100) / 100;
+            
+            let cTop = safeArr(bankObj.colTop, [0, 255, 255]);
+            let colBase = safeArr(bankObj.colBaseBot, [0, 255, 255]);
+            let colTarget = safeArr(bankObj.colTargetBot, [255, 0, 255]);
+            let colActive = safeArr(bankObj.colActive, [255, 255, 255]);
 
-        for (let i = 0; i < 5; i++) {
-            let el = document.getElementById(`led-p${i}`);
-            if (el) {
-                el.style.backgroundColor = `rgb(${rTop}, ${gTop}, ${bTop})`;
-                el.style.boxShadow = `0 0 10px rgb(${rTop}, ${gTop}, ${bTop})`;
+            let uAnimTop = document.getElementById('ui-anim-top');
+            let animT = uAnimTop ? parseInt(uAnimTop.value) : 0;
+            let uAnim = document.getElementById('ui-anim');
+            let animB = uAnim ? parseInt(uAnim.value) : 0;
+
+            let speed = (bankObj.speedBot || 50);
+            let sFac = (speed * 2) / 100.0; 
+            let sMs = ms * sFac; 
+
+            let animR_Bot = Array(17).fill(0), animG_Bot = Array(17).fill(0), animB_Bot = Array(17).fill(0);
+            let animR_Top = Array(17).fill(0), animG_Top = Array(17).fill(0), animB_Top = Array(17).fill(0);
+
+            if (!window.mockupFlameBlends) { 
+                window.mockupFlameBlends = Array(17).fill(0.5); 
+                window.mockupFlameTargets = Array(17).fill(0.5); 
+                window.lastFlameUpdate = 0; 
             }
-        }
-
-        // 2. LAYER BAWAH: Simulasi Generator Animasi
-        let brightBot = (bankObj.brightBot || 100) / 100;
-        let speed = (bankObj.speedBot || 50);
-        let sFac = (speed * 2) / 100.0; 
-        let sMs = ms * sFac; 
-        let anim = parseInt(document.getElementById('ui-anim').value);
-
-        let colBase = bankObj.colBaseBot || [0, 255, 255];
-        let colTarget = bankObj.colTargetBot || [255, 0, 255];
-
-        // Generator Setup Animasi 4 (Flame / Sparkle)
-        if (!window.mockupFlameBlends) { 
-            window.mockupFlameBlends = Array(12).fill(0.5); 
-            window.mockupFlameTargets = Array(12).fill(0.5); 
-            window.lastFlameUpdate = 0; 
-        }
-        let flameInterval = 280 - (speed * 2);
-        if (ms - window.lastFlameUpdate > flameInterval) { 
-            for (let f = 0; f < 12; f++) window.mockupFlameTargets[f] = 0.1 + Math.random() * 0.9; 
-            window.lastFlameUpdate = ms; 
-        }
-        for (let f = 0; f < 12; f++) {
-            window.mockupFlameBlends[f] += (window.mockupFlameTargets[f] - window.mockupFlameBlends[f]) * 0.12;
-        }
-
-        // Generator Setup Animasi 6 (Raindrop)
-        if (!window.mockupDrops) { 
-            window.mockupDrops = Array(12).fill(0); 
-            window.lastDropTime = 0; 
-        }
-        let dropInterval = 300 / (sFac === 0 ? 1 : sFac);
-        if (ms - window.lastDropTime > dropInterval) { 
-            for (let d = 0; d < 12; d++) window.mockupDrops[d] = Math.max(0, window.mockupDrops[d] - 0.05); 
-            if (Math.random() > 0.8) window.mockupDrops[Math.floor(Math.random() * 12)] = 1.0; 
-            window.lastDropTime = ms; 
-        }
-
-        for (let i = 0; i < 12; i++) {
-            let el = document.getElementById(`led-b${i}`);
-            if (!el) continue;
-
-            let r = 0, g = 0, b = 0, blend = 0.5;
-
-            if (anim === 0) {
-                blend = (11.0 - i) / 11.0;
-                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
-                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
-                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
-            } else if (anim === 1) {
-                blend = 0.2 + (Math.sin((sMs + (i * 200)) * 0.002) * 0.4 + 0.4);
-                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
-                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
-                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
-            } else if (anim === 2) {
-                let activeIdx = Math.floor(sMs / 150) % 12;
-                if (i === activeIdx) { r = colBase[0]; g = colBase[1]; b = colBase[2]; }
-                else { r = colTarget[0]*0.1; g = colTarget[1]*0.1; b = colTarget[2]*0.1; }
-            } else if (anim === 3) {
-                blend = Math.sin(sMs * 0.0015) * 0.5 + 0.5;
-                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
-                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
-                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
-            } else if (anim === 4) {
-                blend = window.mockupFlameBlends[i];
-                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
-                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
-                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
-            } else if (anim === 5) {
-                let hue = (sMs * 0.1 + (i * 30)) % 360;
-                let rgb = hsvToRgb(hue / 360, 1, 1);
-                r = rgb[0]; g = rgb[1]; b = rgb[2];
-            } else if (anim === 6) {
-                blend = window.mockupDrops[i];
-                r = colBase[0]*blend + colTarget[0]*(1.0-blend);
-                g = colBase[1]*blend + colTarget[1]*(1.0-blend);
-                b = colBase[2]*blend + colTarget[2]*(1.0-blend);
+            let flameInterval = 280 - (speed * 2);
+            if (ms - window.lastFlameUpdate > flameInterval) { 
+                for (let f = 0; f < 17; f++) window.mockupFlameTargets[f] = 0.1 + Math.random() * 0.9; 
+                window.lastFlameUpdate = ms; 
+            }
+            for (let f = 0; f < 17; f++) {
+                window.mockupFlameBlends[f] += (window.mockupFlameTargets[f] - window.mockupFlameBlends[f]) * 0.12;
             }
 
-            r *= brightBot; g *= brightBot; b *= brightBot;
+            if (!window.mockupDrops) { 
+                window.mockupDrops = Array(17).fill(0); 
+                window.lastDropTime = 0; 
+            }
+            let dropInterval = 300 / (sFac === 0 ? 1 : sFac);
+            if (ms - window.lastDropTime > dropInterval) { 
+                for (let d = 0; d < 17; d++) window.mockupDrops[d] = Math.max(0, window.mockupDrops[d] - 0.05); 
+                if (Math.random() > 0.8) window.mockupDrops[Math.floor(Math.random() * 17)] = 1.0; 
+                window.lastDropTime = ms; 
+            }
 
-            r = Math.min(255, Math.max(0, Math.floor(r)));
-            g = Math.min(255, Math.max(0, Math.floor(g)));
-            b = Math.min(255, Math.max(0, Math.floor(b)));
+            // Kalkulasi Dual Animation secara paralel
+            for (let i = 0; i < 17; i++) {
+                let p = LOGIC_TO_PHYS[i];
 
-            el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-            el.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+                // A. Bottom Animation Calculator
+                let blendB = 0.5;
+                if (animB === 0) {
+                    blendB = (16.0 - i) / 16.0;
+                    animR_Bot[p] = colBase[0]*blendB + colTarget[0]*(1.0-blendB);
+                    animG_Bot[p] = colBase[1]*blendB + colTarget[1]*(1.0-blendB);
+                    animB_Bot[p] = colBase[2]*blendB + colTarget[2]*(1.0-blendB);
+                } else if (animB === 1) {
+                    let phase = Math.floor(sMs / 8 + i * 4) & 63;
+                    blendB = 0.2 + (sinTable_JS(phase) / 255) * 0.8;
+                    animR_Bot[p] = colBase[0]*blendB + colTarget[0]*(1.0-blendB);
+                    animG_Bot[p] = colBase[1]*blendB + colTarget[1]*(1.0-blendB);
+                    animB_Bot[p] = colBase[2]*blendB + colTarget[2]*(1.0-blendB);
+                } else if (animB === 2) {
+                    let activeIdx = Math.floor(sMs / 150) % 17;
+                    if (i === activeIdx) { animR_Bot[p] = colBase[0]; animG_Bot[p] = colBase[1]; animB_Bot[p] = colBase[2]; }
+                    else { animR_Bot[p] = colTarget[0]*0.1; animG_Bot[p] = colTarget[1]*0.1; animB_Bot[p] = colTarget[2]*0.1; }
+                } else if (animB === 3) {
+                    let phase = Math.floor(sMs / 10) & 63;
+                    blendB = sinTable_JS(phase) / 255;
+                    animR_Bot[p] = colBase[0]*blendB + colTarget[0]*(1.0-blendB);
+                    animG_Bot[p] = colBase[1]*blendB + colTarget[1]*(1.0-blendB);
+                    animB_Bot[p] = colBase[2]*blendB + colTarget[2]*(1.0-blendB);
+                } else if (animB === 4) {
+                    blendB = window.mockupFlameBlends[i];
+                    animR_Bot[p] = colBase[0]*blendB + colTarget[0]*(1.0-blendB);
+                    animG_Bot[p] = colBase[1]*blendB + colTarget[1]*(1.0-blendB);
+                    animB_Bot[p] = colBase[2]*blendB + colTarget[2]*(1.0-blendB);
+                } else if (animB === 5) {
+                    let hue = (sMs * 0.1 + (i * 30)) % 360;
+                    let rgb = hsvToRgb(hue / 360, 1, 1);
+                    animR_Bot[p] = rgb[0]; animG_Bot[p] = rgb[1]; animB_Bot[p] = rgb[2];
+                } else if (animB === 6) {
+                    blendB = window.mockupDrops[i];
+                    animR_Bot[p] = colBase[0]*blendB + colTarget[0]*(1.0-blendB);
+                    animG_Bot[p] = colBase[1]*blendB + colTarget[1]*(1.0-blendB);
+                    animB_Bot[p] = colBase[2]*blendB + colTarget[2]*(1.0-blendB);
+                }
+                animR_Bot[p] *= brightBot; animG_Bot[p] *= brightBot; animB_Bot[p] *= brightBot;
+
+                // B. Top Animation Calculator
+                let blendT = 0.5;
+                if (animT === 0) {
+                    blendT = (16.0 - i) / 16.0;
+                    animR_Top[p] = cTop[0]*blendT + colTarget[0]*(1.0-blendT);
+                    animG_Top[p] = cTop[1]*blendT + colTarget[1]*(1.0-blendT);
+                    animB_Top[p] = cTop[2]*blendT + colTarget[2]*(1.0-blendT);
+                } else if (animT === 1) {
+                    let phase = Math.floor(sMs / 8 + i * 4) & 63;
+                    blendT = 0.2 + (sinTable_JS(phase) / 255) * 0.8;
+                    animR_Top[p] = cTop[0]*blendT + colTarget[0]*(1.0-blendT);
+                    animG_Top[p] = cTop[1]*blendT + colTarget[1]*(1.0-blendT);
+                    animB_Top[p] = cTop[2]*blendT + colTarget[2]*(1.0-blendT);
+                } else if (animT === 2) {
+                    let activeIdx = Math.floor(sMs / 150) % 17;
+                    if (i === activeIdx) { animR_Top[p] = cTop[0]; animG_Top[p] = cTop[1]; animB_Top[p] = cTop[2]; }
+                    else { animR_Top[p] = colTarget[0]*0.1; animG_Top[p] = colTarget[1]*0.1; animB_Top[p] = colTarget[2]*0.1; }
+                } else if (animT === 3) {
+                    let phase = Math.floor(sMs / 10) & 63;
+                    blendT = sinTable_JS(phase) / 255;
+                    animR_Top[p] = cTop[0]*blendT + colTarget[0]*(1.0-blendT);
+                    animG_Top[p] = cTop[1]*blendT + colTarget[1]*(1.0-blendT);
+                    animB_Top[p] = cTop[2]*blendT + colTarget[2]*(1.0-blendT);
+                } else if (animT === 4) {
+                    blendT = window.mockupFlameBlends[i];
+                    animR_Top[p] = cTop[0]*blendT + colTarget[0]*(1.0-blendT);
+                    animG_Top[p] = cTop[1]*blendT + colTarget[1]*(1.0-blendT);
+                    animB_Top[p] = cTop[2]*blendT + colTarget[2]*(1.0-blendT);
+                } else if (animT === 5) {
+                    let hue = (sMs * 0.1 + (i * 30)) % 360;
+                    let rgb = hsvToRgb(hue / 360, 1, 1);
+                    animR_Top[p] = rgb[0]; animG_Top[p] = rgb[1]; animB_Top[p] = rgb[2];
+                } else if (animT === 6) {
+                    blendT = window.mockupDrops[i];
+                    animR_Top[p] = cTop[0]*blendT + colTarget[0]*(1.0-blendT);
+                    animG_Top[p] = cTop[1]*blendT + colTarget[1]*(1.0-blendT);
+                    animB_Top[p] = cTop[2]*blendT + colTarget[2]*(1.0-blendT);
+                }
+                animR_Top[p] *= brightTop; animG_Top[p] *= brightTop; animB_Top[p] *= brightTop;
+            }
+
+            let iTop = document.getElementById('ui-idle-top-en');
+            let isIdleTopChecked = iTop ? iTop.checked : true;
+            let breathPulse = 0.6 + 0.4 * Math.sin(ms * 0.0025);
+
+            for (let i = 0; i < 5; i++) {
+                let el = document.getElementById(`led-p${i}`);
+                if (el) {
+                    let r = 0, g = 0, b = 0;
+                    if (isIdleTopChecked) {
+                        r = animR_Top[LED_MAP_POT[i]]; g = animG_Top[LED_MAP_POT[i]]; b = animB_Top[LED_MAP_POT[i]];
+                    } else {
+                        r = cTop[0] * brightTop * breathPulse; g = cTop[1] * brightTop * breathPulse; b = cTop[2] * brightTop * breathPulse;
+                    }
+                    r = isNaN(r) ? 0 : Math.floor(r); g = isNaN(g) ? 0 : Math.floor(g); b = isNaN(b) ? 0 : Math.floor(b);
+                    el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    el.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+                }
+            }
+
+            let iMid = document.getElementById('ui-idle-mid-en');
+            let isIdleMidChecked = iMid ? iMid.checked : true;
+            let colBaseMid = safeArr(bankObj.colBaseMid, [0, 255, 255]); 
+
+            for (let i = 0; i < 5; i++) {
+                let el = document.getElementById(`led-b${i}`);
+                if (el) {
+                    let r = 0, g = 0, b = 0;
+                    let v = simulatedPotSteps[i];
+
+                    if (v <= 2) {
+                        if (isIdleMidChecked) {
+                            r = animR_Bot[LED_MAP_BTN[i]]; g = animG_Bot[LED_MAP_BTN[i]]; b = animB_Bot[LED_MAP_BTN[i]];
+                        } else {
+                            r = colBaseMid[0] * brightTop; g = colBaseMid[1] * brightTop; b = colBaseMid[2] * brightTop;
+                        }
+                    } else if (v >= 125) {
+                        r = 0; g = 0; b = 255 * brightTop; // Biner Biru Puncak 125-127
+                    } else {
+                        let hue = (v / 127) * 120; 
+                        let rgb = hsvToRgb(hue / 360, 1, 1);
+                        r = rgb[0] * brightTop; g = rgb[1] * brightTop; b = rgb[2] * brightTop;
+                    }
+                    r = isNaN(r) ? 0 : Math.floor(r); g = isNaN(g) ? 0 : Math.floor(g); b = isNaN(b) ? 0 : Math.floor(b);
+                    el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    el.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+                }
+            }
+
+            for (let i = 5; i < 10; i++) {
+                let el = document.getElementById(`led-b${i}`);
+                if (el) {
+                    let r = animR_Bot[LED_MAP_BTN[i]], g = animG_Bot[LED_MAP_BTN[i]], b = animB_Bot[LED_MAP_BTN[i]];
+                    r = isNaN(r) ? 0 : Math.floor(r); g = isNaN(g) ? 0 : Math.floor(g); b = isNaN(b) ? 0 : Math.floor(b);
+                    el.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    el.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+                }
+            }
+
+            let elB11 = document.getElementById('led-b10'); 
+            let elB12 = document.getElementById('led-b11'); 
+
+            let colB11 = safeArr(bankObj.colB11, [0, 255, 255]);
+            let colB12 = safeArr(bankObj.colB12, [255, 128, 0]);
+            let colBaseB11 = safeArr(bankObj.colBaseB11, [0, 0, 0]);
+
+            let heartbeatCycle = ms % 2000;
+            let isHeartbeatOn = false;
+            if (curB === 1) { 
+                if (heartbeatCycle < 100) isHeartbeatOn = true;
+            } else { 
+                if (heartbeatCycle < 100 || (heartbeatCycle >= 250 && heartbeatCycle < 350)) isHeartbeatOn = true;
+            }
+
+            let iSide = document.getElementById('ui-idle-side-en');
+            let isIdleSideChecked = iSide ? iSide.checked : true;
+
+            if (elB11) {
+                let r = 0, g = 0, b = 0;
+                if (isHeartbeatOn) {
+                    r = colB11[0] * brightBot; g = colB11[1] * brightBot; b = colB11[2] * brightBot;
+                } else {
+                    if (isIdleSideChecked) { r = animR_Bot[0]; g = animG_Bot[0]; b = animB_Bot[0]; } 
+                    else { r = colBaseB11[0] * brightBot; g = colBaseB11[1] * brightBot; b = colBaseB11[2] * brightBot; }
+                }
+                r = isNaN(r) ? 0 : Math.floor(r); g = isNaN(g) ? 0 : Math.floor(g); b = isNaN(b) ? 0 : Math.floor(b);
+                elB11.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                elB11.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+            }
+
+            // Sync visual L12 dengan Blue Peak dan cerminan fader analog 
+            if (elB12) {
+                let r = 0, g = 0, b = 0;
+                let elPot = ms - maxPotTime;
+                
+                if (activePot !== -1 && elPot < 2000) {
+                    let v = simulatedPotSteps[activePot];
+                    let fade = 100;
+                    if (elPot > 1500) fade = 100 - ((elPot - 1500) * 100) / 500;
+                    
+                    if (v <= 2) {
+                        r=0; g=0; b=0;
+                    } else if (v >= 125) {
+                        r=0; g=0; b = 255 * brightBot * fade / 10000;
+                    } else {
+                        let hue = (v / 127) * 120;
+                        let rgb = hsvToRgb(hue / 360, 1, 1);
+                        r = rgb[0] * brightBot * fade / 100;
+                        g = rgb[1] * brightBot * fade / 100;
+                        b = rgb[2] * brightBot * fade / 100;
+                    }
+                } else if (isIdleSideChecked) {
+                    r = animR_Bot[11]; g = animG_Bot[11]; b = animB_Bot[11];
+                } else {
+                    r = colB12[0] * brightBot; g = colB12[1] * brightBot; b = colB12[2] * brightBot;
+                }
+                r = isNaN(r) ? 0 : Math.floor(r); g = isNaN(g) ? 0 : Math.floor(g); b = isNaN(b) ? 0 : Math.floor(b);
+                elB12.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                elB12.style.boxShadow = `0 0 10px rgb(${r}, ${g}, ${b})`;
+            }
+
+        } catch (e) {
+            console.error("Mockup Error: ", e);
         }
-
         requestAnimationFrame(renderMockupLoop);
     }
 
@@ -854,13 +1121,9 @@
     }
 
     function updateAllLabels() {
-        let pObj = getProfileObj(curB);
-
-        // Update Label Menu Config Encoder Switch
+        let pObj = getBankObj(curB);
         let swLbl = document.getElementById('lbl-enc-sw');
-        if (swLbl) {
-            swLbl.innerText = curB === 0 ? "[ NORM ]" : "[ NORM | SHFT ]";
-        }
+        if (swLbl) swLbl.innerText = curB === 0 ? "[ NORM ]" : "[ NORM | SHFT ]";
 
         for(let i=0; i<12; i++) {
             let dN, dS;
@@ -881,7 +1144,7 @@
             let dS = curB===0 ? null : getBankObj(curB).pot[1][i];
             document.getElementById(`lbl-p${i}-n`).innerText = buildLabel(dN); 
             document.getElementById(`lbl-p${i}-s`).innerText = curB===0 ? "" : buildLabel(dS); 
-            document.getElementById(`div-p0`).parentNode.querySelector('.btn-lbl-div').style.display = curB===0 ? "none" : "block";
+            document.getElementById(`div-p${i}`).style.display = curB===0 ? "none" : "block";
         }
         let dEN = curB===0 ? cfg.profilB.enc : getBankObj(curB).enc[0]; 
         let dES = curB===0 ? null : getBankObj(curB).enc[1];
@@ -905,12 +1168,7 @@
         autoSave();
     }
 
-    function getProfileObj(b) {
-        return b === 0 ? cfg.profilB : cfg.profilA;
-    }
-
-    function openEditor(type, idx) {
-        // v1.3 - Kuncian Akses Editor B12 Khusus Profil A ditutup secara snappy
+    function openEditorModal(type, idx) {
         if (curB === 1 && type === 'btn' && idx === 11) {
             showToast("B12 dikunci sebagai tombol SHIFT pada Profil A");
             return;
@@ -981,9 +1239,9 @@
                 else if(idx<5){ dN=pObj.btn3_5[0][idx-2]; dS=pObj.btn3_5[1][idx-2]; } 
                 else { dN=pObj.btn6_11[0][idx-5]; dS=pObj.btn6_11[1][idx-5]; } 
             } 
-            else if(type==='pot') { dN=pObj.pot[0][idx]; dS=pObj.pot[1][idx]; } 
-            else if(type==='enc') { dN=pObj.enc[0]; dS=pObj.enc[1]; } 
-            else if(type==='encSw') { dN=pObj.encSw[0]; dS=pObj.encSw[1]; } 
+            if(type==='pot') { dN=pObj.pot[0][idx]; dS=pObj.pot[1][idx]; } 
+            if(type==='enc') { dN=pObj.enc[0]; dS=pObj.enc[1]; } 
+            if(type==='encSw') { dN=pObj.encSw[0]; dS=pObj.encSw[1]; } 
         }
         fill('n', dN); if(hasShift) fill('s', dS);
         document.getElementById('modal').style.display = 'flex';
@@ -1013,86 +1271,120 @@
         } else if (curT === 'pot') { if(m==2) document.getElementById(`${l}-ui-midi`).classList.remove('hidden'); }
     }
 
-    function saveConfig() {
-        const get = (l) => {
-            let m = parseInt(document.getElementById(`${l}-m`).value); 
-            let d = (curB > 0 && curT==='btn' && curI>=2 && curI<=4) ? makeAct10() : makeAct4(); 
-            d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
-            if(curT === 'pot') { d.v3 = document.getElementById(`${l}-sto`).checked ? 1 : 0; }
-            if(m==1 && (curT==='btn' || curT==='encSw')){ 
-                let mod = 0; if(document.getElementById(`${l}-mod-ctrl`).checked) mod |= 1; if(document.getElementById(`${l}-mod-shift`).checked) mod |= 2; if(document.getElementById(`${l}-mod-alt`).checked) mod |= 4; if(document.getElementById(`${l}-mod-win`).checked) mod |= 8;
-                d.v1 = mod; d.v2=parseInt(document.getElementById(`${l}-key`).value)||0; d.v3=0; 
-            }
-            if(m==1 && curT==='enc') { d.v2 = parseInt(document.getElementById(`${l}-enc-mult`).value) || 1; }
-            if(m==2||m==4){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; if(curT==='enc'&&m==2) d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; }
-            if(m==4 && curT==='enc') { d.v3 = parseInt(document.getElementById(`${l}-enc-mult`).value) || 1; }
-            if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
-            if(m==4&&curT==='btn'){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
-            if(m==5&&curT==='enc'){ d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; }
-            if(m==6||m==7){ 
-                d.v1 = parseInt(document.getElementById(`${l}-seq-chan`).value) || 1; 
-                // v1.3 FIX: Menyimpan status checkbox Auto-Reset ke Blueprint global agar sinkron penuh
-                let arVal = document.getElementById(`${l}-auto-reset`).checked ? 1 : 0;
-                if (curB === 0) cfg.autoResetB = arVal; else cfg.autoResetA = arVal;
-                for(let i=0; i<10; i++) d.seq[i] = parseInt(document.getElementById(`${l}-seq-${m==6?'k':'m'}-${i}`).value) || 0; 
-            }
-            if(m==8&&curT==='enc'){ 
-                let mod = 0; if(document.getElementById(`${l}-enc-mod-ctrl`).checked) mod |= 1; if(document.getElementById(`${l}-enc-mod-shift`).checked) mod |= 2; if(document.getElementById(`${l}-enc-mod-alt`).checked) mod |= 4; if(document.getElementById(`${l}-enc-mod-win`).checked) mod |= 8;
-                d.v1 = mod; d.v2=parseInt(document.getElementById(`${l}-enc-l`).value)||0; d.v3=parseInt(document.getElementById(`${l}-enc-r`).value)||0; 
-            }
-            return d;
-        };
-        
-        let gN = get('n'), gS = curB>0 ? get('s') : null;
-        if(curB === 0) { 
-            if(curT==='btn') cfg.profilB.btn[curI] = gN; 
-            if(curT==='pot') cfg.profilB.pot[curI] = gN; 
-            if(curT==='enc') cfg.profilB.enc = gN; 
-            if(curT==='encSw') cfg.profilB.encSw = gN; 
-        } else { 
-            let pObj = cfg.profilA; 
-            if(curT==='btn') { 
-                if(curI<2){ pObj.btn1_2[0][curI]=gN; pObj.btn1_2[1][curI]=gS; } 
-                else if(curI<5){ pObj.btn3_5[0][curI-2]=gN; pObj.btn3_5[1][curI-2]=gS; } 
-                else { pObj.btn6_11[0][curI-5]=gN; pObj.btn6_11[1][curI-5]=gS; } 
-            } 
-            if(curT==='pot') { pObj.pot[0][curI]=gN; pObj.pot[1][curI]=gS; } 
-            if(curT==='enc') { pObj.enc[0]=gN; pObj.enc[1]=gS; } 
-            if(curT==='encSw') { pObj.encSw[0]=gN; pObj.encSw[1]=gS; } 
+    function closeEditorModal() {
+        try {
+            document.getElementById('modal').style.display = 'none';
+            closeKeyPicker();
+        } catch (e) {
+            console.error("Close Error: ", e);
         }
-        closeModal(); autoSave(); updateAllLabels();
     }
 
-    function closeModal() { document.getElementById('modal').style.display='none'; closeKeyPicker(); }
-    
+    function saveEditorConfig() {
+        try {
+            const get = (l) => {
+                let m = parseInt(document.getElementById(`${l}-m`).value); 
+                let d = (curB > 0 && curT==='btn' && curI>=2 && curI<=4) ? makeAct10() : makeAct4(); 
+                d.m = m; d.lbl = document.getElementById(`${l}-lbl`).value; 
+                if(curT === 'pot') { d.v3 = document.getElementById(`${l}-sto`).checked ? 1 : 0; }
+                if(m==1 && (curT==='btn' || curT==='encSw')){ 
+                    let mod = 0; if(document.getElementById(`${l}-mod-ctrl`).checked) mod |= 1; if(document.getElementById(`${l}-mod-shift`).checked) mod |= 2; if(document.getElementById(`${l}-mod-alt`).checked) mod |= 4; if(document.getElementById(`${l}-mod-win`).checked) mod |= 8;
+                    d.v1 = mod; d.v2=parseInt(document.getElementById(`${l}-key`).value)||0; d.v3=0; 
+                }
+                if(m==1 && curT==='enc') { d.v2 = parseInt(document.getElementById(`${l}-enc-mult`).value) || 1; }
+                if(m==2||m==4){ d.v1=parseInt(document.getElementById(`${l}-chan`).value)||1; d.v2=parseInt(document.getElementById(`${l}-cc`).value)||0; if(curT==='enc'&&m==2) d.v3=parseInt(document.getElementById(`${l}-cc2`).value)||0; }
+                if(m==4 && curT==='enc') { d.v3 = parseInt(document.getElementById(`${l}-enc-mult`).value) || 1; }
+                if(m==3){ d.v1=parseInt(document.getElementById(`${l}-med`).value)||205; }
+                if(m==4&&curT==='btn'){ d.v1=parseInt(document.getElementById(`${l}-mac-act1`).value)||1; d.v2=parseInt(document.getElementById(`${l}-mac-act2`).value)||1; d.t1=document.getElementById(`${l}-mac-txt1`).value; d.t2=document.getElementById(`${l}-mac-txt2`).value; }
+                if(m==5&&curT==='enc'){ d.v1=parseInt(document.getElementById(`${l}-nav-opt`).value)||1; }
+                if(m==6||m==7){ 
+                    d.v1 = parseInt(document.getElementById(`${l}-seq-chan`).value) || 1; 
+                    let arVal = document.getElementById(`${l}-auto-reset`).checked ? 1 : 0;
+                    if (curB === 0) cfg.autoResetB = arVal; else cfg.autoResetA = arVal;
+                    for(let i=0; i<10; i++) d.seq[i] = parseInt(document.getElementById(`${l}-seq-${m==6?'k':'m'}-${i}`).value) || 0; 
+                }
+                
+                if(m==8&&curT==='enc'){ 
+                    let mod = 0; 
+                    if(document.getElementById(`${l}-enc-mod-ctrl`).checked) mod |= 1; 
+                    if(document.getElementById(`${l}-enc-mod-shift`).checked) mod |= 2; 
+                    if(document.getElementById(`${l}-enc-mod-alt`).checked) mod |= 4; 
+                    if(document.getElementById(`${l}-enc-mod-win`).checked) mod |= 8;
+                    d.v1 = mod; 
+                    d.v2 = parseInt(document.getElementById(`${l}-enc-l`).value) || 0; 
+                    d.v3 = parseInt(document.getElementById(`${l}-enc-r`).value) || 0; 
+                }
+                return d;
+            };
+            
+            let gN = get('n'), gS = curB>0 ? get('s') : null;
+            if(curB === 0) { 
+                if(curT==='btn') cfg.profilB.btn[curI] = gN; 
+                if(curT==='pot') cfg.profilB.pot[curI] = gN; 
+                if(curT==='enc') cfg.profilB.enc = gN; 
+                if(curT==='encSw') cfg.profilB.encSw = gN; 
+            } else { 
+                let pObj = cfg.profilA; 
+                if(curT==='btn') { 
+                    if(curI<2){ pObj.btn1_2[0][curI]=gN; pObj.btn1_2[1][curI]=gS; } 
+                    else if(curI<5){ pObj.btn3_5[0][curI-2]=gN; pObj.btn3_5[1][curI-2]=gS; } 
+                    else { pObj.btn6_11[0][curI-5]=gN; pObj.btn6_11[1][curI-5]=gS; } 
+                } 
+                if(curT==='pot') { pObj.pot[0][curI]=gN; pObj.pot[1][curI]=gS; } 
+                if(curT==='enc') { pObj.enc[0]=gN; pObj.enc[1]=gS; } 
+                if(curT==='encSw') { pObj.encSw[0]=gN; pObj.encSw[1]=gS; } 
+            }
+            
+            closeEditorModal(); 
+            autoSave(); 
+            updateAllLabels();
+        } catch (e) {
+            console.error("Save Configuration Error: ", e);
+            showToast("Gagal menyimpan: " + e.message);
+        }
+    }
+
     function autoSave() { 
         let bankObj = getBankObj(curB);
-        bankObj.animBot = parseInt(document.getElementById('ui-anim').value); 
-        bankObj.colTop = hexToRgb(document.getElementById('ui-color-top').value);
-        bankObj.colBaseBot = hexToRgb(document.getElementById('ui-color-base').value);
-        bankObj.colTargetBot = hexToRgb(document.getElementById('ui-color-target').value);
-        bankObj.colActive = hexToRgb(document.getElementById('ui-color-active').value);
+        let uAnimTop = document.getElementById('ui-anim-top'); if(uAnimTop) bankObj.animTop = parseInt(uAnimTop.value);
+        let uAnimBot = document.getElementById('ui-anim'); if(uAnimBot) bankObj.animBot = parseInt(uAnimBot.value); 
         
-        cfg.panicSource = parseInt(document.getElementById('ui-panic-source').value);
+        let cTop = document.getElementById('ui-color-top'); if(cTop) bankObj.colTop = hexToRgb(cTop.value);
+        let cBaseBot = document.getElementById('ui-color-base'); if(cBaseBot) bankObj.colBaseBot = hexToRgb(cBaseBot.value);
+        let cTargetBot = document.getElementById('ui-color-target'); if(cTargetBot) bankObj.colTargetBot = hexToRgb(cTargetBot.value);
         
-        // v1.3 - Menjamin nilai 0 tidak tertimpa falsy check
-        let pVal = parseInt(document.getElementById('ui-panic-mode').value);
-        cfg.panicMode = isNaN(pVal) ? 119 : pVal;
+        let cAct = document.getElementById('ui-color-active'); 
+        if(cAct) {
+            let actRgb = hexToRgb(cAct.value);
+            cfg.profilB.colActive = actRgb; cfg.profilA.colActive = actRgb;
+        }
         
-        cfg.panicChan = parseInt(document.getElementById('ui-panic-chan').value) || 1;
+        let ps = document.getElementById('ui-panic-source'); if(ps) cfg.panicSource = parseInt(ps.value);
+        let pm = document.getElementById('ui-panic-mode'); if(pm) { let pVal = parseInt(pm.value); cfg.panicMode = isNaN(pVal) ? 119 : pVal; }
+        let pc = document.getElementById('ui-panic-chan'); if(pc) cfg.panicChan = parseInt(pc.value) || 1;
+
+        let itop = document.getElementById('ui-idle-top-en'); if(itop) bankObj.idleTopEnabled = itop.checked ? 1 : 0;
+        let imid = document.getElementById('ui-idle-mid-en'); if(imid) bankObj.idleMidEnabled = imid.checked ? 1 : 0;
+        let isid = document.getElementById('ui-idle-side-en'); if(isid) bankObj.idleSideEnabled = isid.checked ? 1 : 0;
+        
+        let cb11 = document.getElementById('ui-color-b11'); if(cb11) bankObj.colB11 = hexToRgb(cb11.value);
+        let cb12 = document.getElementById('ui-color-b12'); if(cb12) bankObj.colB12 = hexToRgb(cb12.value);
+
+        let cBaseMid = document.getElementById('ui-color-base-mid'); if(cBaseMid) bankObj.colBaseMid = hexToRgb(cBaseMid.value);
+        let cBaseB11 = document.getElementById('ui-color-base-b11'); if(cBaseB11) bankObj.colBaseB11 = hexToRgb(cBaseB11.value);
 
         if (curB > 0) {
-            bankObj.colShift = hexToRgb(document.getElementById('ui-color-shift').value);
-            bankObj.colB6 = hexToRgb(document.getElementById('ui-color-b6').value);
+            let csh = document.getElementById('ui-color-shift'); if(csh) bankObj.colShift = hexToRgb(csh.value);
+            bankObj.colB6 = bankObj.colB11; 
         }
 
         updateAllLabels();
-        localStorage.setItem('sakuMIDI_RC2_Config', JSON.stringify(cfg)); 
+        localStorage.setItem('sakuMIDI_RC3_Config', JSON.stringify(cfg)); 
         markUnsaved();
     }
     
     function loadAutoSave() { 
-        const s = localStorage.getItem('sakuMIDI_RC2_Config'); 
+        const s = localStorage.getItem('sakuMIDI_RC3_Config'); 
         if(s) { 
             try { 
                 let loaded = JSON.parse(s); 
@@ -1100,6 +1392,22 @@
                     cfg = loaded; 
                     if (!cfg.profilB.encSw) cfg.profilB.encSw = makeAct4();
                     if (!cfg.profilA.encSw) cfg.profilA.encSw = [makeAct4(), makeAct4()];
+                    
+                    if (cfg.profilB.idleTopEnabled === undefined) cfg.profilB.idleTopEnabled = 1;
+                    if (cfg.profilB.idleMidEnabled === undefined) cfg.profilB.idleMidEnabled = 1;
+                    if (cfg.profilB.idleSideEnabled === undefined) cfg.profilB.idleSideEnabled = 1;
+                    if (!cfg.profilB.colB11) cfg.profilB.colB11 = [0, 255, 255];
+                    if (!cfg.profilB.colB12) cfg.profilB.colB12 = [255, 128, 0];
+                    if (!cfg.profilB.colBaseMid) cfg.profilB.colBaseMid = [0, 255, 255];
+                    if (!cfg.profilB.colBaseB11) cfg.profilB.colBaseB11 = [0, 0, 0];
+
+                    if (cfg.profilA.idleTopEnabled === undefined) cfg.profilA.idleTopEnabled = 1;
+                    if (cfg.profilA.idleMidEnabled === undefined) cfg.profilA.idleMidEnabled = 1;
+                    if (cfg.profilA.idleSideEnabled === undefined) cfg.profilA.idleSideEnabled = 1;
+                    if (!cfg.profilA.colB11) cfg.profilA.colB11 = [0, 255, 255];
+                    if (!cfg.profilA.colB12) cfg.profilA.colB12 = [255, 128, 0];
+                    if (!cfg.profilA.colBaseMid) cfg.profilA.colBaseMid = [0, 255, 255];
+                    if (!cfg.profilA.colBaseB11) cfg.profilA.colBaseB11 = [0, 0, 0];
                 }
             } catch(e) {} 
         } 
@@ -1109,43 +1417,175 @@
     function hexToRgb(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
     function rgbToHex(arr) { return "#" + arr.map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='saku-MIDI_RC2_Config.json'; a.click(); showToast("EXPORT BERHASIL!"); }
+    function exportData() { const blob = new Blob([JSON.stringify(cfg)], {type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='saku-MIDI_RC3_Config.json'; a.click(); showToast("EXPORT BERHASIL!"); }
     function importData() { document.getElementById('f-import').click(); }
     function handleImport(i) { const fr = new FileReader(); fr.onload = (e) => { 
         cfg = JSON.parse(e.target.result); 
         if (!cfg.profilB.encSw) cfg.profilB.encSw = makeAct4();
         if (!cfg.profilA.encSw) cfg.profilA.encSw = [makeAct4(), makeAct4()];
+        
+        if (cfg.profilB.idleTopEnabled === undefined) cfg.profilB.idleTopEnabled = 1;
+        if (cfg.profilB.idleMidEnabled === undefined) cfg.profilB.idleMidEnabled = 1;
+        if (cfg.profilB.idleSideEnabled === undefined) cfg.profilB.idleSideEnabled = 1;
+        if (!cfg.profilB.colB11) cfg.profilB.colB11 = [0, 255, 255];
+        if (!cfg.profilB.colB12) cfg.profilB.colB12 = [255, 128, 0];
+        if (!cfg.profilB.colBaseMid) cfg.profilB.colBaseMid = [0, 255, 255];
+        if (!cfg.profilB.colBaseB11) cfg.profilB.colBaseB11 = [0, 0, 0];
+
+        if (cfg.profilA.idleTopEnabled === undefined) cfg.profilA.idleTopEnabled = 1;
+        if (cfg.profilA.idleMidEnabled === undefined) cfg.profilA.idleMidEnabled = 1;
+        if (cfg.profilA.idleSideEnabled === undefined) cfg.profilA.idleSideEnabled = 1;
+        if (!cfg.profilA.colB11) cfg.profilA.colB11 = [0, 255, 255];
+        if (!cfg.profilA.colB12) cfg.profilA.colB12 = [255, 128, 0];
+        if (!cfg.profilA.colBaseMid) cfg.profilA.colBaseMid = [0, 255, 255];
+        if (!cfg.profilA.colBaseB11) cfg.profilA.colBaseB11 = [0, 0, 0];
+
         switchBank(0); markUnsaved(); showToast("IMPORT SUKSES!"); 
     }; fr.readAsText(i.files[0]); i.value=''; }
 
+    let readerActive = false;
+    let serialBuffer = "";
+    let syncResultBuffer = "";
+    let waitingForString = "";
+    let waitingForPromiseResolve = null;
+
     async function connectUSB() {
         try {
-            port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 });
-            document.getElementById('serial-status').innerText = "CONNECTED"; document.getElementById('serial-status').style.color = "var(--box-bg)"; document.getElementById('serial-status').style.background = "var(--text-main)";
-            const decoder = new TextDecoderStream(); port.readable.pipeTo(decoder.writable); serialReader = decoder.readable.getReader();
-            showToast("DEVICE TERHUBUNG!"); return true;
-        } catch(e) { return false; }
+            port = await navigator.serial.requestPort(); 
+            await port.open({ baudRate: 115200 });
+            let stat = document.getElementById('serial-status');
+            if(stat) {
+                stat.innerText = "CONNECTED"; 
+                stat.style.color = "var(--box-bg)"; 
+                stat.style.background = "var(--text-main)";
+            }
+            showToast("DEVICE TERHUBUNG!"); 
+            startSerialReadLoop();
+            return true;
+        } catch(e) { 
+            return false; 
+        }
+    }
+
+    async function startSerialReadLoop() {
+        if (readerActive) return;
+        readerActive = true;
+        const decoder = new TextDecoderStream();
+        port.readable.pipeTo(decoder.writable);
+        serialReader = decoder.readable.getReader();
+        try {
+            while (true) {
+                const { value, done } = await serialReader.read();
+                if (done) break;
+                if (value) {
+                    serialBuffer += value;
+                    let lines = serialBuffer.split("\n");
+                    serialBuffer = lines.pop(); // keep last incomplete line
+                    for (let line of lines) {
+                        line = line.trim();
+                        if (!line) continue;
+                        
+                        if (line.startsWith("<POT,") && line.endsWith(">")) {
+                            let parts = line.substring(5, line.length - 1).split(",");
+                            if (parts.length === 2) {
+                                let idx = parseInt(parts[0]);
+                                let val = parseInt(parts[1]);
+                                if (idx >= 0 && idx < 5 && val >= 0 && val <= 127) {
+                                    simulatedPotSteps[idx] = val; 
+                                    maxPotTime = Date.now();
+                                    activePot = idx;
+                                }
+                            }
+                        } 
+                        else {
+                            syncResultBuffer += line + "\n";
+                            if (waitingForString && line.includes(waitingForString)) {
+                                if (waitingForPromiseResolve) {
+                                    waitingForPromiseResolve(true);
+                                    waitingForPromiseResolve = null;
+                                    waitingForString = "";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Serial read error:", e);
+        } finally {
+            readerActive = false;
+        }
+    }
+
+    async function waitFor(exp) {
+        return new Promise((resolve) => {
+            waitingForString = exp;
+            waitingForPromiseResolve = resolve;
+            setTimeout(() => {
+                if (waitingForString === exp) {
+                    waitingForString = "";
+                    waitingForPromiseResolve = null;
+                    resolve(false);
+                }
+            }, 3000);
+        });
     }
 
     async function pushToEEPROM() {
         if(!port) { let connected = await connectUSB(); if(!connected) return; }
         const writer = port.writable.getWriter(); const encoder = new TextEncoder();
-        const btn = document.getElementById('btn-push'); const autoExport = document.getElementById('cb-autoexport').checked; 
+        const btn = document.getElementById('btn-push'); 
+        const cbExp = document.getElementById('cb-autoexport');
+        const autoExport = cbExp ? cbExp.checked : true; 
+        
         try {
-            btn.innerText = "COMPILING..."; 
+            if(btn) btn.innerText = "COMPILING..."; 
+            await new Promise(r => setTimeout(r, 50)); 
+            syncResultBuffer = ""; 
+
             let b = new Uint8Array(1024); 
             
-            b[0] = 83; b[1] = 75; b[2] = 52; 
+            b[0] = 83; b[1] = 75; b[2] = 52; // SK4 Magic Key
 
             b[3] = cfg.panicSource || 0;
             b[4] = cfg.autoResetB || 0;
             b[5] = cfg.autoResetA || 0;
             
-            // v1.3 - Menjamin nilai 0 tidak tertimpa falsy check pada memori biner
-            let pVal = parseInt(document.getElementById('ui-panic-mode').value);
+            let pm = document.getElementById('ui-panic-mode');
+            let pVal = pm ? parseInt(pm.value) : 119;
             b[6] = isNaN(pVal) ? 119 : pVal;
             
             b[7] = 1; 
+
+            // v3.2 MAP INDEPENDENT LEDS PER PROFILE TO BINARY EEPROM SLOTS (ZERO DRIFT CRITICAL)
+            let flagsB = 0;
+            if (cfg.profilB.idleTopEnabled) flagsB |= 1;
+            if (cfg.profilB.idleMidEnabled) flagsB |= 2;
+            if (cfg.profilB.idleSideEnabled) flagsB |= 4;
+            b[8] = flagsB;
+            
+            b[9] = cfg.profilB.animTop; // Sync biner animTop B ke offset 9 firmware terbaru
+
+            b[10] = cfg.profilB.colB12[0]; b[11] = cfg.profilB.colB12[1]; b[12] = cfg.profilB.colB12[2];
+            b[13] = cfg.profilB.colB11[0]; b[14] = cfg.profilB.colB11[1]; b[15] = cfg.profilB.colB11[2];
+
+            // Penempatan parameter warna standby mandiri Profil B
+            b[1004] = cfg.profilB.colBaseMid[0]; b[1005] = cfg.profilB.colBaseMid[1]; b[1006] = cfg.profilB.colBaseMid[2];
+            b[1010] = cfg.profilB.colBaseB11[0]; b[1011] = cfg.profilB.colBaseB11[1]; b[1012] = cfg.profilB.colBaseB11[2];
+
+            let flagsA = 0;
+            if (cfg.profilA.idleTopEnabled) flagsA |= 1;
+            if (cfg.profilA.idleMidEnabled) flagsA |= 2;
+            if (cfg.profilA.idleSideEnabled) flagsA |= 4;
+            b[1019] = flagsA;
+            
+            b[1020] = cfg.profilA.animTop; // Sync biner animTop A ke offset 1020 firmware terbaru
+            
+            b[1021] = cfg.profilA.colB12[0]; b[1022] = cfg.profilA.colB12[1]; b[1023] = cfg.profilA.colB12[2];
+
+            // Penempatan parameter warna standby mandiri Profil A
+            b[1007] = cfg.profilA.colBaseMid[0]; b[1008] = cfg.profilA.colBaseMid[1]; b[1009] = cfg.profilA.colBaseMid[2];
+            b[1013] = cfg.profilA.colBaseB11[0]; b[1014] = cfg.profilA.colBaseB11[1]; b[1015] = cfg.profilA.colBaseB11[2];
 
             const write_4 = (offset, o) => {
                 if(!o) return;
@@ -1194,9 +1634,10 @@
             cfg.profilA.colShift.forEach((c, idx) => b[addrA+12+idx] = c);
             cfg.profilA.colBaseBot.forEach((c, idx) => b[addrA+15+idx] = c);
             cfg.profilA.colTargetBot.forEach((c, idx) => b[addrA+18+idx] = c);
-            cfg.profilA.colB6.forEach((c, idx) => b[addrA+21+idx] = c);
+            
+            b[507] = cfg.profilA.colB11[0]; b[508] = cfg.profilA.colB11[1]; b[509] = cfg.profilA.colB11[2];
 
-            let pool = new Uint8Array(490); 
+            let pool = new Uint8Array(470); 
             let pOff = 0;
 
             for(let l=0; l<2; l++) for(let i=0; i<3; i++) {
@@ -1204,7 +1645,7 @@
                 if(d.m==4) {
                     let s1 = encoder.encode((d.t1||"") + "\0"), s2 = encoder.encode((d.t2||"") + "\0"); 
                     let total = s1.length + (d.v2==2 ? s2.length : 0);
-                    if(pOff + total <= 490) { 
+                    if(pOff + total <= 470) { 
                         d.v3 = pOff; 
                         pool.set(s1, pOff); pOff += s1.length; 
                         if(d.v2==2) { pool.set(s2, pOff); pOff += s2.length; } 
@@ -1217,7 +1658,7 @@
             let encs = [cfg.profilB.enc, cfg.profilA.enc[0], cfg.profilA.enc[1]];
             encs.forEach(enc => {
                 if(enc && (enc.m == 6 || enc.m == 7)) {
-                    if(pOff + 10 <= 490) { 
+                    if(pOff + 10 <= 470) { 
                         enc.v2 = pOff; 
                         for(let k=0; k<10; k++) pool[pOff++] = enc.seq[k]; 
                     } else { 
@@ -1226,11 +1667,10 @@
                 }
             });
 
-            for(let i=0; i<490; i++) {
+            for(let i=0; i<470; i++) {
                 b[534 + i] = pool[i];
             }
 
-            // Sync structural pointer biner
             for (let l = 0; l < 2; l++) {
                 for (let i = 0; i < 3; i++) {
                     write_10(base + 32 + (l * 42) + (i * 14), cfg.profilA.btn3_5[l][i]);
@@ -1245,41 +1685,61 @@
 
             const hex = Array.from(b, x => x.toString(16).padStart(2,'0').toUpperCase()).join('');
             
-            await writer.write(encoder.encode("<PAUSE>\n")); if(!(await waitFor("<NEXT>"))) throw "No Response";
-            await writer.write(encoder.encode("<CFG>\n")); if(!(await waitFor("<NEXT>"))) throw "Sync Error";
+            await writer.write(encoder.encode("<PAUSE>\n")); if(!(await waitFor("<NEXT>"))) throw "No Response Dari Alat!";
+            await writer.write(encoder.encode("<CFG>\n")); if(!(await waitFor("<NEXT>"))) throw "Sinkronisasi Pintu Alat Gagal!";
+            
             for(let i=0; i<hex.length; i+=64) { 
                 await writer.write(encoder.encode(hex.substring(i, i+64) + "\n")); 
-                let pct = Math.round((i/hex.length)*100); 
-                btn.innerText = `BURNING... ${pct}%`; 
-                if(!(await waitFor("<NEXT>"))) throw "Comm Error"; 
+                let pct = Math.round(((i+64)/hex.length)*100); 
+                if (btn) btn.innerText = `BURNING... ${pct > 100 ? 100 : pct}%`; 
+                if(!(await waitFor("<NEXT>"))) throw "Koneksi Penulisan Serial Gagal!"; 
             }
-            await writer.write(encoder.encode("</CFG>\n")); if(!(await waitFor("<SUCCESS>"))) throw "Verify Fail";
+            
+            await writer.write(encoder.encode("</CFG>\n")); if(!(await waitFor("<SUCCESS>"))) throw "Verifikasi Penutupan Gagal!";
             markSaved(); showToast("SUKSES SUNTIK KE ALAT!"); if(autoExport) exportData(); 
-        } catch(e) { showToast(e); btn.innerText = "⚡ PUSH TO DEVICE"; }
-        writer.releaseLock();
+            
+        } catch(e) { 
+            showToast(e); 
+        } finally {
+            if(btn) btn.innerText = "⚡ PUSH TO DEVICE";
+            writer.releaseLock(); 
+        }
     }
 
     async function syncDevice() {
         if(!port) { let connected = await connectUSB(); if(!connected) return; }
         const writer = port.writable.getWriter(); const encoder = new TextEncoder();
+        let btnSync = document.querySelector('.btn-sync');
         try {
-            document.querySelector('.btn-sync').innerText = "SYNCING..."; showToast("MENARIK DATA...");
-            await writer.write(encoder.encode("<SYNC>\n")); let start = Date.now(), syncHex = "";
-            while(Date.now() - start < 4000) { 
-                const {value} = await serialReader.read(); 
-                if(value) syncHex += value; 
-                if(syncHex.length >= 2048 && syncHex.includes("\n")) break; 
+            if(btnSync) btnSync.innerText = "SYNCING..."; 
+            showToast("MENARIK DATA...");
+            syncResultBuffer = ""; 
+            await writer.write(encoder.encode("<SYNC>\n")); 
+            
+            await new Promise(r => setTimeout(r, 2000));
+            
+            let lines = syncResultBuffer.split("\n");
+            let syncHex = "";
+            for (let l of lines) {
+                let clean = l.trim();
+                if (clean.length >= 2048) {
+                    syncHex = clean;
+                    break;
+                }
             }
-            syncHex = syncHex.trim(); 
             if(syncHex.length >= 2048) { 
                 parseHexToConfig(syncHex); switchBank(0); 
-                localStorage.setItem('sakuMIDI_RC2_Config', JSON.stringify(cfg)); 
+                localStorage.setItem('sakuMIDI_RC3_Config', JSON.stringify(cfg)); 
                 markSaved(); showToast("SINKRONISASI BERHASIL!"); 
             } else { 
-                throw "Versi Firmware Tidak Cocok!"; 
+                throw "Versi Firmware Tidak Cocok atau Gangguan Data!"; 
             }
-        } catch(e) { showToast("ERROR: " + e); } 
-        document.querySelector('.btn-sync').innerText = "SYNC"; writer.releaseLock();
+        } catch(e) { 
+            showToast("ERROR: " + e); 
+        } finally {
+            if(btnSync) btnSync.innerText = "SYNC"; 
+            writer.releaseLock(); 
+        }
     }
 
     function parseHexToConfig(hex) {
@@ -1297,7 +1757,7 @@
             for(let i=0; i<10; i++){ 
                 let c=getB(addr+4+i); if(c!=0) lbl+=String.fromCharCode(c); 
             } 
-            return {m, v1, v2, v3, t1:"", t2:"", lbl}; 
+            return {m, v1, v2, v3, t1:"", t2:"", lbl, seq:[0,0,0,0,0,0,0,0,0,0]}; 
         };
         
         cfg.panicSource = getB(3);
@@ -1305,6 +1765,19 @@
         cfg.autoResetA = getB(5);
         cfg.panicMode = getB(6);
         cfg.panicChan = getB(7);
+
+        let flagsB = getB(8);
+        cfg.profilB.idleTopEnabled = (flagsB & 1) ? 1 : 0;
+        cfg.profilB.idleMidEnabled = (flagsB & 2) ? 1 : 0;
+        cfg.profilB.idleSideEnabled = (flagsB & 4) ? 1 : 0;
+
+        cfg.profilB.animTop = getB(9);
+
+        cfg.profilB.colB12 = [getB(10), getB(11), getB(12)];
+        cfg.profilB.colB11 = [getB(13), getB(14), getB(15)];
+
+        cfg.profilB.colBaseMid = [getB(1004), getB(1005), getB(1006)];
+        cfg.profilB.colBaseB11 = [getB(1010), getB(1011), getB(1012)];
 
         for(let i=0; i<12; i++) cfg.profilB.btn[i] = read_4(16 + i * 8); 
         for(let i=0; i<5; i++) cfg.profilB.pot[i] = read_4(112 + i * 8); 
@@ -1344,20 +1817,34 @@
         cfg.profilA.colShift=[getB(addrA+12),getB(addrA+13),getB(addrA+14)]; 
         cfg.profilA.colBaseBot=[getB(addrA+15),getB(addrA+16),getB(addrA+17)]; 
         cfg.profilA.colTargetBot=[getB(addrA+18),getB(addrA+19),getB(addrA+20)];
-        cfg.profilA.colB6=[getB(addrA+21),getB(addrA+22),getB(addrA+23)];
+        
+        cfg.profilA.colB11 = [getB(507), getB(508), getB(509)]; 
+        cfg.profilA.colB6 = cfg.profilA.colB11;
+
+        let flagsA = getB(1019);
+        cfg.profilA.idleTopEnabled = (flagsA & 1) ? 1 : 0;
+        cfg.profilA.idleMidEnabled = (flagsA & 2) ? 1 : 0;
+        cfg.profilA.idleSideEnabled = (flagsA & 4) ? 1 : 0;
+        
+        cfg.profilA.animTop = getB(1020);
+
+        cfg.profilA.colB12 = [getB(1021), getB(1022), getB(1023)];
+
+        cfg.profilA.colBaseMid = [getB(1007), getB(1008), getB(1009)];
+        cfg.profilA.colBaseB11 = [getB(1013), getB(1014), getB(1015)];
 
         let poolArr = []; 
-        for(let i=0; i<490; i++) poolArr.push(getB(534 + i));
+        for(let i=0; i<470; i++) poolArr.push(getB(534 + i));
         
         for(let l=0; l<2; l++) for(let i=0; i<3; i++) {
             let act = cfg.profilA.btn3_5[l][i];
             if(act.m === 4) { 
                 let idx = act.v3, str1 = ""; 
-                while(idx < 490 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); 
+                while(idx < 470 && poolArr[idx] !== 0) str1 += String.fromCharCode(poolArr[idx++]); 
                 act.t1 = str1; idx++; 
                 if(act.v2 === 2) { 
                     let str2 = ""; 
-                    while(idx < 490 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); 
+                    while(idx < 470 && poolArr[idx] !== 0) str2 += String.fromCharCode(poolArr[idx++]); 
                     act.t2 = str2; 
                 } 
             }
@@ -1372,7 +1859,25 @@
         });
     }
 
-    async function waitFor(exp) { let start = Date.now(), buf = ""; while(Date.now() - start < 3000) { const {value} = await serialReader.read(); if(value) buf += value; if(buf.includes(exp)) return true; await new Promise(r=>setTimeout(r,10)); } return false; }
+    // EXPLICIT GLOBAL BINDINGS TO PREVENT REFERENCE ERROR IN CANVASES
+    window.switchBank = switchBank;
+    window.switchSubTab = switchSubTab;
+    window.openEditorModal = openEditorModal;
+    window.closeEditorModal = closeEditorModal;
+    window.saveEditorConfig = saveEditorConfig;
+    window.toggleTheme = toggleTheme;
+    window.pushToEEPROM = pushToEEPROM;
+    window.syncDevice = syncDevice;
+    window.connectUSB = connectUSB;
+    window.exportData = exportData;
+    window.importData = importData;
+    window.handleImport = handleImport;
+    window.uiLogic = uiLogic;
+    window.openKeyPicker = openKeyPicker;
+    window.closeKeyPicker = closeKeyPicker;
+    window.selectKey = selectKey;
+    window.autoSave = autoSave;
+    window.updateLEDParam = updateLEDParam;
 </script>
 </body>
 </html>
